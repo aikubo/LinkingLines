@@ -21,11 +21,12 @@ git config user.email <email>
 In the git directory 
 
 ```
-git add $FILENAME
+git add <files>
 
 git commit -m "message for commit"`
 
-git remote add Linking-and-Clustering-Dikes https://github.com/aikubo/Linking-and-Clustering-Dikes.githttps://github.com/aikubo/Linking-and-Clustering-Dikes.git
+git remote add Linking-and-Clustering-Dikes https://github.com/aikubo/Linking-and-Clustering-Dikes.git 
+
 git push origin
 ```
 
