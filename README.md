@@ -2,9 +2,9 @@
 ## Purpose of this Group 
 The purpose of this group and respository is to explore the mesoscale structure of dikeswarms associated with Large Igneous Provences. 
 ## How to Use this Github 
-Sign into your git hub account. 
+Sign into your git hub account/ create account. 
 
-###Clone repository
+###Clone git hub respository
 In your command line interface.
 
  `$ git clone https://github.com/aikubo/Linking-and-Clustering-Dikes.git`
