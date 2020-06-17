@@ -30,6 +30,19 @@ git remote add origin git@github.com:aikubo/Linking-and-Clustering-Dikes.git
 
 git push origin master
 ```
+### Work flow 
+Always remember to pull changes when you start working 
+
+```
+git pull
+# do your coding 
+git add <files>
+git commit -m "message"
+git push 
+
+git pull
+# Should say Already up to date.
+```
 
 ### Starting a New Branch 
 Let's say you want to change some aspect of the code to try it out. Rather than do this on the `master` copy. Try it on a new branch. A branch allows you to edit your own version of the code and then later merge the change back into the the main branch. 
@@ -43,7 +56,7 @@ git push origin
 ```
 Go to a new branch using 
 ```
-git checkout <branch name
+git checkout <branch name>
 
 ```
 It is best practices to always work on your own branch. 
@@ -51,5 +64,5 @@ It is best practices to always work on your own branch.
 
 ### Merge that branch back in 
 Now you've made a new branch and edited some code and are happy with the changes. You can now try to add it back into the main branch. 
-
+See [tutorial.](https://yangsu.github.io/pull-request-tutorial/#:~:text=From%20Github's%20Using%20Pull%20Requests,follow%2Dup%20commits%20if%20necessary.)
 
