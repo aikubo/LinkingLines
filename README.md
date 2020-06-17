@@ -21,19 +21,35 @@ git config user.email <email>
 In the git directory 
 
 ```
+# add files 
 git add <files>
-
+# put in a message about what the files do and changes you've made
 git commit -m "message for commit"`
 
-git remote add Linking-and-Clustering-Dikes https://github.com/aikubo/Linking-and-Clustering-Dikes.git 
+git remote add origin git@github.com:aikubo/Linking-and-Clustering-Dikes.git
 
-git push origin
+git push origin master
 ```
 
 ### Starting a New Branch 
 Let's say you want to change some aspect of the code to try it out. Rather than do this on the `master` copy. Try it on a new branch. A branch allows you to edit your own version of the code and then later merge the change back into the the main branch. 
 
 ```
+# Create new branch
 git checkout -b <name of new branch>
+# push branch to remote
+git push origin
 
 ```
+Go to a new branch using 
+```
+git checkout <branch name
+
+```
+It is best practices to always work on your own branch. 
+
+
+### Merge that branch back in 
+Now you've made a new branch and edited some code and are happy with the changes. You can now try to add it back into the main branch. 
+
+
