@@ -30,3 +30,10 @@ git remote add Linking-and-Clustering-Dikes https://github.com/aikubo/Linking-an
 git push origin
 ```
 
+### Starting a New Branch 
+Let's say you want to change some aspect of the code to try it out. Rather than do this on the `master` copy. Try it on a new branch. A branch allows you to edit your own version of the code and then later merge the change back into the the main branch. 
+
+```
+git checkout -b <name of new branch>
+
+```
