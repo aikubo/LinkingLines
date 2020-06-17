@@ -9,9 +9,12 @@ In your command line interface.
 ### First time you commit 
 In the git directory 
 
-`git add $FILENAME`
-`git commit -m "message for commit"`
-`git remot add Linking-and-Clustering-Dikes https://github.com/aikubo/Linking-and-Clustering-Dikes.githttps://github.com/aikubo/Linking-and-Clustering-Dikes.git`
-`git push origin`
+```
+git add $FILENAME
 
+git commit -m "message for commit"`
+
+git remote add Linking-and-Clustering-Dikes https://github.com/aikubo/Linking-and-Clustering-Dikes.githttps://github.com/aikubo/Linking-and-Clustering-Dikes.git
+git push origin
+```
 
