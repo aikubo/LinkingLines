@@ -227,7 +227,7 @@ def squaresError(lines, xc, yc):
     m=-np.cos(avgtheta)/np.sin(avgtheta)
     b=avgrho/np.sin(avgtheta)
     
-    r=np.sum((ys-(m*(xs-xc)+b+yc))**2)/line['seg_length'].sum() #len(lines)
+    r=np.sum((ys-(m*(xs-xc)+b+yc))**2)/lines['seg_length'].sum() #len(lines)
     
     # just do b? 
     

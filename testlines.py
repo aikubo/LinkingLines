@@ -19,7 +19,6 @@ theta, r, xc, yc= HT(true, xc=0, yc=0)
 
 
 fig,ax=plt.subplots(2)
-
 plotlines(true,'r', ax[0], linewidth=3)
 
 ax[1].scatter(theta,r,c='red', edgecolor="black", s=100)
@@ -48,6 +47,18 @@ ax[1].set_xlim([-90,90])
 ax[0].plot(0,0, 'w*', mec='black')
 
 
+true=pd.read_csv('/home/akh/myprojects/Linking-and-Clustering-Dikes/test_rand4.csv')
+theta, r, xc, yc= HT(true, xc=0, yc=0)
+
+plotlines(true,"r", ax[0], linewidth=3)
+
+ax[1].scatter(theta,r, c="r", edgecolor="black", s=100)
+ax[1].set_ylabel('Rho (m)')
+ax[1].set_xlabel('Theta (deg)')
+ax[1].set_xlim([-90,90])
+ax[0].plot(0,0, 'w*', mec='black')
+
+fig.savefig("houghexample.eps", dpi=600)
 # fig,ax=plt.subplots()
 # lines=pd.DataFrame(columns=['Xstart', 'Ystart', 'Xend', 'Yend', 'p', 'theta'])
 # for i in range(0,len(nclusters)): 

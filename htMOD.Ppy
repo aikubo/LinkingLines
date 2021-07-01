@@ -1,0 +1,58 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Thu Apr  1 12:49:07 2021
+
+@author: akh
+"""
+import pandas as pd 
+import numpy as np
+
+def rotateData2(data, rotation_angle):
+    o_x1 = data['Xstart'].values - data['Xstart'].values.mean()
+    o_x2 = data['Xend'].values - data['Xstart'].values.mean()
+    o_y1 = data['Ystart'].values - data['Ystart'].values.mean()
+    o_y2 = data['Yend'].values - data['Ystart'].values.mean()
+    
+    
+    x1 = o_x1*np.cos(np.deg2rad(rotation_angle)) - o_y1*np.sin(np.deg2rad(rotation_angle))
+    y1 = o_x1*np.sin(np.deg2rad(rotation_angle)) + o_y1*np.cos(np.deg2rad(rotation_angle))
+    
+    x2 = o_x2*np.cos(np.deg2rad(rotation_angle)) - o_y2*np.sin(np.deg2rad(rotation_angle))
+    y2 = o_x2*np.sin(np.deg2rad(rotation_angle)) + o_y2*np.cos(np.deg2rad(rotation_angle))
+    
+    dataRotated=data
+    
+    dataRotated['Xstart']=x1
+    dataRotated['Ystart']=y1
+    dataRotated['Xend']=x2
+    dataRotated['Yend']=y2
+
+    return dataRotated
+
+def HT_center(data):
+    xc=np.mean( (data['Xstart'].values+data['Xend'].values)/2)
+    yc=np.mean( (data['Ystart'].values+data['Yend'].values)/2)
+    
+    return xc,yc
+
+def AKH_HT(data, xc=None, yc=None):
+  
+    if xc is None and yc is None:
+        xc,yc=HT_center(data)
+
+    o_x1 = data['Xstart'].values - xc
+    o_x2 = data['Xend'].values - xc
+    o_y1 = data['Ystart'].values - yc
+    o_y2 = data['Yend'].values - yc
+
+    A = o_y1 - o_y2 + 0.00000000001;
+    B = o_x1 - o_x2+ 0.00000000001;
+
+    m=A/B
+    angle=np.arctan(-1/float(m))
+    b1=-1*m*o_x1+o_y1
+    rho=b1*np.sin(angle)
+    theta=np.rad2deg(angle)
+    
+    return theta, rho, xc, yc

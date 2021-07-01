@@ -20,6 +20,7 @@ theta, rho, xc, yc= HT(dikeset)
 dikeset['rho']=rho
 dikeset['theta']=theta
 
+
 trange=2 
 rrange=5000 
 
@@ -32,6 +33,7 @@ dikeset['Labels']=clustering.labels_
 dikeset['p']=rho
 dikeset['theta']=theta
 Deccanlines,IC=examineClusters(dikeset)
+dikeset.to_csv('/home/akh/myprojects/Linking-and-Clustering-Dikes/dikedata/Deccan_Central.csv',index=False)
 
 #generate a kmz
 colorsSegments=labelcolors(dikeset['Labels'])
@@ -69,4 +71,5 @@ a2[1].set_ylabel('Length')
 
 fig,ax, h1, h2=BA_HT(dikeset, Deccanlines, rstep=15000)
 errorAnalysis(Deccanlines)
-TopHTSection(lines, 15000, 3)
+#TopHTSection(lines, 15000, 3)
+Deccanlines.to_csv('/home/akh/myprojects/Linking-and-Clustering-Dikes/dikedata/DeccanCostalLinked0621.csv')

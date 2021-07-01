@@ -12,7 +12,8 @@ import numpy as np
 from clusterMod import *
 import matplotlib.pyplot as plt
 from plotmod import plotlines, labelcolors, plotbyAngle, BA_HT
-from examineMod import examineClusters
+from examineMod import examineClusters, plotlabel, writeToQGIS
+from PrePostProcess import *
 
 dikeset=pd.read_csv('/home/akh/myprojects/Linking-and-Clustering-Dikes/dikedata/dikeset_ptheta.csv')
 theta, rho, xc, yc= HT(dikeset)
@@ -29,6 +30,7 @@ d2=trange/stdT
 clustering=HT_AGG(dikeset,d2)
 dikeset['Labels']=clustering.labels_
 lines,IC=examineClusters(dikeset)
+dikeset.to_csv('/home/akh/myprojects/Linking-and-Clustering-Dikes/dikedata/dikeset_ptheta.csv',index=False))
 
 #generate a kmz
 colorsSegments=labelcolors(dikeset['Labels'])
@@ -36,7 +38,14 @@ colorsDikes=labelcolors(lines['Label'])
 
 errorAnalysis(lines)
 
-TopHTSection(lines, 5000, 3)
+#lines2= writeToQGIS(lines, "CRBLinkedQGIS.csv")
+
+# label=22
+# plotlabel(dikeset,label)
+fig, ax= DotsHT(dikeset,lines)
+
+lines.to_csv('/home/akh/myprojects/Linking-and-Clustering-Dikes/dikedata/CRBLinked0621.csv')
+#TopHTSection(lines, 5000, 3)
 #fig,ax=plotbyAngle(dikeset, lines, 20)
 
 ## Length and Width plots

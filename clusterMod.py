@@ -22,6 +22,28 @@ def scalesimple(rho,theta):
     
     return X 
 
+def intersection(df):
+    inters=np.empty([len(df), len(df),2])
+    for i in range(len(df)):
+        x1=df['Xstart'].iloc[i]
+        x2=df['Xend'].iloc[i]
+        y1=df['Ystart'].iloc[i]
+        y2=df['Yend'].iloc[i]
+        for j in range(len(df)):
+            if j == i :
+                continue
+            x3=df['Xstart'].iloc[j]
+            x4=df['Xend'].iloc[j]
+            y3=df['Ystart'].iloc[j]
+            y4=df['Yend'].iloc[j]
+            
+            d=(x1-x2)*(y3-y4)-(y1-y2)*(x3-x4)+.0000001
+            px=(x1*y2-y1*x2)*(x3-x4)-(x1-x2)*(x3*y4-y3*x4)
+            py=(x1*y2-y1*x2)*(y3-y4)-(y1-y2)*(x3*y4-y3*x4)
+            inters[i,j,0]=px/d
+            inters[i,j,1]=py/d
+    return inters
+
 def HT_DB(dikeset, eps, samp):
     X=scalesimple(dikeset['rho'], dikeset['theta'])
     clustering = DBSCAN(eps=eps, min_samples=samp).fit(X)

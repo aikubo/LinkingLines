@@ -14,6 +14,7 @@ import matplotlib.pyplot as plt
 from plotmod import plotlines, labelcolors, plotbyAngle, BA_HT, HThist
 from examineMod import examineClusters
 import seaborn as sns
+from jitteringHTcenter import moveHTcenter, rotateHT
 
 def fragmentDikes(df, maxL=20000, ndikesMax=None, distortion=0):
     np.random.seed(5)
@@ -32,6 +33,7 @@ def fragmentDikes(df, maxL=20000, ndikesMax=None, distortion=0):
                 xrange=np.random.randint(low,high=high, size=2)
                 m=df['Slope'].iloc[i]*(1+np.random.rand()*distortion)
                 yrange=m*xrange
+                
                 L=np.sqrt((xrange[0]-xrange[1])**2+(yrange[0]-yrange[1])**2)
                 if L > maxL: 
                     continue
@@ -57,8 +59,9 @@ dikelength=[50000, -50000]
 sns.set_context("talk")
 center=np.array([0,0])
 ndikes=50
-angles=np.linspace(-90,90,ndikes)
-m=np.tan(angles)
+angles=np.linspace(70,90,ndikes)
+m=np.tan(np.deg2rad(angles))
+
 Xstart=np.ones(ndikes*2)*0
 Ystart=np.ones(ndikes*2)*0
 Xend1=dikelength[0]/np.sqrt(1+m**2)
@@ -66,8 +69,23 @@ Xend=np.append(Xend1, dikelength[1]/np.sqrt(1+m**2))
 m2=np.append(m,m)
 Yend=m2*Xend
 
+linearm=.02
+Xstart2=np.linspace(-50000,50000, 20)
+Ystart2=-40000*np.ones(len(Xstart2))
+Xend2=Xstart2+100
+Yend2=Xend2*linearm+1000
+
+Xstart=np.append(Xstart, Xstart2)
+Ystart=np.append(Ystart, Ystart2)
+Xend=np.append(Xend, Xend2)
+Yend=np.append(Yend, Yend2)
+m2=np.append(m2,linearm*np.ones(20))
+
 df=pd.DataFrame({'Xstart':Xstart, 'Xend': Xend, 'Ystart': Ystart, 'Yend':Yend, 'Slope':m2})
 
+df.to_csv('/home/akh/myprojects/Linking-and-Clustering-Dikes/synthetic.csv')
+
+#df=rotateData2(df, 50)
 fig, ax =plt.subplots(2,2)
 
 
@@ -83,29 +101,29 @@ ax[0][0].set_label('With Noise')
 
 ax[1][0].set_ylabel('Rho (m)')
 
-dfFrag1=fragmentDikes(df, distortion=1)
+#dfFrag1=fragmentDikes(df, distortion=1)
 d=20000
-plotlines(dfFrag1, 'r', ax[0][1], linewidth=2)
-plotlines(df, 'k', ax[0][1], alpha=0.1)
-theta2, rho2, xc2, yc2=AKH_HT(dfFrag1.astype(float), xc=0, yc=0)
-ax[1][1].scatter(theta2, rho2, edgecolor='black')
-ax[0][1].plot(0,0, "*", mec='black', markersize=20)
+# plotlines(dfFrag1, 'r', ax[0][1], linewidth=2)
+# plotlines(df, 'k', ax[0][1], alpha=0.1)
+# theta2, rho2, xc2, yc2=AKH_HT(dfFrag1.astype(float), xc=0, yc=0)
+# ax[1][1].scatter(theta2, rho2, edgecolor='black')
+# ax[0][1].plot(0,0, "*", mec='black', markersize=20)
 
 """ make gif of center change """
-fig,ax=plt.subplots(1,2)
-fig.set_size_inches(12,6)
-rold=rho1
-told=theta1
-n=0
+# fig,ax=plt.subplots(1,2)
+# fig.set_size_inches(12,6)
+# rold=rho1
+# told=theta1
+# n=0
 
-plotlines(df, 'grey', ax[0], center=True)
-plotlines(dfFrag1, 'r', ax[0], linewidth=2)
+# plotlines(df, 'grey', ax[0], center=True)
+# plotlines(dfFrag1, 'r', ax[0], linewidth=2)
 
-ax[0].plot(0,0, "*", mec='black', markersize=20)
-ax[1].scatter(theta1,rho1, edgecolor='black')
-ax[1].set_ylim([-30000, 30000,])
-ax[1].set_xlabel('Theta (deg)')
-ax[1].set_ylabel('Rho (m)')
+# ax[0].plot(0,0, "*", mec='black', markersize=20)
+# ax[1].scatter(theta1,rho1, edgecolor='black')
+# ax[1].set_ylim([-30000, 30000,])
+# ax[1].set_xlabel('Theta (deg)')
+# ax[1].set_ylabel('Rho (m)')
 
 #title="Center at ["+str(0) +"m ,"+str(0)+" m]"
 #ax[0].set_title(title)
@@ -114,36 +132,45 @@ plt.tight_layout()
 name="radial"+str(n)+".png"
 fig.savefig(name, dpi=600)
 plt.tight_layout()
-xcs=np.array([0,d,d,d,0,-d,-d,-d])
-ycs=np.array([d,d,0,-d,-d,-d,0,d])
+xcs=np.array([0,d,.5*d, -0.2*d])
+ycs=np.array([d,d,.7*d, -d])
 
+fig,ax=plt.subplots(1,2)
+fig.set_size_inches(12,6)
 
-for ic in range(len(xcs)):
+plotlines(df, 'grey', ax[0], center=True)
 
-    i=xcs[ic]
-    j=ycs[ic]
-    fig,ax=plt.subplots(1,2)
-    fig.set_size_inches(12,6)
-    ax[1].scatter(told,rold, c='grey', s=20)
+rotateHT(df, 20)
+
+#plotlines(dfFrag1, 'r', ax[0], linewidth=2)
+# for ic in range(len(xcs)):
+
+#     i=xcs[ic]
+#     j=ycs[ic]
+
+#     #ax[1].scatter(told,rold, c='grey', s=20)
     
-    plotlines(df, 'grey', ax[0], center=True)
-    plotlines(dfFrag1, 'r', ax[0], linewidth=2)
-    theta2, rho2, xc2, yc2=AKH_HT(dfFrag1.astype(float), xc=i, yc=j)
-    ax[0].plot(i,j, "*", mec='black', markersize=20)
-    ax[1].scatter(theta2,rho2, edgecolor='black')
-    ax[1].set_ylim([-30000, 30000,])
-    ax[1].set_xlabel('Theta (deg)')
-    ax[1].set_ylabel('Rho (m)')
-    
-    #title="Center at ["+str(i) +"m ,"+str(j)+" m]|"
-    #ax[0].set_title(title)
-    rold=np.append(rold, rho2)
-    told=np.append(told, theta2)
-    n=n+1
-    plt.tight_layout()
-    name="radial"+str(n)+".png"
-    fig.savefig(name, dpi=600)
+
+#     theta2, rho2, xc2, yc2=AKH_HT(df.astype(float), xc=i, yc=j)
+#     ax[0].plot(i,j, "*", mec='black', markersize=20)
+#     ax[1].scatter(theta2,rho2, edgecolor='black')
+#     ax[1].set_ylim([-30000, 30000,])
+#     ax[1].set_xlabel('Theta (deg)')
+#     ax[1].set_ylabel('Rho (m)')
+#     dist=np.sqrt(i**2+j**2)
+#     print(dist, max(abs(rho2)))
+#     #title="Center at ["+str(i) +"m ,"+str(j)+" m]|"
+#     #ax[0].set_title(title)
+#     rold=np.append(rold, rho2)
+#     told=np.append(told, theta2)
+#     n=n+1
+#     plt.tight_layout()
+#     #name="radial"+str(n)+".png"
+
 """ """
+
+fig.savefig(name, dpi=600)
+    
 # dfFrag2=fragmentDikes(df, ndikesMax=40, distortion=0)
 # dfFrag3=fragmentDikes(df, ndikesMax=20, distortion=5)
 

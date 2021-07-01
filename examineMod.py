@@ -10,6 +10,7 @@ import pandas as pd
 from fitRectangle import *
 from htMOD import HT_center
 from plotmod import HThist, plotlines
+from sklearn.neighbors import NearestNeighbors
 
 import matplotlib.pyplot as plt 
 
@@ -22,7 +23,7 @@ def clustered_lines(xs, ys, theta):
     
     xmid=(xstart+xend)/2
     ymid=(ystart+yend)/2
-    l=np.sqrt( (xstart-xend)**2 + (ystart-yend)**2)*1.2
+    l=np.sqrt( (xstart-xend)**2 + (ystart-yend)**2)
     a = np.cos(np.deg2rad(theta))
     b = np.sin(np.deg2rad(theta))
     
@@ -64,13 +65,13 @@ def examineClusters(clusters):
     
     cmask=np.full(len(clusters),False)
     for i in np.unique(clusters['Labels']): 
-
+        clustered=True
         mask=clusters['Labels']==i
         lines=clusters[mask]
         cmask[mask]=True
-        if i == -1 or len(lines)<2: 
-            continue
-        
+        if (i == -1 or len(lines)<2):
+            clustered=False
+            
         x,y=endpoints2(lines)
 
         x0=(max(x)-min(x))/2
@@ -82,7 +83,7 @@ def examineClusters(clusters):
         avgtheta=np.average(lines['theta'])
         stdrho=np.std(lines['rho'])
         stdt=np.std(lines['theta'])
-        sizes.append(size)
+        segmentL=lines['seg_length'].sum()
         
         
         w,l=fit_Rec(lines, xc, yc)
@@ -93,15 +94,58 @@ def examineClusters(clusters):
         #points=(np.vstack((x, y)).T)
         #sx,sy, ang=ellipse(points)
         Xe,Ye=RecEdges(lines, xc, yc)
+        hashlines=pd.util.hash_pandas_object(lines['ID']).sum()
         
         clusters_data=clusters_data.append({ "Label": i, "Xstart": x1, "Ystart":y1, "Xend": x2, "Yend":y2, "X0": x0, "Y0": y0, "AvgRho":avgrho, "AvgTheta":avgtheta, "RhoRange":rrange,
-         "ThetaRange": trange, "StdRho": stdrho, "StdTheta": stdt, "R_Width": w, "R_Length": l, "Size":size, "R_error":np.sqrt(r)}, ignore_index=True)
+         "ThetaRange": trange, "StdRho": stdrho, "StdTheta": stdt, "R_Width": w, "R_Length": l, "Size":size, "R_error":np.sqrt(r), "Linked":clustered, "SegmentLSum":segmentL, "Hash":hashlines}, ignore_index=True)
     
-    #ax[0].scatter(clusters_data["ThetaRange"],clusters_data["RhoRange"], s=sum(mask))
-    #ax[1].hist(clusters_data["ThetaRange"])
-    #ax[2].hist(clusters_data["RhoRange"])
-    #plt.hist(sizes)
+    #Find KNN distance of the endpoints 
+    # Check that the KNN is not just one endpoint
+    # Add to lines output
+    X,Y=endpoints2(clusters_data)
+    #X=clusters_data['Xstart'].values
+    #Y=clusters_data['Ystart'].values
+    X=(np.vstack((X, Y)).T)
+    nbrs = NearestNeighbors(n_neighbors=3, algorithm='ball_tree').fit(X)
+    distances, indices = nbrs.kneighbors(X)
+    s=0
+    distAvg=[]
+    for i in range(int(len(indices)/2)): 
+        if distances[i,1]==clusters_data['R_Length'].iloc[i]:
+            s=s+1
+            print("matched to endpoint", s)
+            distAvg.append(min(distances[i,2],distances[i*2,2]))
+            continue
+            
+        distAvg.append(min(distances[i,1],distances[i*2,1]))
+        
+        
 
+    
+    
+    clusters_data["KNN2"]=distAvg
+    
+
+    X=clusters_data['Xstart'].values
+    Y=clusters_data['Ystart'].values
+    X=(np.vstack((X, Y)).T)
+    nbrs = NearestNeighbors(n_neighbors=3, algorithm='ball_tree').fit(X)
+    distances, indices = nbrs.kneighbors(X)
+    s=0
+    distAvg=[]
+    for i in range(int(len(indices))): 
+        if distances[i,1]==clusters_data['R_Length'].iloc[i]:
+            s=s+1
+            print("matched to endpoint", s)
+            distAvg.append(distances[i,2])
+            continue
+            
+        distAvg.append(distances[i,1])
+        
+    clusters_data["KNN"]=distAvg
+
+    
+    
     evaluation=pd.DataFrame({ "Ic": (len(clusters)-notclustered),
                               "nClusters": nclusters,
                               "AverageRhoRange": np.average(clusters_data["RhoRange"]),                              
@@ -151,6 +195,10 @@ def errorAnalysis(lines):
     
     for i in range(4):
         ax[1][i].set_xlabel("SS Error (m)")
+    print("Error evaluation")
+    print("average error:", lines['R_error'].mean())
+    print("# clusters over 1 mil error:", max(lines['Label'])-len(lines))
+    print("N% clustered", (np.sum(lines['Size'])/4262)*100)
         
 def TopHTSection(lines, rstep, tstep):
     fig,ax=plt.subplots(1,2)
@@ -183,3 +231,24 @@ def TopHTSection(lines, rstep, tstep):
     print(toplines['Size'].sum(), "dike segements")
     
     return toplines
+
+def plotlabel(df,label):
+    fig,ax=plt.subplots()
+    mask=df['Labels']==label
+    xc,yc=HT_center(df)
+    lines=df[mask]
+    plotlines(lines,"r", ax)
+    x,y=endpoints2(lines)
+    w,l=fit_Rec(lines, xc, yc)
+    r=squaresError(lines,xc,yc)
+    avgtheta=np.average(lines['theta'])
+
+    x1, x2, y1, y2=clustered_lines(x,y,avgtheta)
+    ax.plot([x1,x2], [y1,y2], 'g')
+    
+    ax.set_title("Label"+str(label))
+    ax.text( .89, .89, "W:"+str(w),transform=ax.transAxes )
+    ax.text( .84, .84, "L:"+str(l),transform=ax.transAxes  )
+    ax.text( .80, .80, "errors:"+str(r),transform=ax.transAxes  )
+         
+    
