@@ -9,7 +9,6 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 
-
 def HT_center(data):
     xc=np.mean( (data['Xstart'].values+data['Xend'].values)/2)
     yc=np.mean( (data['Ystart'].values+data['Yend'].values)/2)
@@ -18,11 +17,12 @@ def HT_center(data):
 
 def rotateData2(data, rotation_angle):
     xc,yc=HT_center(data)
+    rotation_angle=float(rotation_angle)
     o_x1 = data['Xstart'].values - xc
     o_x2 = data['Xend'].values - xc
     o_y1 = data['Ystart'].values - yc
     o_y2 = data['Yend'].values - yc
-    
+    #print(xc,yc)
     
     x1 = o_x1*np.cos(np.deg2rad(rotation_angle)) - o_y1*np.sin(np.deg2rad(rotation_angle))
     y1 = o_x1*np.sin(np.deg2rad(rotation_angle)) + o_y1*np.cos(np.deg2rad(rotation_angle))
@@ -32,12 +32,16 @@ def rotateData2(data, rotation_angle):
     
     dataRotated=data.copy()
     
-    dataRotated['Xstart']=x1
-    dataRotated['Ystart']=y1
-    dataRotated['Xend']=x2
-    dataRotated['Yend']=y2
+    dataRotated['Xstart']=x1+xc
+    dataRotated['Ystart']=y1+yc
+    dataRotated['Xend']=x2+xc
+    dataRotated['Yend']=y2+yc
+    
+    xcR, ycR=HT_center(dataRotated)
+    #print(xcR,ycR)
 
     return dataRotated
+
 
 def transformXstart(dikeset, xc=None, yc=None):
     if xc is None or  yc is None:
@@ -61,8 +65,8 @@ def AKH_HT(data, xc=None, yc=None):
     o_y1 = data['Ystart'].values - yc
     o_y2 = data['Yend'].values - yc
 
-    A = o_y1 - o_y2 + 0.00000000001;
-    B = o_x1 - o_x2+ 0.00000000001;
+    A = o_y1.astype(float) - o_y2.astype(float) + 0.0000000000000001;
+    B = o_x1.astype(float) - o_x2.astype(float)+ 0.000000000000000001;
 
     m=A/B
     angle=np.arctan(-1/m)
@@ -85,3 +89,5 @@ def gridSearch(df,dc):
             a[t].set_title(title)
             print(npts, i, j)
             t=t+1
+            
+

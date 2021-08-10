@@ -11,7 +11,8 @@ from plotmod import plotlines
 import pandas as pd 
 import matplotlib.pyplot as plt
 import numpy as np 
-
+from matplotlib import cm
+import matplotlib.animation as animation
 
 def rotateHT(dikeset,deg):
     xci,yci=HT_center(dikeset)
@@ -104,3 +105,75 @@ def moveHTcenter(dikeset,r):
 
     for i in range(p-1):
         ax[i+1].set_ylim(minrho,mrho)
+        
+
+def jitterAnimation(dikeset, frames, name):
+    global Xc, Yc, HTvis 
+    fig,ax=plt.subplots(1,2, figsize=[12,6])
+    
+    plotlines(dikeset, 'grey', ax[0])
+    theta,rho,xc1,yc1=AKH_HT(dikeset)
+    cmap=cm.turbo
+    HTvis=ax[1].scatter(theta, rho/max(abs(rho)), c=dikeset['Xstart']-xc1, cmap=cmap, edgecolor='black')
+    ax[1].set_ylim([-1, 1])
+    ax[1].set_xlabel("Theta")
+    ax[1].set_ylabel("Rho/max(abs(rho))")
+    ax[0].plot(xc1,yc1, "k*", markersize=15)
+    centerplot, =ax[0].plot([],[], 'r*', markeredgecolor='black')
+    centerline, =ax[0].plot([],[], 'r--')
+    #archimedian spiral
+    phi=np.linspace(0,4*np.pi, frames)
+    alpha=1500
+    Xc=alpha*phi*np.cos(phi)+xc1
+    Yc=alpha*phi*np.sin(phi)+yc1
+    
+    interval=500
+    t=np.arange(0,frames)
+    
+    def UpdateJitter(t):
+        global Xc, Yc, HTvis 
+        theta,rho,xc,yc=AKH_HT(dikeset, xc=Xc[t], yc=Yc[t])
+        HTvis.set_offsets(np.c_[theta, rho/max(abs(rho))])
+        centerplot.set_xdata(Xc[t])
+        centerplot.set_ydata(Yc[t])
+        centerline.set_xdata(Xc[:t+1])
+        centerline.set_ydata(Yc[:t+1])
+        #ax[1].set_ylim(min(rho), max(rho))
+        
+    
+    ani=animation.FuncAnimation(fig, UpdateJitter, frames=t, interval=interval)
+    ani.save(name)
+    
+# def matchCenter(df, xc, yc, gridM):
+#     global xr, yr, HTvis, A, phi,rho, theta
+#     fig,ax=plt.subplots(1,2, figsize=[12,6])
+#     cmap=cm.Reds_r
+#     plotlines(df, 'grey', ax[0])
+#     theta,rho,xc1,yc1=AKH_HT(df)
+#     HTvis=ax[1].scatter(theta, rho, c=[], cmap=cmap, edgecolor='black')
+    
+#     xs=np.arange(min(df['Xstart']), max(df['Xstart']), gridM)
+#     ys=np.arange(min(df['Ystart']), max(df['Ystart']), gridM)
+    
+#     xr,yr=np.meshgrid( xs, ys)
+    
+#     A=np.sqrt( (xc-xr)**2+ (yc-yr)**2)
+#     phi=np.arctan( (yc-yr)/ (xc-xr)) 
+
+#     for i in range(len(df)):
+#         rho=A*np.sin(df['theta'].iloc[i]-phi)
+#         err=(df['rho']-rho)**2
+        
+#     def updateRadialCenter(t):
+#         global xr, yr, HTvis, A, phi,rho, theta
+#         ax[0].plot(xr[t], yr[t], 'r*')
+        
+        
+        
+#         HTvis.set_array(
+    
+#     return xr
+    
+    
+    
+    

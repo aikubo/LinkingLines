@@ -11,6 +11,7 @@ from fitRectangle import *
 from htMOD import HT_center
 from plotmod import HThist, plotlines
 from sklearn.neighbors import NearestNeighbors
+from sklearn.preprocessing import scale
 
 import matplotlib.pyplot as plt 
 
@@ -51,7 +52,7 @@ def checkoutCluster(dikeset, label):
 
     
 def examineClusters(clusters):
-    
+    """ Must have  ['Xstart', 'Ystart', 'Xend', 'Yend','seg_length', 'ID', 'rho', 'theta', 'Labels'] """
     #fig,ax=plt.subplots(1,3)
     clabel=np.unique(clusters['Labels'])
     nclusters=len(clabel)-1
@@ -71,6 +72,7 @@ def examineClusters(clusters):
         cmask[mask]=True
         if (i == -1 or len(lines)<2):
             clustered=False
+            continue
             
         x,y=endpoints2(lines)
 
@@ -88,8 +90,8 @@ def examineClusters(clusters):
         
         w,l=fit_Rec(lines, xc, yc)
         r=squaresError(lines,xc,yc)
-        if r> 1000000: 
-            continue 
+        #f r> 1000000: 
+        #   continue 
         x1, x2, y1, y2=clustered_lines(x,y,avgtheta)
         #points=(np.vstack((x, y)).T)
         #sx,sy, ang=ellipse(points)
@@ -102,28 +104,47 @@ def examineClusters(clusters):
     #Find KNN distance of the endpoints 
     # Check that the KNN is not just one endpoint
     # Add to lines output
-    X,Y=endpoints2(clusters_data)
+    # X,Y=endpoints2(clusters_data)
+    # #X=clusters_data['Xstart'].values
+    # #Y=clusters_data['Ystart'].values
+    # X=(np.vstack((X, Y)).T)
+    # nbrs = NearestNeighbors(n_neighbors=3, algorithm='ball_tree').fit(X)
+    # distances, indices = nbrs.kneighbors(X)
+    # s=0
+    # distAvg=[]
+    # for i in range(int(len(indices)/2)): 
+    #     if distances[i,1]==clusters_data['R_Length'].iloc[i]:
+    #         s=s+1
+    #         print("matched to endpoint", s)
+    #         distAvg.append(min(distances[i,2],distances[i*2,2]))
+    #         continue
+            
+    #     distAvg.append(min(distances[i,1],distances[i*2,1]))
+
+    #clusters_data["KNN2"]=distAvg
+    
+    X,Y=midpoint(clusters_data)
     #X=clusters_data['Xstart'].values
     #Y=clusters_data['Ystart'].values
-    X=(np.vstack((X, Y)).T)
+    X=(np.vstack((X, Y, clusters_data['AvgTheta'])).T)
+    X=np.array(clusters_data['AvgTheta']).reshape(-1,1)
+    #=scale(X)
+    #rint(X.shape)
     nbrs = NearestNeighbors(n_neighbors=3, algorithm='ball_tree').fit(X)
     distances, indices = nbrs.kneighbors(X)
-    s=0
-    distAvg=[]
-    for i in range(int(len(indices)/2)): 
-        if distances[i,1]==clusters_data['R_Length'].iloc[i]:
-            s=s+1
-            print("matched to endpoint", s)
-            distAvg.append(min(distances[i,2],distances[i*2,2]))
-            continue
+    #s=0
+    #distAvg=[]
+    # for i in range(int(len(indices)/2)): 
+    #     if distances[i,1]==clusters_data['R_Length'].iloc[i]:
+    #         s=s+1
+    #         print("matched to endpoint", s)
+    #         distAvg.append(min(distances[i,2],distances[i*2,2]))
+    #         continue
             
-        distAvg.append(min(distances[i,1],distances[i*2,1]))
-        
-        
+    #     distAvg.append(min(distances[i,1],distances[i*2,1]))
+    print(len(clusters_data), len(distances[:,1]))
 
-    
-    
-    clusters_data["KNN2"]=distAvg
+    clusters_data["KNN2"]=distances[:,1]
     
 
     X=clusters_data['Xstart'].values
@@ -166,39 +187,40 @@ def examineClusters(clusters):
 def ClusteredAll(dikeset,lines,cmask):
     notClustered=dikeset.iloc[~cmask]
 
-def errorAnalysis(lines):
+def errorAnalysis(lines, dikeset, plot=False):
     
-    fig,ax=plt.subplots(2,4)
-    ax[0][0].set_ylabel('R_length')
-    ax[0][0].scatter(lines['R_error'], lines['R_Length'])
-    ax[0][1].scatter(lines['R_error'], lines['R_Width'])
-    ax[0][1].set_ylabel('R_Width')
-    
-    ax[0][2].scatter(lines['R_error'], lines['Size'])
-    ax[0][2].set_ylabel('Size')
-    
-    
-    ax[0][3].hist(lines['R_error'], bins=50)
-    ax[0][3].set_ylabel('Counts')
-    
-    ax[1][0].scatter(lines['R_error'], lines['AvgTheta'])
-    ax[1][0].set_ylabel('AvgTheta')
-    
-    ax[1][1].scatter(lines['R_error'], lines['AvgRho'])
-    ax[1][1].set_ylabel('AvgRho')
-    
-    ax[1][2].scatter(lines['R_error'], lines['ThetaRange'])
-    ax[1][2].set_ylabel('ThetaRange')
-    
-    ax[1][3].scatter(lines['R_error'], lines['RhoRange'])
-    ax[1][3].set_ylabel('RhoRange')
-    
-    for i in range(4):
-        ax[1][i].set_xlabel("SS Error (m)")
+    if plot: 
+        fig,ax=plt.subplots(2,4)
+        ax[0][0].set_ylabel('R_length')
+        ax[0][0].scatter(lines['R_error'], lines['R_Length'])
+        ax[0][1].scatter(lines['R_error'], lines['R_Width'])
+        ax[0][1].set_ylabel('R_Width')
+        
+        ax[0][2].scatter(lines['R_error'], lines['Size'])
+        ax[0][2].set_ylabel('Size')
+        
+        
+        ax[0][3].hist(lines['R_error'], bins=50)
+        ax[0][3].set_ylabel('Counts')
+        
+        ax[1][0].scatter(lines['R_error'], lines['AvgTheta'])
+        ax[1][0].set_ylabel('AvgTheta')
+        
+        ax[1][1].scatter(lines['R_error'], lines['AvgRho'])
+        ax[1][1].set_ylabel('AvgRho')
+        
+        ax[1][2].scatter(lines['R_error'], lines['ThetaRange'])
+        ax[1][2].set_ylabel('ThetaRange')
+        
+        ax[1][3].scatter(lines['R_error'], lines['RhoRange'])
+        ax[1][3].set_ylabel('RhoRange')
+        
+        for i in range(4):
+            ax[1][i].set_xlabel("SS Error (m)")
     print("Error evaluation")
     print("average error:", lines['R_error'].mean())
     print("# clusters over 1 mil error:", max(lines['Label'])-len(lines))
-    print("N% clustered", (np.sum(lines['Size'])/4262)*100)
+    print("N% clustered", (np.sum(lines['Size'])/len(dikeset))*100)
         
 def TopHTSection(lines, rstep, tstep):
     fig,ax=plt.subplots(1,2)
@@ -232,23 +254,52 @@ def TopHTSection(lines, rstep, tstep):
     
     return toplines
 
-def plotlabel(df,label):
+def plotlabel(df, linked, label, hashlabel=False):
     fig,ax=plt.subplots()
+    print(label)
+    if hashlabel:
+        l=linked['Label'].loc[linked['Hash']==label].astype(int).values[0]
+        label=l 
+    print(label)
+
     mask=df['Labels']==label
     xc,yc=HT_center(df)
     lines=df[mask]
     plotlines(lines,"r", ax)
-    x,y=endpoints2(lines)
-    w,l=fit_Rec(lines, xc, yc)
-    r=squaresError(lines,xc,yc)
-    avgtheta=np.average(lines['theta'])
+    # x,y=endpoints2(lines)
+    # w,l=fit_Rec(lines, xc, yc)
+    # r=squaresError(lines,xc,yc)
+    # avgtheta=np.average(lines['theta'])
 
-    x1, x2, y1, y2=clustered_lines(x,y,avgtheta)
-    ax.plot([x1,x2], [y1,y2], 'g')
+    # x1, x2, y1, y2=clustered_lines(x,y,avgtheta)
+    linkedlines=linked[linked['Label']==label]
+    plotlines(linkedlines,"g", ax)
     
-    ax.set_title("Label"+str(label))
-    ax.text( .89, .89, "W:"+str(w),transform=ax.transAxes )
-    ax.text( .84, .84, "L:"+str(l),transform=ax.transAxes  )
-    ax.text( .80, .80, "errors:"+str(r),transform=ax.transAxes  )
-         
+    
+    ax.set_title("Label "+str(label)+ "| theta:"+str(linkedlines['AvgTheta'].values)+" rho:"+str(linkedlines['AvgRho'].values))
+    ax.text( .89, .89, "W:"+str(linkedlines['R_Width'].values),transform=ax.transAxes )
+    ax.text( .84, .84, "L:"+str(linkedlines['R_Length'].values),transform=ax.transAxes  )
+    ax.text( .80, .80, "errors:"+str(linkedlines['R_error'].values),transform=ax.transAxes  )
+    print("errors:"+str(linkedlines['R_error']))
+    
+def checkClusterChange(df1, df2):
+    s=0
+    eqLabels=[]
+    oneTotwo=[]
+    errChange=[]
+    ndikes=0
+    for i in range(len(df1)):
+        for j in range(len(df2)):
+            if df1['Hash'].iloc[i]==df2['Hash'].iloc[j]:
+                s=s+1
+                ndikes=df1['Size'].iloc[i]+ndikes
+                eqLabels.append(df1['Hash'].iloc[i])
+                #errChange.append(df1['R_error'].iloc[i]-df2['R_error'].iloc[j])
+                
+                #eqLabels=np.append(eqLabels, [df1['Label'].iloc[i], df2['Label'].iloc[j]])
+    print(s, len(df1), len(df2), ndikes)
+    if (s==len(df1) and s==len(df2)):
+        print("These clusters are the same")
+    
+    return eqLabels #, errChange
     

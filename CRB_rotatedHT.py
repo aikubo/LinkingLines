@@ -15,10 +15,10 @@ import matplotlib.pyplot as plt
 from plotmod import plotlines, labelcolors, plotbyAngle, BA_HT
 from examineMod import examineClusters
 from jitteringHTcenter import moveHTcenter
-
+from clusterMod import scalesimple
 regular=pd.read_csv('/home/akh/myprojects/Linking-and-Clustering-Dikes/dikedata/dikeset_ptheta.csv')
 
-linked=pd.read_csv('/home/akh/myprojects/Linking-and-Clustering-Dikes/dikedata/CRBLinked0621.csv')
+CRBl=pd.read_csv('/home/akh/myprojects/Linking-and-Clustering-Dikes/dikedata/CRBLinked0621.csv')
 dikeset=rotateData2(regular, 30)
 
 theta, rho, xc, yc= AKH_HT(dikeset)
@@ -34,23 +34,44 @@ rrange=5000
 stdT=np.std(theta)
 stdRho=np.std(rho)
 d2=trange/stdT
-
-clustering=HT_AGG(dikeset,d2)
+fig,ax=plt.subplots(2,4)
+d1=2/np.std(regular['theta'])
+clustering=HT_AGG(dikeset,d1)
 dikeset['Labels']=clustering.labels_
 dikeset['p']=rho
 dikeset['theta']=theta
 lines,IC=examineClusters(dikeset)
 
-#generate a kmz
-colorsSegments=labelcolors(dikeset['Labels'])
-colorsDikes=labelcolors(lines['Label'])
-errorAnalysis(lines)
-errorAnalysis(linked)
+# ax[0,0].hist(CRBl['AvgTheta'])
+# ax[0,1].hist(CRBl['AvgRho'])
+# ax[0,2].scatter(CRBl['AvgTheta'], CRBl['AvgRho'])
 
-label=22
-plotlabel(dikeset,label)
-label=22
-plotlabel(regular,label)
+# ax[1,0].hist(lines['AvgTheta'])
+# ax[1,1].hist(lines['AvgRho'])
+
+# dist=np.sqrt( (CRBl['AvgTheta']- lines['AvgTheta'])**2 + (CRBl['AvgRho']- lines['AvgRho'])**2)
+# ax[1,2].scatter(lines['AvgTheta'], lines['AvgRho'], c=dist)
+
+# # #generate a kmz
+# colorsSegments=labelcolors(dikeset['Labels'],cm.turbo)
+# colorsDikes=labelcolors(lines['Label'],cm.turbo)
+errorAnalysis(lines, dikeset)
+errorAnalysis(CRBl, regular)
+
+#errorAnalysis(linked)
+
+#c, err=checkClusterChange(CRBl, lines)
+
+
+f,a=plt.subplots(3)
+X=scalesimple(regular['rho'], regular['theta'])
+a[0].hist(X[:,0])
+
+
+X2=scalesimple(dikeset['rho'], dikeset['theta'])
+a[2].hist(X2[:,0])
+print(np.sum(X==X2))
+
 
 #fig,ax=plotbyAngle(dikeset, lines, 20)
 

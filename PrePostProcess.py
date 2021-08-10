@@ -11,7 +11,7 @@ Contains various preprocessing data and post processing
     WKTtoArray processes from a WKT CSV to a pandas Dataframe with columns Xstart,Ystart,Xend,Yend,seg_length
     giveID gives a numeric ID to data
 """
-
+import pandas as pd
 import numpy as np 
 def writeToQGIS(df,name):
     front="LINESTRING("
@@ -59,14 +59,36 @@ def WKTtoArray(df):
 def giveID(df):
     col=[x.upper() for x in df.columns]
     
-    if "id" not in col:
+    if "ID" not in col:
         newID=np.arange(0,len(df))
     else: 
         idCol = [i for i, s in enumerate(col) if 'ID' in s]
         newID=df[df.columns[idCol][0]]
-        if np.unique(newID) < len(df):
+        if len(np.unique(newID)) < len(df):
             newID=np.arange(0,len(df))
     df['ID']=newID
     
     return df
 
+def giveHashID(df):
+    ids=[]
+    for i in range(len(df)):
+        h=pd.util.hash_pandas_object(df)
+        ids.append(hash( (h['Xstart'], h['Ystart'], h['Xend'], h['Yend'])))
+    df['HashID']=ids
+    
+    return df
+
+def segLength(df):
+    length=np.sqrt( (df['Xstart']-df['Xend'])**2 + (df['Ystart']-df['Yend'])**2)
+    df['seg_length']=length
+    return df
+
+    
+def preprocess(df):
+    col=[x.upper() for x in df.columns]
+    df=giveID(df)
+    if "SEG_LENGTH" not in col:
+        df=segLength(df)
+        
+    return df

@@ -16,17 +16,19 @@ from plotmod import plotlines, labelcolors, plotbyAngle, BA_HT, DotsHT
 from examineMod import examineClusters, plotlabel
 from PrePostProcess import *
 from fitRectangle import endpoints2
+from matplotlib import cm
+import matplotlib.colors as colors
 
-dikeset=pd.read_csv('/home/akh/myprojects/Linking-and-Clustering-Dikes/dikedata/DikeMountain_Peaks_3857WKT.csv')
-#dikeset=pd.read_csv('/home/akh/myprojects/Linking-and-Clustering-Dikes/dikedata/Peaks_3857.csv')
-dikeset=WKTtoArray(dikeset)
-dikeset=giveID(dikeset)
+# dikeset=pd.read_csv('/home/akh/myprojects/Linking-and-Clustering-Dikes/dikedata/DikeMountain_Peaks_3857WKT.csv')
+# #dikeset=pd.read_csv('/home/akh/myprojects/Linking-and-Clustering-Dikes/dikedata/Peaks_3857.csv')
+# dikeset=WKTtoArray(dikeset)
+# dikeset=giveID(dikeset)
+# 
+# dikeset['rho']=rho
+# dikeset['theta']=theta
+
+dikeset=pd.read_csv('/home/akh/myprojects/Linking-and-Clustering-Dikes/dikedata/DikeMountain_Peaks_3857.csv')
 theta, rho, xc, yc= HT(dikeset)
-dikeset['rho']=rho
-dikeset['theta']=theta
-
-dikeset.to_csv('/home/akh/myprojects/Linking-and-Clustering-Dikes/dikedata/DikeMountain_Peaks_3857.csv',index=False)
-
 trange=2 
 rrange=5000 
 
@@ -42,6 +44,48 @@ Splines,IC=examineClusters(dikeset)
 
 Splines=transformXstart(Splines)
 
-fig, ax= DotsHT(dikeset,Splines)
+#fig, ax= DotsHT(Splines, ColorBy="Xstart")
 
-Splines.to_csv('/home/akh/myprojects/Linking-and-Clustering-Dikes/dikedata/SpanishSilverLinked0621.csv')
+from findRadialCenters import sweepCenters, detectLocalPeaks
+
+err, xs, ys=sweepCenters(Splines, 1000, 3000, xc,yc)
+
+import imagepers
+
+
+
+g0=imagepers.persistence(err)
+print(g0)
+fig = plt.figure()
+ax = fig.add_subplot(111)
+ax.set_title("Peristence diagram")
+ax.plot([0,100], [0,100], '-', c='grey')
+for i, homclass in enumerate(g0):
+    p_birth, bl, pers, p_death = homclass
+    if pers <= 1.0:
+        continue
+    
+    x, y = bl, bl-pers
+    ax.plot([x], [y], '.', c='b')
+    ax.text(x, y+2, str(i+1), color='b')
+ax.set_xlabel("Birth level")
+ax.set_ylabel("Death level")
+
+im=err
+
+fig,ax=plt.subplots(1,2)
+ax[0].set_title("Loci of births")
+for i, homclass in enumerate(g0):
+    p_birth, bl, pers, p_death = homclass
+    if pers <= 20.0:
+        continue
+    y, x = p_birth
+    ax[0].plot(xs[x], ys[y], '.', c='b')
+    ax[0].text(xs[x], ys[y]+5000, str(i+1), color='b')
+    
+ax[0].pcolor(xs, ys, err, cmap=cm.Reds, shading='auto')
+ax[1].set_xlim((0,im.shape[1]))
+ax[1].set_ylim((0,im.shape[0]))
+plt.gca().invert_yaxis()
+
+#Splines.to_csv('/home/akh/myprojects/Linking-and-Clustering-Dikes/dikedata/SpanishSilverLinked0621.csv')

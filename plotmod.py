@@ -87,9 +87,9 @@ def pltRec(lines, xc, yc, a):
     for i in range(0,len(lines)):
          a.plot( [xi[i], xi[i+len(lines)]],  [yi[i], yi[i+len(lines)]], 'k.-')
 
-def labelcolors(labels):
+def labelcolors(labels, colormap):
     n=len(np.unique(labels))
-    c=cm.turbo(np.linspace(0, 1, n))
+    c=colormap(np.linspace(0, 1, n))
     colors=[]
     colorsShort=[ RGBtoHex(c[i]) for i in range(n)]
     
@@ -98,9 +98,6 @@ def labelcolors(labels):
         cval=RGBtoHex(c[cloc])
         colors.append(cval)
         
-
-
-    colors=np.array(colors)
     return colors, colorsShort
 
 def plotlines(data, col, ax, alpha=1, myProj=None, maskar=None, linewidth=1, center=False, xc=None, yc=None):
@@ -201,6 +198,8 @@ def trueDikeLength(lines, dikeset, maxL, Lstep=2000, secondbar=False, axs=None):
     
     a.text( .60,.50 ,'Segment mean:'+str(round(oldavg,0)),transform=a.transAxes)
     a.text( .60,.40, 'Segment std:'+str(round(oldstd,0)),transform=a.transAxes)
+    
+    return axs
 
 def plotbyAngle(dikeset, lines, AngleBin):
     
@@ -324,7 +323,7 @@ def BA_HT(dikeset,lines,rstep=5000):
 def HT3D(lines):
     fig = plt.figure()
     ax = fig.add_subplot(projection='3d')
-    c=ax.scatter(lines['Xstart'], lines['AvgRho'], lines['AvgTheta'] , marker='o', c=np.log(lines['Ystart']), cmap="turbo")
+    c=ax.scatter(lines['KNN2'], lines['AvgRho'], lines['AvgTheta'] , marker='o', c=np.log(lines['Ystart']), cmap="turbo")
     ax.set_xlabel('Xstart')
     ax.set_ylabel('Rho')
     ax.set_zlabel('Theta')
@@ -333,11 +332,38 @@ def HT3D(lines):
 
     return fig, ax
 
-def DotsHT(dikeset,lines):
+
+def DotsHT(lines, ColorBy="seg_length"):
     
     #plt.rcParams.update({'font.size': 50, 'font.weight': 'normal'})
     #sns.set_context("talk")
     fig,ax=plt.subplots(1,2)    #lines['StdRho'].mean()*2
+    plotlines(lines, 'k', ax[0], center=True)
+    ax[1].set_xlabel('Theta (degrees)')
+    ax[1].set_ylabel('Rho (m)')
+
+    #ax[1], h2=HThist(lines['AvgRho'], lines['AvgTheta'], rstep, tstep, weights=lines['R_Length'], ax=ax[1],rbins=rbins)
+    c2=ax[1].scatter(lines['AvgTheta'], lines['AvgRho'], c=(lines[ColorBy]), cmap=cm.turbo, edgecolor='black')
+    ax[1].set_title('HT')
+    
+    
+    #cbar=fig.colorbar(c1, ax=ax[0])
+    #cbar.set_label('Segment Length (m)')
+    
+    cbar=fig.colorbar(c2, ax=ax[1])
+    cbar.set_label(ColorBy)
+    
+    
+    plt.tight_layout()
+    
+    return fig,ax
+
+
+def DotsHT2(dikeset,lines, ColorBy="seg_length"):
+    
+    #plt.rcParams.update({'font.size': 50, 'font.weight': 'normal'})
+    #sns.set_context("talk")
+    fig,ax=plt.subplots(1,3)    #lines['StdRho'].mean()*2
             
     
     #ax[0],h1=HThist(dikeset['rho'], dikeset['theta'],rstep, tstep, weights=dikeset['seg_length'], ax=ax[0], rbins=rbins)

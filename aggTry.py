@@ -12,10 +12,11 @@ import numpy as np
 from clusterMod import *
 import matplotlib.pyplot as plt
 from plotmod import plotlines, labelcolors, plotbyAngle, BA_HT
-from examineMod import examineClusters, plotlabel, writeToQGIS
+from examineMod import examineClusters, plotlabel
 from PrePostProcess import *
 
 dikeset=pd.read_csv('/home/akh/myprojects/Linking-and-Clustering-Dikes/dikedata/dikeset_ptheta.csv')
+dikeset=giveID(dikeset)
 theta, rho, xc, yc= HT(dikeset)
 dikeset['rho']=rho
 dikeset['theta']=theta
@@ -30,11 +31,11 @@ d2=trange/stdT
 clustering=HT_AGG(dikeset,d2)
 dikeset['Labels']=clustering.labels_
 lines,IC=examineClusters(dikeset)
-dikeset.to_csv('/home/akh/myprojects/Linking-and-Clustering-Dikes/dikedata/dikeset_ptheta.csv',index=False))
+dikeset.to_csv('/home/akh/myprojects/Linking-and-Clustering-Dikes/dikedata/dikeset_ptheta.csv',index=False)
 
 #generate a kmz
-colorsSegments=labelcolors(dikeset['Labels'])
-colorsDikes=labelcolors(lines['Label'])
+#colorsSegments=labelcolors(dikeset['Labels'])
+#colorsDikes=labelcolors(lines['Label'])
 
 errorAnalysis(lines)
 
