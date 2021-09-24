@@ -15,6 +15,8 @@ from plotmod import plotlines, labelcolors, plotbyAngle, BA_HT
 from examineMod import examineClusters, plotlabel
 from PrePostProcess import *
 
+from findRadialCenters import sweepCenters, detectLocalPeaks
+'''
 dikeset=pd.read_csv('/home/akh/myprojects/Linking-and-Clustering-Dikes/dikedata/dikeset_ptheta.csv')
 dikeset=giveID(dikeset)
 theta, rho, xc, yc= HT(dikeset)
@@ -37,15 +39,49 @@ dikeset.to_csv('/home/akh/myprojects/Linking-and-Clustering-Dikes/dikedata/dikes
 #colorsSegments=labelcolors(dikeset['Labels'])
 #colorsDikes=labelcolors(lines['Label'])
 
-errorAnalysis(lines)
+#errorAnalysis(lines)
 
 #lines2= writeToQGIS(lines, "CRBLinkedQGIS.csv")
 
 # label=22
 # plotlabel(dikeset,label)
-fig, ax= DotsHT(dikeset,lines)
+#fig, ax= DotsHT(dikeset,lines)
+'''
+xc=475201.3737670694
+yc=4976341.597868606
+lines=pd.read_csv('/home/akh/myprojects/Linking-and-Clustering-Dikes/dikedata/CRBLinked0621.csv')
+#lines.to_csv('/home/akh/myprojects/Linking-and-Clustering-Dikes/dikedata/CRBLinked0621.csv')
 
-lines.to_csv('/home/akh/myprojects/Linking-and-Clustering-Dikes/dikedata/CRBLinked0621.csv')
+err, dikes,thetaRange, xs, ys=sweepCenters(lines, 5000, 5000, xc,yc)
+lines,labels,counts=detectLocalPeaks(err,dikes, lines, plot=True)
+
+
+col, colshort=labelcolors(lines["MainCatagory"], cm.turbo)
+
+fig,ax=plt.subplots()
+plotlines(lines, col, ax[0])
+
+# custom_lines = [Line2D([0], [0], color=colshort[0], lw=4),
+#         Line2D([0], [0], color=colshort[1], lw=4),
+#         Line2D([0], [0], color=colshort[2], lw=4)]
+
+
+# fig,ax=plt.subplots(1,4)
+# #plotlines(Splines, col, ax[0])
+# ax[0].legend(custom_lines, ["Linear", "SpanishPeaks", "DikeMountain"])
+
+# for i in np.unique(labels):
+#     angles=Splines[Splines['MainCatagory']==i]['AvgTheta']
+#     astd=np.std(angles)
+#     sortedAngles=np.sort(angles)
+#     AverageAngularSpacing=np.mean(np.abs(sortedAngles[0:-1]-sortedAngles[1:]))
+#     avgangle=np.mean(angles)
+#     ax[1].scatter(avgangle, astd, c=colshort[i])
+#     ax[2].scatter(astd, AverageAngularSpacing,c=colshort[i])
+#     print("Label:", i)
+#     print("Angular Spacing:", AverageAngularSpacing)
+    
+
 #TopHTSection(lines, 5000, 3)
 #fig,ax=plotbyAngle(dikeset, lines, 20)
 
