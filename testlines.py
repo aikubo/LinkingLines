@@ -6,7 +6,7 @@ Created on Tue Nov 10 13:00:55 2020
 @author: akh
 """
 import numpy as np 
-from plotmod import plotlines
+from plotmod import plotlines, DotsHT
 import pandas as pd
 from htMOD import AKH_HT as HT 
 import matplotlib.pyplot as plt
@@ -20,6 +20,7 @@ theta, r, xc, yc= HT(true, xc=0, yc=0)
 
 fig,ax=plt.subplots(2)
 plotlines(true,'r', ax[0], linewidth=3)
+DotsHT(fig, ax[1], lines, ColorBy="label")
 
 ax[1].scatter(theta,r,c='red', edgecolor="black", s=100)
 ax[1].set_ylabel('Rho (m)')

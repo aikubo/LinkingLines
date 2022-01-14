@@ -1,3 +1,4 @@
+
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
@@ -19,13 +20,17 @@ from skimage.morphology import reconstruction
 from scipy.ndimage import gaussian_filter
 
 from skimage import img_as_float
-from skimage.filters import threshold_otsu
+from skimage.filters import threshold_otsu, threshold_local
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy import ndimage as ndi
 from plotmod import plotlines
 from skimage.segmentation import watershed
 from skimage.feature import peak_local_max
+
+from skimage import feature
+
+
 
 def findLocations(err,n=2): 
     loc=np.empty((n,2))
@@ -35,7 +40,7 @@ def findLocations(err,n=2):
         
     return loc
 
-def sweepCenters(df, gridM, threshold, xc, yc):
+def sweepCenters(df, gridM, threshold, xc, yc, ThetaRangeWeight=0, plot=False, radialSpreadMinimum=5):
      
     """ 
     Generates heatmap of radial center in dike data set 
@@ -53,14 +58,21 @@ def sweepCenters(df, gridM, threshold, xc, yc):
         x coordinate of center of Hough Transform 
      yc: float 
          y coordinate of center of Hough Transform
-         
+    ThetaRangeWeight: float optional
+        weighting in thresholding as a function of the range in theta of lines 
+        intersecting with possible radial center
+    plot: boolean optional 
+        show plots of radial centers and theta range
      
      Returns 
      -------
      err : numpy.ndarray 
          array of the sum of dikes that are above the threshold for each x,y potential center 
-     dikes: numpy.ndarray
-        
+     dikes: numpy.ndarray,  dtype=np.ndarray
+     thetaRange: numpy.ndarray
+         array of min(dikes['theta'])-max(dikes['theta'])
+     thetaSTD: numpy.ndarray
+         array of np.std(dikes['theta'])
      xs : numpy.ndarray 
          array of x coordinate of radial centers
      ys : numpy.ndarray 
@@ -68,9 +80,9 @@ def sweepCenters(df, gridM, threshold, xc, yc):
          
      """
     
-    fig, ax=plt.subplots(1,2)
+    
 
-    theta=df['AvgTheta']
+    theta=df['AvgTheta'].values
 
     xs=np.arange( min( min(df['Xstart']), min(df['Xend']))-2000, max( max(df['Xstart']), max(df['Xend']))+2000, gridM)
     ys=np.arange( min( min(df['Ystart']), min(df['Yend']))-2000, max( max(df['Ystart']), max(df['Yend']))+2000,  gridM)
@@ -78,25 +90,60 @@ def sweepCenters(df, gridM, threshold, xc, yc):
     err=np.empty_like(xr)
     thetaRange=np.empty_like(xr)
     dikes = np.empty_like(xr, dtype=np.ndarray)
+    thetaSTD=np.empty_like(xr)
     print(err.shape)
     dikelabel=np.arange(0,len(df))
     for i in range(len(xs)):
         for j in range(len(ys)): 
             #print(i,j)
+            err[j,i]=0
             rhoRadial=(xs[i]-xc)*np.cos(np.deg2rad(theta))+(ys[j]-yc)*np.sin(np.deg2rad(theta))
             thresholdArray=(threshold*(np.cos(np.deg2rad(theta)) + np.sin(np.deg2rad(theta))))**2
             mask= ((df['AvgRho']-rhoRadial)**2< thresholdArray)
-            trange=np.max(theta[mask])-np.min(theta[mask])-2
-            err[j,i]=np.sum(mask) #*trange**2
-            thetaRange[j,i]=trange
-            dikes[j,i]=dikelabel[mask]
-    #plotlines(df, 'k', ax[0], center=True, alpha=0.4)
-    
-    c=ax[1].pcolor(xr, yr, err, cmap=cm.Reds, shading='auto') #,  norm=colors.PowerNorm(gamma=3))
-    c=ax[0].pcolor(xr, yr, err, cmap=cm.Reds, shading='auto')
-    plotlines(df, 'b', ax[1], center=True, alpha=0.1)
-    cbar=fig.colorbar(c, ax=ax[1])
 
+            
+            if np.sum(mask) < 5: ##less than 5 
+                thetaRange[j,i]=0
+                dikes[j,i]=np.empty([1])
+                thetaRange[j,i]=0
+                thetaSTD[j,i]=0
+                continue
+            trange=(np.max(theta[mask])-np.min(theta[mask])-2)
+            tstd=(np.std(theta[mask]))
+            thetaRange[j,i]=trange
+            thetaSTD[j,i]=tstd
+            
+            bins=np.arange(min(theta[mask]), max(theta[mask]), 10) 
+            counts=len(np.unique(np.digitize(theta[mask],bins)))
+            
+            if radialSpreadMinimum <= counts: 
+                err[j,i]=np.sum(mask)*((counts)**ThetaRangeWeight)
+                dikes[j,i]=dikelabel[mask]
+            else:
+                err[j,i]=0
+                dikes[j,i]=np.empty([1])
+                
+    
+    if plot:
+        fig, ax=plt.subplots(1,2)
+        c=ax[1].pcolor(xr, yr, err, cmap=cm.Reds, shading='auto') #,  norm=colors.PowerNorm(gamma=3))
+        c=ax[0].pcolor(xr, yr, err, cmap=cm.Reds, shading='auto')
+        plotlines(df, 'b', ax[1], center=True, alpha=0.8)
+        cbar=fig.colorbar(c, ax=ax[1])
+        cbar.set_label('Intersecting Dikes')
+        ax[1].set_xlabel("X (m)")
+        ax[0].set_ylabel("Y (m)")
+        ax[0].set_xlabel("X (m)")
+        
+    
+        # fig,ax=plt.subplots(1,2)
+        # c=ax[0].pcolor(xr,yr, thetaSTD, cmap=cm.Blues, shading='auto')
+        # c=ax[1].pcolor(xr,yr, thetaSTD, cmap=cm.Blues, shading='auto')
+        # plotlines(df, 'k', ax[1], center=True, alpha=0.6)
+        # fig.colorbar(c,ax=ax[1])
+        # ax[1].set_title("Theta STD")
+        # ax[1].set_xlim([min(xs), max(xs)])
+        # ax[1].set_ylim([min(ys), max(ys)])
     # N,M=len(xs), len(ys)
     # Z = np.zeros((N, M))
     # for i, (x,y) in enumerate(product(xs,ys)):
@@ -108,7 +155,7 @@ def sweepCenters(df, gridM, threshold, xc, yc):
     #                        linewidth=0, antialiased=False)
     # fig.colorbar(surf, shrink=0.5, aspect=5)
         
-    return err, dikes, thetaRange, xs, ys
+    return err, dikes, thetaRange, thetaSTD, xs, ys
 
 # def checkOneCenter(df, threshold, xc, yc, xr, yr):
 #     fig, ax=plt.subplots(1,2)
@@ -132,13 +179,18 @@ def sweepCenters(df, gridM, threshold, xc, yc):
 #     return err, xs, ys
 
 
-def detectLocalPeaks(err,dikes,df, plot=False):
+def detectLocalPeaks(err,dikes,df,gridM, plot=False,  maxArea=2827433388):
     """ 
     after https://scikit-image.org/docs/stable/auto_examples/color_exposure/plot_regional_maxima.html#sphx-glr-auto-examples-color-exposure-plot-regional-maxima-py
     and 
     https://scikit-image.org/docs/stable/auto_examples/applications/plot_thresholding.html#:~:text=Thresholding%20is%20used%20to%20create,Histogram%2Dbased.
     
     """
+    
+    xs=np.arange( min( min(df['Xstart']), min(df['Xend']))-2000, max( max(df['Xstart']), max(df['Xend']))+2000, gridM)
+    ys=np.arange( min( min(df['Ystart']), min(df['Yend']))-2000, max( max(df['Ystart']), max(df['Yend']))+2000,  gridM)
+    xr,yr=np.meshgrid( xs, ys)
+    
     image=img_as_float(err)
     image=gaussian_filter(image,1) # filter image
     
@@ -147,7 +199,12 @@ def detectLocalPeaks(err,dikes,df, plot=False):
     mask = image
     
     dilated = reconstruction(seed, mask, method='dilation') #dilate
+    #blocksize=101
+    
+    #if thresholdType =='otsu':
     thresh=threshold_otsu(image-dilated) #otsu (automatic threshold)
+    #else: 
+    #    thresh=threshold_local(image-dilated, blocksize)
     indicesx, indicesy=np.meshgrid( np.arange(0,err.shape[1]), np.arange(0,err.shape[0]))
     spots=image-dilated> thresh
     # Now we want to separate the two objects in image
@@ -162,20 +219,48 @@ def detectLocalPeaks(err,dikes,df, plot=False):
     
     #catagories=["Linear", "Radial1", "Radial2"]
     totalcounts=np.empty( (len(df), len(np.unique(labels))))
-    areas=np.empty(np.unique(labels))
+    areas=np.empty( len(np.unique(labels)))
+    Centers=np.empty( (len(np.unique(labels)), 2))
+    
+    #rint(np.unique(labels), np.unique(labels,return_counts=True))
     for i in np.unique(labels):
         name="Catagory"+str(i)+"Percent"
         df[name]=''
         mask=(labels==i)
+        areas[i]=np.sum(mask)*gridM**2 
+        Centers[i,:]=[np.mean(xr[mask]), np.mean(yr[mask])]
         rdikes,counts=np.unique(np.concatenate(dikes[mask]).ravel(), return_counts=True)
-        totalcounts[rdikes,i]=counts
-        areas[i]=np.sum(mask)
-
         
+        totalcounts[rdikes.astype(int),i]=counts
+        if areas[i] > maxArea & i>0: 
+            print("Warning: Label", i, "exceeded max area")
+
+
+        df['CenterX']=Centers[i,0]
+        df['CenterY']=Centers[i,1]
+        
+        
+
+
+    df["CenterX"]=''
+    df["CenterY"]=''
+    centerData=pd.DataFrame({"CenterX": Centers[:,0], "CenterY": Centers[:,1], "Area": areas})
     for i in range(len(totalcounts)):
-        j=np.argmax(totalcounts[i]/areas)
-        df["MainCatagory"].iloc[i]=j
+        icounts=(totalcounts[i]/areas)/(np.sum(totalcounts[i]/areas))
+        j=np.argmax(icounts)
+        
+        #print(i, icounts[j], j)
+        if icounts[j] > 0.60:
+            df["MainCatagory"].iloc[i]=j
+        else:
+            df["MainCatagory"].iloc[i]=0
+            j=0
+            
+        #df["MainCatagory"].iloc[i]=j
+        # print(i, df["MainCatagory"].iloc[i], j)
         #totalcounts[i]=totalcounts[i]/np.sum(totalcounts[i])
+        df["CenterX"].iloc[i]=Centers[j,0]
+        df["CenterX"].iloc[i]=Centers[j,0]
         
         for j in np.unique(labels):
             name="Catagory"+str(j)+"Percent"
@@ -187,26 +272,21 @@ def detectLocalPeaks(err,dikes,df, plot=False):
                                     figsize=(8, 2.5),
                                     sharex=True,
                                     sharey=True)
-        ax2.imshow(image - dilated, cmap='gray')
-        ax2.set_title('image - dilated')
-        ax2.axis('off')
+        ax0.imshow(image - dilated, cmap='gray')
+        ax0.set_title('image - dilated')
+        ax0.axis('off')
         plt.gca().invert_yaxis()
         fig.tight_layout()
         #fig, ax = try_all_threshold(image-dilated, figsize=(10, 8), verbose=False)
 
-        ax3.set_title('threshold- otsu')
-        ax3.imshow(spots,cmap=plt.cm.gray)
+        ax1.set_title('threshold- otsu')
+        ax1.imshow(spots,cmap=plt.cm.gray)
         plt.gca().invert_yaxis()
-        fig, axes = plt.subplots(ncols=2, figsize=(9, 3), sharex=True, sharey=True)
-        ax = axes.ravel()
-        
-        ax[0].imshow(spots, cmap=plt.cm.gray)
-        ax[0].set_title('Overlapping objects')
-        ax[1].imshow(labels, cmap=plt.cm.nipy_spectral)
-        ax[1].set_title('Separated objects')
-        
-        for a in ax:
-            a.set_axis_off()
+
+        ax2.imshow(spots, cmap=plt.cm.gray)
+        ax2.set_title('Overlapping objects')
+        ax3.imshow(labels, cmap=plt.cm.nipy_spectral)
+        ax3.set_title('Separated objects')
         
         fig.tight_layout()
         plt.gca().invert_yaxis()
@@ -226,7 +306,7 @@ def detectLocalPeaks(err,dikes,df, plot=False):
     
 
     
-    return df,labels,totalcounts
+    return df,labels,totalcounts,centerData, 
 
 
     

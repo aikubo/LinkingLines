@@ -79,7 +79,42 @@ def makeRadialSwarm(radius, doubled=True, anglestart=-90, anglestop=90, ndikes=5
     print(center)
     return Xstart, Ystart, Xend, Yend
 
-def makeLinearSwarm(length, slope, ndikes=20):
+def makeRadialSwarmdf(radius, doubled=True, anglestart=-90, anglestop=90, ndikes=50, center=[0,0]):
+    
+    #center=np.array([0,0])
+    angles=np.linspace(anglestart, anglestop, ndikes)
+    m=np.tan(np.deg2rad(angles))
+    
+    Xstart=np.zeros(ndikes)+center[0]
+    Ystart=np.zeros(ndikes)+center[1]
+    Xend=radius/np.sqrt(1+m**2)+center[0]
+    Yend=Xend*m+center[1]
+    
+    if doubled:
+        
+        Xstart=np.append(Xstart, np.zeros(ndikes)+center[0])
+        Ystart=np.append(Ystart, np.zeros(ndikes)+center[1])
+        Yend=np.append(Yend, -1*Xend*m+center[1])
+        Xend=np.append(Xend, -1*radius/np.sqrt(1+m**2)+center[0])
+        
+        
+    Xstart[abs(Xstart)<10**-6]=1
+    
+    df=pd.DataFrame({'Xstart':Xstart, 'Xend': Xend, 'Ystart': Ystart, 'Yend':Yend})
+                     
+    return df
+
+def addSwarms(dflist):
+    dfSwarm=pd.DataFrame()
+    b=0
+    for i in dflist:
+        i['label']=[b]*len(i)
+        dfSwarm=dfSwarm.append(i)
+        b=b+1
+        
+    return dfSwarm
+
+def makeLinearSwarm(length, slope,  ndikes=20):
     
     Xstart=np.linspace(-1*length,length, ndikes)
     b=np.random.rand(ndikes)*2*length
@@ -89,6 +124,47 @@ def makeLinearSwarm(length, slope, ndikes=20):
     
     
     return Xstart, Ystart, Xend, Yend
+
+# make linear dike swarms of angle and rho distributions 
+def makeLinear2(length, angle, angleSTD, rho, rhoSTD, ndikes=100, CartRange=300000):
+    angles=np.random.normal(angle, angleSTD, ndikes)
+    rhos=np.random.normal(rho, rhoSTD, ndikes)
+
+    b=rhos/np.sin(np.deg2rad(angles))
+    slopes=-1/(np.tan(np.deg2rad(angles))+0.000000001)
+    Xstart=np.random.normal(rho, rhoSTD, ndikes)
+    
+    Ystart=slopes*Xstart+b
+    Xend=Xstart-length/np.sqrt(1+slopes**2)
+    Yend=slopes*Xend+b
+
+    df=pd.DataFrame({'Xstart':Xstart, 'Xend': Xend, 'Ystart': Ystart, 'Yend':Yend})
+    
+    df=df.drop(df[ abs(df['Ystart']) > CartRange].index)
+
+    return df, angles, rhos
+
+
+
+# def makeLinearSwarmdf(length, angle, rho=0, ndikes=20, angleSTD=1, rhoSTD=10000, CartRange=300000):
+    
+    
+#     angles=np.random.normal(angle, angleSTD, ndikes)
+#     slopes=-1/np.tan(np.deg2rad(angles))
+#     Xstart= np.random.random_sample(0, rhoSTD*5,ndikes)#(3*length)*np.random.random_sample(ndikes) + 2*length#np.linspace(-1*length,length, ndikes)  
+#     b=np.random.normal(rho, rhoSTD, ndikes)*np.sin(np.deg2rad(angles))
+    
+#     Ystart=Xstart*slopes+b
+#     Xend=Xstart-length**2/(1+slopes**2)
+#     Yend=Xend*slopes+b 
+    
+#     df=pd.DataFrame({'Xstart':ystart, 'Xend':Yend 'Ystart': Xstart, 'Yend':Yend})
+    
+#     largenss= (abs(Xstart-Xend) > CartRange) | (abs(Ystart-Yend) > CartRange)
+#     #df.drop(largenss)
+                     
+#     return df
+
 
 def OverLappingSwarms(nlinear, nradial, A1,A2, slope, center):
     length=45000
@@ -172,6 +248,36 @@ def fragmentDikes(df):
                                            'Length':L
                                                }), ignore_index=True)
     return dfFrag
+# CRB 500-300km
+# min(lines['Ystart'])-max(lines['Ystart'])
+# Out[7]: -530604.0
+
+# min(lines['Xstart'])-max(lines['Xstart'])
+# Out[8]: -325692.0
+
+radius=10000
+df1=makeRadialSwarmdf(radius, doubled=False, anglestart=-90, anglestop=90, ndikes=200, center=[0,0])
+df2=makeRadialSwarmdf(radius, doubled=False, anglestart=-40, anglestop=40, ndikes=200, center=[40000,40000])
+df3=makeRadialSwarmdf(radius, doubled=False, anglestart=-20, anglestop=50, ndikes=200, center=[-100000,100000])
+df4=makeRadialSwarmdf(radius, doubled=False, anglestart=-10, anglestop=20, ndikes=200, center=[200000,-300000])
+df5=makeRadialSwarmdf(radius, doubled=False, anglestart=-10, anglestop=15, ndikes=200, center=[10000,500000])
+#df6=makeLinearSwarmdf(radius, 2, rho=500000, ndikes=1000, angleSTD=10, rhoSTD=20000)
+df6, theta1, rho1=makeLinear2(radius, 6,30, 3200, 5000, ndikes=1000)
+df=addSwarms([df1,df2,df3,df4,df5,df6])
+
+lines=df6
+fig,ax=plt.subplots(1,2)
+plotlines(df6, 'k', ax[0], center=True)
+theta, rho, xc, yc= HT(lines, yc=0, xc=0)
+lines['AvgRho']=rho
+lines['AvgTheta']=theta
+print("mean",np.mean(theta), "std", np.std(theta) )
+print("mean",np.mean(rho), "std", np.std(rho) )
+print( np.sum(np.int64(theta)==np.int64(theta1)), np.sum(np.int64(rho)==np.int64(rho1)))
+ax[1].scatter(theta,rho, c=lines['label'], cmap=cm.turbo)
+ax[0].axis('equal')
+ax[1].set_xlim([-90,90])
+df.to_csv('/home/akh/myprojects/Linking-and-Clustering-Dikes/syntheticRadial_testfindRadial_doubledFalse.csv')
 #df=OverLappingSwarms(500,500, 20, 40, 0.2, center=[0,0])
 
 #df2=OverLappingSwarms(500,500, -60, 40, 4, center=[40000,20000])
@@ -198,34 +304,34 @@ def fragmentDikes(df):
 # dfFrag.to_csv('/home/akh/myprojects/Linking-and-Clustering-Dikes/syntheticFrag_large.csv', index=False)
 # df.to_csv('/home/akh/myprojects/Linking-and-Clustering-Dikes/syntheticTrue_large.csv', index=False)
 
-rdf=OverLappingSwarms(500,500, 20, 40, 0.2, center=[0,0]) #ManyRadial(2)
-rdfFrag=fragmentDikes(rdf)
-#rdfFrag.to_csv('/home/akh/myprojects/Linking-and-Clustering-Dikes/syntheticManyRadial.csv', index=False)
-#rdf.to_csv('/home/akh/myprojects/Linking-and-Clustering-Dikes/syntheticTrue_ManyRadial.csv', index=False)
-fig, ax =plt.subplots(1,3)
-theta1,rho1, xc, yc=AKH_HT(rdf.astype(float), xc=0, yc=0)
-rdf['theta']=theta1
-rdf['rho']=rho1
+# rdf=OverLappingSwarms(500,500, 20, 40, 0.2, center=[0,0]) #ManyRadial(2)
+# rdfFrag=fragmentDikes(rdf)
+# #rdfFrag.to_csv('/home/akh/myprojects/Linking-and-Clustering-Dikes/syntheticManyRadial.csv', index=False)
+# #rdf.to_csv('/home/akh/myprojects/Linking-and-Clustering-Dikes/syntheticTrue_ManyRadial.csv', index=False)
+# fig, ax =plt.subplots(1,3)
+# theta1,rho1, xc, yc=AKH_HT(rdf.astype(float), xc=0, yc=0)
+# rdf['theta']=theta1
+# rdf['rho']=rho1
 
-plotlines(rdf, 'k', ax[0], center=True)
-theta, rho, xc, yc=AKH_HT(rdf, xc=0, yc=0)
-xr1, yr1=[0, 0]
-xr2, yr2=[5000, 5000]
-A1=np.sqrt( (xr1-xc)**2 + (yr1-yc)**2)
-A2=np.sqrt( (xr2-xc)**2 + (yr2-yc)**2)
-phi1=0#np.arctan( (yr1-yc)/(xr1-xc) )
-phi2=np.arctan( (yr2-yc)/(xr2-xc) )
-rhoRadial1=(xr1-xc)*np.cos(np.deg2rad(theta))+(yr1-yc)*np.sin(np.deg2rad(theta))#  A1*np.sin(theta-np.rad2deg(phi1))#(xr1-xc)*np.cos(theta)+(yr1-yc)*np.sin(theta)
-rhoRadial2=(xr2-xc)*np.cos(np.deg2rad(theta))+(yr2-yc)*np.sin(np.deg2rad(theta))
-#A2*np.sin(theta-np.rad2deg(phi2))#
+# plotlines(rdf, 'k', ax[0], center=True)
+# theta, rho, xc, yc=AKH_HT(rdf, xc=0, yc=0)
+# xr1, yr1=[0, 0]
+# xr2, yr2=[5000, 5000]
+# A1=np.sqrt( (xr1-xc)**2 + (yr1-yc)**2)
+# A2=np.sqrt( (xr2-xc)**2 + (yr2-yc)**2)
+# phi1=0#np.arctan( (yr1-yc)/(xr1-xc) )
+# phi2=np.arctan( (yr2-yc)/(xr2-xc) )
+# rhoRadial1=(xr1-xc)*np.cos(np.deg2rad(theta))+(yr1-yc)*np.sin(np.deg2rad(theta))#  A1*np.sin(theta-np.rad2deg(phi1))#(xr1-xc)*np.cos(theta)+(yr1-yc)*np.sin(theta)
+# rhoRadial2=(xr2-xc)*np.cos(np.deg2rad(theta))+(yr2-yc)*np.sin(np.deg2rad(theta))
+# #A2*np.sin(theta-np.rad2deg(phi2))#
 
-c1=ax[1].scatter( theta, rho, c=(rho-rhoRadial1)**2, cmap=cm.Reds, edgecolor="black")
-ax[1].plot( theta, rhoRadial1, "k")
-cbar=fig.colorbar(c1, ax=ax[1])
+# c1=ax[1].scatter( theta, rho, c=(rho-rhoRadial1)**2, cmap=cm.Reds, edgecolor="black")
+# ax[1].plot( theta, rhoRadial1, "k")
+# cbar=fig.colorbar(c1, ax=ax[1])
 
-c2=ax[2].scatter( theta, rho, c=(rho-rhoRadial2)**2, cmap=cm.Reds,edgecolor="black")
-ax[2].plot( theta, rhoRadial2, "k")
-cbar=fig.colorbar(c2, ax=ax[2])
+# c2=ax[2].scatter( theta, rho, c=(rho-rhoRadial2)**2, cmap=cm.Reds,edgecolor="black")
+# ax[2].plot( theta, rhoRadial2, "k")
+# cbar=fig.colorbar(c2, ax=ax[2])
 
 
 

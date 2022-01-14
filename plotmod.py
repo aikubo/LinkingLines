@@ -10,18 +10,19 @@ import numpy as np
 import math 
 import pandas as pd
 from scipy import * 
-
+from matplotlib import cm
 #from skimage.transform import probabilistic_hough_line as ProbHough
 #from sklearn.cluster import DBSCAN
 import matplotlib.pyplot as plt
 
 from pyproj import Proj
 from matplotlib import cm
-from matplotlib.colors import ListedColormap, LinearSegmentedColormap
+from matplotlib.colors import ListedColormap, LinearSegmentedColormap, Normalize
 import seaborn as sns
 import matplotlib.colors as mcolors
 from htMOD import HT_center
 from fitRectangle import *
+from PrePostProcess import whichForm
 
 sns.set()
 np.random.seed(5)
@@ -51,6 +52,10 @@ def RGBtoHex(vals, rgbtype=1):
 
 
 def pltRec(lines, xc, yc, a): 
+    """
+    plots the rectangle defined by the center, a, and the lines
+    """
+
     xi,yi=endpoints2(lines)
     x0=xc
     y0=xc
@@ -100,7 +105,7 @@ def labelcolors(labels, colormap):
         
     return colors, colorsShort
 
-def plotlines(data, col, ax, alpha=1, myProj=None, maskar=None, linewidth=1, center=False, xc=None, yc=None):
+def plotlines(data, col, ax, alpha=1, myProj=None, maskar=None, linewidth=1, ColorBy=None, center=False, xc=None, yc=None, extend=False):
 
     #plots the line segments contained in data[maskar]
     # in the color col 
@@ -117,7 +122,7 @@ def plotlines(data, col, ax, alpha=1, myProj=None, maskar=None, linewidth=1, cen
     #        color you want all lines to be plotted
     
     # ax    - object you want to plot on 
-    
+
     if maskar is not None:
         temp=data.loc[maskar]
         if not isinstance(col,str):
@@ -125,6 +130,14 @@ def plotlines(data, col, ax, alpha=1, myProj=None, maskar=None, linewidth=1, cen
     else :
         temp=data
     
+    if ColorBy is not None: 
+        C=data[ColorBy]
+        norm=Normalize(vmin=min(C), vmax=max(C))
+        cmap=cm.turbo
+        m = cm.ScalarMappable(norm=norm, cmap=cmap)   
+        col=m.to_rgba(C)
+        
+        
     for i in range(0,len(temp)):
         x1=temp['Xstart'].iloc[i]
         y1=temp['Ystart'].iloc[i]
@@ -146,10 +159,24 @@ def plotlines(data, col, ax, alpha=1, myProj=None, maskar=None, linewidth=1, cen
         LAT = [lat1, lat2]
         LONG = [lon1, lon2]
         
-        if isinstance(col,list):
+        if extend: 
+            m=(lat1-lat2)/(lon1-lon2)
+            b=lat1-lon1*m
+            
+            l=np.sqrt((lat1-lat2)**2+(lon1-lon2)**2)
+            LONG=[lon1-l*4, lon2+l*4]
+            LAT=np.multiply(LONG,m)+b
+        
+        #color handling 
+        
+        if ColorBy is None: 
+            if isinstance(col,list):
+                colo=col[i]
+            elif isinstance(col, str):
+                colo=col
+        else: 
             colo=col[i]
-        elif isinstance(col, str):
-            colo=col
+        
         
         ax.plot(LONG,LAT, c=colo, alpha=alpha, linewidth=linewidth)
         
@@ -157,9 +184,12 @@ def plotlines(data, col, ax, alpha=1, myProj=None, maskar=None, linewidth=1, cen
         if xc is None or yc is None:
             xc,yc=HT_center(data)
         ax.plot(xc,yc, "*r", markeredgecolor="black")
-
+        ax.axis('equal')
+    #if ColorBy is not None: 
+    #   fig.colorbar(label=ColorBy)
 
 def trueDikeLength(lines, dikeset, maxL, Lstep=2000, secondbar=False, axs=None):
+
     if axs is None:
         fig,axs=plt.subplots() #(2)
     axs.grid(False)
@@ -201,36 +231,60 @@ def trueDikeLength(lines, dikeset, maxL, Lstep=2000, secondbar=False, axs=None):
     
     return axs
 
-def plotbyAngle(dikeset, lines, AngleBin):
+def plotbyAngle(lines, AngleBin, absValue=False):
     
-    colorsSegments=labelcolors(dikeset['Labels'])
-    colorsDikes=labelcolors(lines['Label'])
+    #colorsSegments=labelcolors(dikeset['Labels'],cm.turbo)
+    #colorsDikes=labelcolors(lines['Label'],cm.turbo)
     
     bins=int(180/AngleBin)
-    fig,ax=plt.subplots(2,bins)
     start=-90 
+    if absValue:
+        lines['AvgTheta']=abs( lines['AvgTheta'])
+        bins=int(90/AngleBin)
+        start=0
     
+    if bins > 9: 
+        fig,ax=plt.subplots(2, int(bins/2))
+        fig2,ax2=plt.subplots(2, int(bins/2))
+    else:
+        fig,ax=plt.subplots(2,bins)
     
+    colors= cm.get_cmap('viridis', bins)
+    j=0
     for i in range(bins): 
         stop=start+AngleBin
-        mask1= (dikeset['theta']>start) & (dikeset['theta']<stop)
-        mask2= (lines['AvgTheta']>start) & (lines['AvgTheta']<stop)
+        #mask1= (dikeset['theta']>start) & (dikeset['theta']<stop)
+        mask= (lines['AvgTheta']>start) & (lines['AvgTheta']<stop)
         
-        ax1=ax[1][i]
-        ax1.hist(lines[mask2]['AvgRho'], bins=30)
-        
-        ax2=ax[0][i]
 
-        plotlines(lines, 'grey', ax2,alpha=0.2)
+        if start >= 0 and bins > 9:
+            
+            ax1=ax2[0][j]
+            ax22=ax2[1][j]
+            j=j+1
+        else:
+            ax1=ax[0][i]
+            ax22=ax[1][i]
+            
+        ax1.hist(lines[mask]['AvgTheta'], bins=30, color=colors(i))
+        ax1.set_title(str(start)+"-"+str(stop))
+        ax1.set_xlabel('Theta (deg)')
+       
+        ax22.hist(lines[mask]['AvgRho'],bins=30, color=colors(i))
+        ax22.set_xlabel('Rho (m)')
+        #plotlines(lines, 'grey', ax2,alpha=0.2)
         
-        plotlines(dikeset, colorsSegments, ax2, maskar=mask1)
-        plotlines(lines, colorsDikes, ax2, alpha=0.4, maskar=mask2)
+        #plotlines(dikeset, colorsSegments, ax2, maskar=mask1)
+        #plotlines(lines, colorsDikes, ax2, alpha=0.4, maskar=mask2)
         
         
         start=stop
         
     return fig, ax
 
+
+    
+    
 def HThist(rho,theta, rstep, tstep, weights=None, ax=None, rbins=None, tbins=None):
     if ax is None: 
         fig,ax=plt.subplots()
@@ -320,21 +374,38 @@ def BA_HT(dikeset,lines,rstep=5000):
     
     return fig,ax, h1, h2
 
-def HT3D(lines):
-    fig = plt.figure()
-    ax = fig.add_subplot(projection='3d')
-    c=ax.scatter(lines['KNN2'], lines['AvgRho'], lines['AvgTheta'] , marker='o', c=np.log(lines['Ystart']), cmap="turbo")
-    ax.set_xlabel('Xstart')
-    ax.set_ylabel('Rho')
-    ax.set_zlabel('Theta')
-    cbar=fig.colorbar(c)
-    cbar.set_label('YStart point (m)')
 
-    return fig, ax
-
-
-def DotsHT(lines, ColorBy="seg_length"):
+def DotsHT(fig,ax,lines, ColorBy="R_length", label=None, cmap=cm.turbo, marker='o'):
     
+    #plt.rcParams.update({'font.size': 50, 'font.weight': 'normal'})
+    #sns.set_context("talk")
+    t,r=whichForm(lines)
+    print(t,r)
+    ax.set_xlabel('Theta ($^\circ$)')
+    ax.set_ylabel('Rho (m)')
+
+    #ax[1], h2=HThist(lines['AvgRho'], lines['AvgTheta'], rstep, tstep, weights=lines['R_Length'], ax=ax[1],rbins=rbins)
+    c2=ax.scatter(lines[t], lines[r], c=(lines[ColorBy]), cmap=cmap, edgecolor='black', marker=marker)
+    ax.set_title('Hough Transform')
+    
+    
+    #cbar=fig.colorbar(c1, ax=ax[0])
+    #cbar.set_label('Segment Length (m)')
+    
+    cbar=fig.colorbar(c2, ax=ax)
+    if label is None: 
+        cbar.set_label(ColorBy)
+    else: 
+        cbar.set_label(label)
+    
+    
+    plt.tight_layout()
+    
+    return fig,ax
+
+
+def DotsLinesHT(lines, ColorBy="seg_length",cmap=cm.turbo):
+    t
     #plt.rcParams.update({'font.size': 50, 'font.weight': 'normal'})
     #sns.set_context("talk")
     fig,ax=plt.subplots(1,2)    #lines['StdRho'].mean()*2
@@ -343,7 +414,7 @@ def DotsHT(lines, ColorBy="seg_length"):
     ax[1].set_ylabel('Rho (m)')
 
     #ax[1], h2=HThist(lines['AvgRho'], lines['AvgTheta'], rstep, tstep, weights=lines['R_Length'], ax=ax[1],rbins=rbins)
-    c2=ax[1].scatter(lines['AvgTheta'], lines['AvgRho'], c=(lines[ColorBy]), cmap=cm.turbo, edgecolor='black')
+    c2=ax[1].scatter(lines['AvgTheta'], lines['AvgRho'], c=(lines[ColorBy]), cmap=cmap, edgecolor='black')
     ax[1].set_title('HT')
     
     
@@ -420,3 +491,30 @@ def BA_Density(dikeset,lines):
     h1=densityPlot(dikeset, ax=a[0], fig=fig)
     h1=densityPlot(lines,ax=a[1], fig=fig)
     
+def HT3D(X,Y,Z, C):
+    
+    sns.set(rc={'axes.facecolor':'white', 'figure.facecolor':'white'})
+    fig = plt.figure(facecolor='w')
+    ax = fig.add_subplot(111, projection='3d')
+    
+    norm=Normalize(vmin=min(C), vmax=max(C))
+    cmap=cm.turbo
+    m = cm.ScalarMappable(norm=norm, cmap=cmap)   
+    c=m.to_rgba(C)
+    
+    ax.scatter(X,Y/1000,Z/1000, c=c, cmap=cm.turbo, edgecolor=c, alpha=0.3)
+    ax.set_xlabel("\nTheta ($^\circ$)")
+    ax.set_ylabel("\nRho (km)")
+    ax.set_zlabel("\nPerp to Mid (km)", linespacing=3.1)
+    plt.tight_layout()
+    return fig, ax
+    
+def rotateHT3D(fig,ax,name):
+    i=0
+    for angle in range(0, 180, 10):
+        ax.view_init(30, angle)
+        plt.draw()
+        #plt.pause(.001)
+        
+        fig.savefig(name+str(i)+".png",dpi=300)
+        i=i+1
