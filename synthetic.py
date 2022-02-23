@@ -106,12 +106,11 @@ def makeRadialSwarmdf(radius, doubled=True, anglestart=-90, anglestop=90, ndikes
 
 def addSwarms(dflist):
     dfSwarm=pd.DataFrame()
-    b=0
-    for i in dflist:
-        i['label']=[b]*len(i)
+    
+    for i, b in zip(dflist, range(len(dflist))):
+        i['Label']=[b]*len(i)
         dfSwarm=dfSwarm.append(i)
-        b=b+1
-        
+
     return dfSwarm
 
 def makeLinearSwarm(length, slope,  ndikes=20):
@@ -138,12 +137,11 @@ def makeLinear2(length, angle, angleSTD, rho, rhoSTD, ndikes=100, CartRange=3000
     Xend=Xstart-length/np.sqrt(1+slopes**2)
     Yend=slopes*Xend+b
 
-    df=pd.DataFrame({'Xstart':Xstart, 'Xend': Xend, 'Ystart': Ystart, 'Yend':Yend})
+    df=pd.DataFrame({'Xstart':Xstart, 'Xend': Xend, 'Ystart': Ystart, 'Yend':Yend, 'theta':angles, 'rho':rhos})
     
     df=df.drop(df[ abs(df['Ystart']) > CartRange].index)
 
-    return df, angles, rhos
-
+    return df
 
 
 # def makeLinearSwarmdf(length, angle, rho=0, ndikes=20, angleSTD=1, rhoSTD=10000, CartRange=300000):
@@ -224,15 +222,71 @@ def ManyRadial(nradial):
     return df
 
     
+def RandomDikes(n, CartRange=100000):
+
+    Xstart=np.random.uniform(-1*CartRange,CartRange,n)
+    Ystart=np.random.uniform(-1*CartRange,CartRange,n)
+    Xend=np.random.uniform(-1*CartRange,CartRange,n)
+    Yend=np.random.uniform(-1*CartRange,CartRange,n)
+
+    angles=np.arctan2(Yend-Ystart, Xend-Xstart)
+   
+
+
+    df=pd.DataFrame({'Xstart':Xstart, 'Xend': Xend, 'Ystart': Ystart, 'Yend':Yend})
+    
+    df=df.drop(df[ abs(df['Ystart']) > CartRange].index)
+    return df
+
+def standardSpacing(ndikes, angle, RhoStart, RhoSpacing, CartRange=100000 ):
+    angles=np.ones(ndikes)*angle #np.random.normal(angle, angleSTD, ndikes)
+    RhoEnd=RhoStart+ndikes*RhoSpacing
+    rhos= np.arange(RhoStart,RhoEnd, RhoSpacing)
+    length=3*RhoSpacing
+    b=rhos/np.sin(np.deg2rad(angles))
+    slopes=-1/(np.tan(np.deg2rad(angles))+0.000000001)
+    Xstart=RhoStart #np.random.normal(rho, rhoSTD, ndikes)
+    
+    Ystart=slopes*Xstart+b
+    Xend=Xstart-length/np.sqrt(1+slopes**2)
+    Yend=slopes*Xend+b
+
+    df=pd.DataFrame({'Xstart':Xstart, 'Xend': Xend, 'Ystart': Ystart, 'Yend':Yend, 'theta':angles, 'rho':rhos, 'Label': np.ones(ndikes)})
+    
+    df=df.drop(df[ abs(df['Ystart']) > CartRange].index)
+    
+    return df 
+
+def EnEchelonSynthetic(ndikes, angle, RhoStart, RhoSpacing, Overlap=0, CartRange=100000 ):
+    angles=np.ones(ndikes)*angle #np.random.normal(angle, angleSTD, ndikes)
+    RhoEnd=RhoStart+ndikes*RhoSpacing
+    rhos= np.arange(RhoStart,RhoEnd, RhoSpacing)
+    length=3*RhoSpacing
+    b=rhos/np.sin(np.deg2rad(angles))
+    slopes=-1/(np.tan(np.deg2rad(angles))+0.000000001)
+    #
+    Xstart=np.linspace(RhoStart,RhoEnd,ndikes) #np.random.normal(rho, rhoSTD, ndikes)
+    
+    Ystart=slopes*Xstart+b
+    Xend=Xstart-length/np.sqrt(1+slopes**2)
+    Yend=slopes*Xend+b
+
+    df=pd.DataFrame({'Xstart':Xstart, 'Xend': Xend, 'Ystart': Ystart, 'Yend':Yend, 'theta':angles, 'rho':rhos, 'Label': np.ones(ndikes)})
+    
+    df=df.drop(df[ abs(df['Ystart']) > CartRange].index)
+    
+    return df 
+
+
 
 def fragmentDikes(df):
-    m=(df['Ystart']-df['Yend'])/(df['Xstart']-df['Xend'])
+    m=(df['Ystart'].values-df['Yend'].values)/(df['Xstart'].values-df['Xend'].values)
     df['Slope']=m
-    bint=df['Ystart']-m*df['Xstart']
+    bint=df['Ystart'].values-m*df['Xstart'].values
     dfFrag=pd.DataFrame()
     print(len(m), len(bint))
     for i in range(len(df)):
-        nSegments=np.random.randint(2,7)
+        nSegments=5 #np.random.randint(2,7)
         high=max(df['Xend'].iloc[i], df['Xstart'].iloc[i])
         low=min(df['Xend'].iloc[i], df['Xstart'].iloc[i])
         xrange1=np.random.randint(low,high, size=nSegments)
@@ -245,9 +299,12 @@ def fragmentDikes(df):
 
         dfFrag=dfFrag.append(pd.DataFrame({'Xstart':xrange1, 'Xend': xrange2, 
                                            'Ystart': yrange1, 'Yend':yrange2,
-                                           'Length':L
+                                           'seg_length':L, 'Label': np.ones(nSegments)*i, 
+                                           'Original Label':np.ones(nSegments)*df['Label'].iloc[i]
                                                }), ignore_index=True)
     return dfFrag
+
+
 # CRB 500-300km
 # min(lines['Ystart'])-max(lines['Ystart'])
 # Out[7]: -530604.0
@@ -255,29 +312,29 @@ def fragmentDikes(df):
 # min(lines['Xstart'])-max(lines['Xstart'])
 # Out[8]: -325692.0
 
-radius=10000
-df1=makeRadialSwarmdf(radius, doubled=False, anglestart=-90, anglestop=90, ndikes=200, center=[0,0])
-df2=makeRadialSwarmdf(radius, doubled=False, anglestart=-40, anglestop=40, ndikes=200, center=[40000,40000])
-df3=makeRadialSwarmdf(radius, doubled=False, anglestart=-20, anglestop=50, ndikes=200, center=[-100000,100000])
-df4=makeRadialSwarmdf(radius, doubled=False, anglestart=-10, anglestop=20, ndikes=200, center=[200000,-300000])
-df5=makeRadialSwarmdf(radius, doubled=False, anglestart=-10, anglestop=15, ndikes=200, center=[10000,500000])
-#df6=makeLinearSwarmdf(radius, 2, rho=500000, ndikes=1000, angleSTD=10, rhoSTD=20000)
-df6, theta1, rho1=makeLinear2(radius, 6,30, 3200, 5000, ndikes=1000)
-df=addSwarms([df1,df2,df3,df4,df5,df6])
+# radius=10000
+# df1=makeRadialSwarmdf(radius, doubled=False, anglestart=-90, anglestop=90, ndikes=200, center=[0,0])
+# df2=makeRadialSwarmdf(radius, doubled=False, anglestart=-40, anglestop=40, ndikes=200, center=[40000,40000])
+# df3=makeRadialSwarmdf(radius, doubled=False, anglestart=-20, anglestop=50, ndikes=200, center=[-100000,100000])
+# df4=makeRadialSwarmdf(radius, doubled=False, anglestart=-10, anglestop=20, ndikes=200, center=[200000,-300000])
+# df5=makeRadialSwarmdf(radius, doubled=False, anglestart=-10, anglestop=15, ndikes=200, center=[10000,500000])
+# #df6=makeLinearSwarmdf(radius, 2, rho=500000, ndikes=1000, angleSTD=10, rhoSTD=20000)
+# df6, theta1, rho1=makeLinear2(radius, 6,30, 3200, 5000, ndikes=1000)
+# df=addSwarms([df1,df2,df3,df4,df5,df6])
 
-lines=df6
-fig,ax=plt.subplots(1,2)
-plotlines(df6, 'k', ax[0], center=True)
-theta, rho, xc, yc= HT(lines, yc=0, xc=0)
-lines['AvgRho']=rho
-lines['AvgTheta']=theta
-print("mean",np.mean(theta), "std", np.std(theta) )
-print("mean",np.mean(rho), "std", np.std(rho) )
-print( np.sum(np.int64(theta)==np.int64(theta1)), np.sum(np.int64(rho)==np.int64(rho1)))
-ax[1].scatter(theta,rho, c=lines['label'], cmap=cm.turbo)
-ax[0].axis('equal')
-ax[1].set_xlim([-90,90])
-df.to_csv('/home/akh/myprojects/Linking-and-Clustering-Dikes/syntheticRadial_testfindRadial_doubledFalse.csv')
+# lines=df6
+# fig,ax=plt.subplots(1,2)
+# plotlines(df6, 'k', ax[0], center=True)
+# theta, rho, xc, yc= HT(lines, yc=0, xc=0)
+# lines['AvgRho']=rho
+# lines['AvgTheta']=theta
+# print("mean",np.mean(theta), "std", np.std(theta) )
+# print("mean",np.mean(rho), "std", np.std(rho) )
+# print( np.sum(np.int64(theta)==np.int64(theta1)), np.sum(np.int64(rho)==np.int64(rho1)))
+# ax[1].scatter(theta,rho, c=lines['label'], cmap=cm.turbo)
+# ax[0].axis('equal')
+# ax[1].set_xlim([-90,90])
+# df.to_csv('/home/akh/myprojects/Linking-and-Clustering-Dikes/syntheticRadial_testfindRadial_doubledFalse.csv')
 #df=OverLappingSwarms(500,500, 20, 40, 0.2, center=[0,0])
 
 #df2=OverLappingSwarms(500,500, -60, 40, 4, center=[40000,20000])

@@ -27,6 +27,8 @@ from PrePostProcess import whichForm
 sns.set()
 np.random.seed(5)
 
+
+
 def RGBtoHex(vals, rgbtype=1):
   """Converts RGB values in a variety of formats to Hex values.
 
@@ -385,7 +387,7 @@ def DotsHT(fig,ax,lines, ColorBy="R_length", label=None, cmap=cm.turbo, marker='
     ax.set_ylabel('Rho (m)')
 
     #ax[1], h2=HThist(lines['AvgRho'], lines['AvgTheta'], rstep, tstep, weights=lines['R_Length'], ax=ax[1],rbins=rbins)
-    c2=ax.scatter(lines[t], lines[r], c=(lines[ColorBy]), cmap=cmap, edgecolor='black', marker=marker)
+    c2=ax.scatter(lines[t], lines[r], c=(lines[ColorBy]), cmap=cmap, edgecolor='black', marker=marker, alpha=0.6)
     ax.set_title('Hough Transform')
     
     
@@ -398,7 +400,7 @@ def DotsHT(fig,ax,lines, ColorBy="R_length", label=None, cmap=cm.turbo, marker='
     else: 
         cbar.set_label(label)
     
-    
+    ax.set_xlim([-90,90])
     plt.tight_layout()
     
     return fig,ax
@@ -518,3 +520,31 @@ def rotateHT3D(fig,ax,name):
         
         fig.savefig(name+str(i)+".png",dpi=300)
         i=i+1
+
+
+#plot results of linking algorithm
+def plotResults(data):
+    
+    fig,ax=plt.subplots(1,5)
+    
+    
+    #plot lines
+    plotlines(data, 'k', ax[0], alpha=1, ColorBy='AvgTheta')
+    
+    ax[0].axis('equal')
+
+    #plot histogram of length 
+    ax[1].hist(data['R_Length']/1000, bins=np.arange(1, 200, 5))
+    ax[1].set_xlabel('Dike Length (km)')
+
+    #plot histogram of width
+    ax[2].hist(data['R_Width'], bins=np.arange(100, 2000, 200))
+    ax[2].set_xlabel('Width (m)')
+
+    #plot histogram of AvgTheta 
+    ax[3].hist(data['AvgTheta'], bins=np.arange(-90,90, 5))
+    ax[3].set_xlabel('Theta $^\circ$')
+
+    #plot histogram of AvgRho
+    ax[4].hist(data['AvgRho']/1000, bins=np.arange(min(data['AvgRho'])/1000, max(data['AvgRho'])/1000, 20))
+    ax[4].set_xlabel('Rho (km)')

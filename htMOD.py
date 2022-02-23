@@ -8,6 +8,7 @@ Created on Thu Apr  1 12:49:07 2021
 import pandas as pd 
 import numpy as np
 import matplotlib.pyplot as plt
+from PrePostProcess import midPoint
 
 def AKH_HT(data, xc=None, yc=None):
     """
@@ -178,25 +179,6 @@ def gridSearch(df,dc):
             t=t+1
             
 
-def midPoint(df):
-    """
-    Finds the midpoint of a dataframe of line segments.
-    
-    Parameters
-    ----------
-    df: pandas.Dataframe 
-        dataframe of the line segments
-        must contain ["Xstart", "Ystart", "Xend", "Yend"]
-
-    Returns
-    -------
-    df: pandas.Dataframe
-    with new columns of ['Xmid', 'Ymid']
-    """
-    df['Xmid']=(df['Xstart']+df['Xend'])/2
-    df['Ymid']=(df['Ystart']+df['Yend'])/2
-    
-    return df
 
 
 def MidtoPerpDistance(df, xc, yc):

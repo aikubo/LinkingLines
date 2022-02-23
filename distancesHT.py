@@ -173,11 +173,12 @@ def CyclicEuclidean(u,v):
     dtheta=min( (u[0]-v[0])%180, (v[0]-u[0])%180)
     return np.sqrt( (u[1]-v[1])**2 + dtheta**2)
 
-dikes = pd.read_csv('/home/akh/myprojects/Linking-and-Clustering-Dikes/dikedata/test.csv')
+dikes = pd.read_csv('/home/akh/myprojects/Linking-and-Clustering-Dikes/dikedata/test_simple.csv')
 dikes=segLength(dikes)
 dikes=giveHashID(dikes)
 theta, rho, xc, yc= HT(dikes, xc=0, yc=0)
-rho=rho*10000
+rho=rho*1000
+
 dikes['theta']=theta
 dikes['rho']=rho
 dikes= MidtoPerpDistance(dikes, xc, yc)
@@ -195,7 +196,15 @@ ax[0].axis('equal')
 # # fullTree(cluster)
 # dist1=squareform(pdist(X2D, metric='euclidean'))
 
-dist2=squareform(pdist(X2D, CyclicEuclidean))
+from clusterMod import CyclicEuclideanScaled
+dtheta=2 
+drho=10
+
+
+metric= lambda u, v: CyclicEuclideanScaled(u,v, dtheta,drho)
+
+dist2=squareform(pdist(X2D, metric))
+from scipy.cluster import hierarchy
 
 # dist25=squareform(pdist(X2D, DistortionDistance2))
 #dist2[dist2>1000]=1000
@@ -212,23 +221,74 @@ Z1=plotDendro(dist2, dikes['label'].values, 'CyclicEuclidean')
 # #Z1=plotDendro(dist3, dikes['label'].values, 'Polar Distance')
 
 # #Z1=plotDendro(dist25, dikes['label'].values, 'Distortion Distance 2')
+from collections import defaultdict
+cluster_idxs=defaultdict(list)
+for c, pi in zip(Z1['color_list'], Z1['leaves']):
+    # print(c,pi)
+    # for leg in pi[1:3]:
+    #     print(leg)
+    #     i = (leg - 5.0) / 10.0
+    #     if abs(i - int(i)) < 1e-5:
+    cluster_idxs[c].append(int(pi))
 
-from clusterMod import HT_AGG_custom
-
-dikes2,clusters=HT_AGG_custom(dikes,10, CyclicEuclidean)
 
 
 
-lines, IC=examineClusters(dikes2)
-dikes['Labels']=dikes['label']
-linesTrue, ic2=examineClusters(dikes)
+dcoord=np.array(Z1['dcoord'])
+icoord=np.array(Z1['icoord'])
+c=Z1['color_list']
+idx=Z1['leaves']
+
+Z2=plotDendro(dist2, theta, 'CyclicEuclidean')
+
+a1=(np.max(icoord)+np.max(dcoord))/2
+a0=(np.min(icoord)+np.min(dcoord))/2
+
+#dcoord=(dcoord-a0)/(a1-a0)
+#icoord=(icoord-a0)/(a1-a0)
+x=np.max(dcoord)
 fig,ax=plt.subplots(2)
-plotlines(lines, 'k', ax[0])
-DotsHT(fig, ax[1], lines, ColorBy="Linked", cmap=cm.viridis, marker="+")
-ax[0].axis('equal')
+ax[0].plot([1,1], [x,x], 'k-', linewidth=10)
+p=np.append(dcoord[:,1]-dcoord[:,0], dcoord[:,2]-dcoord[:,3])
+birth=np.array([ dcoord[:,0], dcoord[:,3]])+1
+death=np.array([ dcoord[:,1], dcoord[:,2]])+1
+
+ax[0].plot(birth, death, "*")
+
+ax[0].set_yscale('log')
+ax[0].set_xscale('log')
+ax[0].plot([1,x], [1,x], 'k-', linewidth=4)
+
+ax[1].hist(np.log(p+1), bins=5, color='r')
+# for ys, color in zip(dcoord, c):
+#     #ax[0].plot(xs, ys, color)
+    
+#     birth=np.array([ys[0]+1, ys[3]+1])
+#     death=np.array([ys[1]+1, ys[2]+1])
+#     ax[0].plot(birth,death, "*", color=color)
+#     p=np.append(birth-death)
+ax[0].set_yscale('log')
 
 
-checkClusterChange(linesTrue, lines)
+""" clustering """
+# from clusterMod import HT_AGG_custom
+
+# dikes2,clusters=HT_AGG_custom(dikes,5000, CyclicEuclidean)
+
+
+
+# lines, IC=examineClusters(dikes2)
+# dikes['Labels']=dikes['label']
+# linesTrue, ic2=examineClusters(dikes)
+# # fig,ax=plt.subplots(2)
+# # plotlines(lines, 'k', ax[0])
+# # DotsHT(fig, ax[1], lines, ColorBy="Linked", cmap=cm.viridis, marker="+")
+# # ax[0].axis('equal')
+
+
+# checkClusterChange(linesTrue, lines)
+
+
 
 """ makes graphs of rho vs dtheta and distance contours """
 # x,y=np.meshgrid( np.linspace(0,300000), np.linspace(0,300000))

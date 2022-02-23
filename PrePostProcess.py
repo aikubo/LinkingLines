@@ -13,6 +13,28 @@ Contains various preprocessing data and post processing
 """
 import pandas as pd
 import numpy as np 
+
+def midPoint(df):
+    """
+    Finds the midpoint of a dataframe of line segments.
+    
+    Parameters
+    ----------
+    df: pandas.Dataframe 
+        dataframe of the line segments
+        must contain ["Xstart", "Ystart", "Xend", "Yend"]
+
+    Returns
+    -------
+    df: pandas.Dataframe
+    with new columns of ['Xmid', 'Ymid']
+    """
+    df['Xmid']=(df['Xstart']+df['Xend'])/2
+    df['Ymid']=(df['Ystart']+df['Yend'])/2
+    
+    return df
+
+
 def writeToQGIS(df,name, myProj=None):
     """
     
@@ -71,8 +93,7 @@ def writeToQGISLong(df,name, myProj=None):
     
     return df
 
-
-def WKTtoArray(df):
+def WKTtoArray(df, interp=True):
 
     '''
     Processes a dataframe with columns Xstart,Ystart,Xend,Yend,seg_length to a pandas dataframe with columns Xstart,Ystart,Xend,Yend,seg_length
@@ -82,47 +103,133 @@ def WKTtoArray(df):
     Output:
         df: a pandas dataframe with columns Xstart,Ystart,Xend,Yend,seg_length
     '''
+    import matplotlib.pyplot as plt
     import re
+    from scipy import stats
+            
     xstart=[]
     ystart=[]
     
     xend=[]
     yend=[]
     drop=[]
+    fig,ax=plt.subplots()
     for i in range(len(df)):
         temp=df["WKT"].iloc[i]
-        temp=re.split(r'[,\s]+', temp[20:-2])
-        if len(temp) < 4 :
+        temp=re.split(r'[(|)]', temp)
+        t1=temp[0]
+        temp=re.split(r'[,\s]+', temp[2])
+        
+        if "Z" in t1:
+            tempx=np.array(temp[::3]).astype(float)
+            tempy=np.array(temp[1::3]).astype(float)
+        else:
+            tempx=np.array(temp[::2]).astype(float)
+            tempy=np.array(temp[1::2]).astype(float)
+               
+        # #print(tempx, tempy)
+        # if interp: 
+        #     xvals=np.linspace(min(tempx), max(tempx), 50)
+        #     yvals=np.interp(xvals, tempx, tempy)
+            
+        #     tempx=xvals
+        #     tempy=yvals
+
+        
+        slope, intercept, r_value, p_value, std_err = stats.linregress(tempx, tempy)
+        #for x,y in zip(tempx, tempy):
+        if p_value > 0.05 and len(tempx)>3: 
+            ax.plot(tempx, tempy)
             drop.append(i)
             continue
         
-       
-        if len(temp)%3 == 0 and '0' in temp: 
-            xstart.append(float(temp[0]))
-            ystart.append(float(temp[1]))
-            xend.append(float(temp[-3]))
-            yend.append(float(temp[-2]))
-        else: 
-            xstart.append(float(temp[0]))
-            ystart.append(float(temp[1]))
-            xend.append(float(temp[-2]))
-            yend.append(float(temp[-1]))
-        #print(temp)
-            
-            
-    length=np.sqrt((np.array(xstart)-np.array(xend))**2+(np.array(ystart)-np.array(yend))**2)
-    
-    if len(drop) >= 0:
-        df=df.drop(drop)
+        
+        x=np.array( [ min(tempx), max(tempx)])
+        y=x*slope+intercept
+        xstart.append(x[0])
+        ystart.append(y[0])
+        xend.append(x[1])
+        yend.append(y[1])
+        #ax.plot(x, x*slope+intercept, '*-' )
+        
 
-    print(len(df), len(xstart))
+
+    length=np.sqrt((np.array(xstart)-np.array(xend))**2+(np.array(ystart)-np.array(yend))**2)
+    if len(drop) >= 0:
+         df=df.drop(drop)
+
+    #print(len(df), len(xstart))
     df['Xstart']=xstart
     df['Ystart']=ystart
     df['Xend']=xend
     df['Yend']=yend
     df['seg_length']=length
+    print( len(drop), "dropped for not being straight")
     
+    ax.axis('equal')
     return df
+        
+# def WKTtoArray(df):
+
+#     '''
+#     Processes a dataframe with columns Xstart,Ystart,Xend,Yend,seg_length to a pandas dataframe with columns Xstart,Ystart,Xend,Yend,seg_length
+
+#     Input:
+#         df: a pandas dataframe with a Linestring column containing WKT strings
+#     Output:
+#         df: a pandas dataframe with columns Xstart,Ystart,Xend,Yend,seg_length
+#     '''
+#     import re
+#     xstart=[]
+#     ystart=[]
+    
+#     xend=[]
+#     yend=[]
+#     drop=[]
+#     for i in range(len(df)):
+#         temp=df["WKT"].iloc[i]
+#         temp=re.split(r'[(|)]', temp)[2]
+#         temp=re.split(r'[,\s]+', temp)
+        
+#         if len(temp) < 4 :
+#             drop.append(i)
+#             continue
+        
+#         tempx=np.array(temp[::2]).astype(float)
+#         tempy=np.array(temp[1::2]).astype(float)
+        
+        
+#         from scipy import stats
+#         slope, intercept, r_value, p_value, std_err = stats.linregress(tempx, tempy)
+#         #for x,y in zip(tempx, tempy):
+#         #    m= 
+       
+#         if len(temp)%3 == 0 and '0' in temp: 
+#             xstart.append(float(temp[0]))
+#             ystart.append(float(temp[1]))
+#             xend.append(float(temp[-3]))
+#             yend.append(float(temp[-2]))
+#         else: 
+#             xstart.append(float(temp[0]))
+#             ystart.append(float(temp[1]))
+#             xend.append(float(temp[-2]))
+#             yend.append(float(temp[-1]))
+#         #print(temp)
+            
+            
+#     length=np.sqrt((np.array(xstart)-np.array(xend))**2+(np.array(ystart)-np.array(yend))**2)
+    
+#     if len(drop) >= 0:
+#         df=df.drop(drop)
+
+#     print(len(df), len(xstart))
+#     df['Xstart']=xstart
+#     df['Ystart']=ystart
+#     df['Xend']=xend
+#     df['Yend']=yend
+#     df['seg_length']=length
+    
+#     return df
 
 def giveID(df):
     """
@@ -173,6 +280,20 @@ def preprocess(df):
         df=segLength(df)
         
     return df
+
+def completePreProcess(df):
+    
+    if 'Xstart' not in df.columns:
+        df=WKTtoArray(df)
+
+    if 'seg_length' not in df.columns:        
+        df=segLength(df)
+    if 'HashID' not in df.columns: 
+        df=giveHashID(df)
+    if 'Xmid' not in df.columns: 
+        df=midPoint(df)
+    
+    return df 
 
 def whichForm(lines):
     '''

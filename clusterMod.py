@@ -15,10 +15,13 @@ import numpy as np
 import pandas as pd
 from scipy.cluster.hierarchy import dendrogram
 from htMOD import *
-from examineMod import *
+#from examineMod import *
 from sklearn.decomposition import PCA
 from sklearn.metrics.pairwise import pairwise_distances
 from PrePostProcess import whichForm
+from scipy.spatial.distance import pdist, squareform
+import scipy.cluster.hierarchy as sch
+import matplotlib.pyplot as plt
 
 def CylDistanceAngleModified(u, v):
     '''
@@ -97,7 +100,28 @@ def DistortionDistance2(u,v):
     
     return abs((1+dtheta)*(max(d1,d2)/min(d1,d2)))
 
+def CyclicEuclidean(u, v):
+    u[0] = u[0]+90
+    v[0] = v[0]+90
+    dtheta = min((u[0]-v[0]) % 180, (v[0]-u[0]) % 180)
+    return np.sqrt((u[1]-v[1])**2 + dtheta**2)
+    
 
+
+def CyclicEuclideanScaled(u, v, thetat, rhot):
+
+    dtheta = min(( (u[0]+90)-(v[0]+90)) % 180, ( (v[0]+90)-(u[0]+90)) % 180)
+    return np.sqrt( ((u[1]-v[1])/rhot)**2 + (dtheta/thetat)**2)
+
+
+def CyclicAngleDist(u,v):
+    u[0]=u[0]+90
+    v[0]=v[0]+90
+    return min( (u[0]-v[0])%180, (v[0]-u[0])%180)
+
+def RhoDist(u,v):
+    return abs(u[1]-v[1])
+    
 def plotDendro(dist1, labels, title):
 
     #https://stackoverflow.com/questions/2982929/plotting-results-of-hierarchical-clustering-ontop-of-a-matrix-of-data-in-python    
@@ -247,7 +271,53 @@ def HT_AGG(dikeset,d):
     
     return clusters
 
-def HT_AGG_custom(dikeset,threshold, metric, dimensions=2, linkage='average'):
+def HT_AGG_custom(dikeset,dtheta, drho, metric=CyclicEuclideanScaled, dimensions=2, linkage='average'):
+    '''
+    Agglomerative clustering with custom metric on Hough transform data
+
+    Input:
+        dikeset: dataframe with Hough transform data
+        metric: metric to use for clustering
+        dimensions (optional): number of dimensions to use for clustering
+        linkage (optional) : 
+    Output: 
+        dikeset: dataframe with cluster labels
+        clusters: fitted AgglomeratieClustering object 
+
+    '''
+    t,r=whichForm(dikeset)
+
+    #scale m unit values
+    dikeset['ScaledRho']=dikeset[r].values # - dikeset[r].mean()
+    dikeset['ScaledPerpOffsetDist']=dikeset['PerpOffsetDist'].values-dikeset['PerpOffsetDist'].mean()
+    # create X vector with theta and rho and midist
+    if dimensions == 2:
+        X=(np.vstack((dikeset[t], dikeset['ScaledRho'])).T)
+    elif dimensions == 3:
+        X=(np.vstack((dikeset[t], dikeset['ScaledRho'], dikeset['ScaledPerpOffsetDist'])).T)
+
+    threshold=1
+    
+ 
+    #if metric == CyclicEuclideanScaled: 
+    metric= lambda u, v: CyclicEuclideanScaled(u,v, dtheta,drho)
+        
+    # Create a new AGG instance with the specified metric and dimensions
+    
+    # I have no idea why but using sklearn pairwise_distances changes 
+    # the imput X value
+    M= squareform(pdist(X, metric))
+    #Mpdist()
+   
+
+    # fit the data to the AGG model
+    ag = AGG(n_clusters=None, affinity='precomputed', distance_threshold=threshold, linkage=linkage)
+    clusters=ag.fit(M)
+    dikeset['Labels']=clusters.labels_
+    
+    return dikeset, clusters, M
+
+def HT_AGG_custom2(dikeset,dtheta, drho, metric=CyclicEuclideanScaled, dimensions=2, linkage='complete'):
     '''
     Agglomerative clustering with custom metric on Hough transform data
 
@@ -272,16 +342,24 @@ def HT_AGG_custom(dikeset,threshold, metric, dimensions=2, linkage='average'):
     elif dimensions == 3:
         X=(np.vstack((dikeset[t], dikeset['ScaledRho'], dikeset['ScaledPerpOffsetDist'])).T)
 
-
-    # Create a new AGG instance with the specified metric and dimensions
-    M= pairwise_distances(X, metric=metric)
-
-    # fit the data to the AGG model
-    ag = AGG(n_clusters=None, affinity='precomputed', distance_threshold=threshold, linkage=linkage)
-    clusters=ag.fit(M)
-    dikeset['Labels']=clusters.labels_
+    threshold=1
     
-    return dikeset, clusters
+ 
+    #if metric == CyclicEuclideanScaled: 
+    metric= lambda u, v: CyclicEuclideanScaled(u,v, dtheta,drho)
+        
+    # Create a new AGG instance with the specified metric and dimensions
+    
+    # I have no idea why but using sklearn pairwise_distances changes 
+    # the imput X value
+    M= pdist(X, metric)
+    Z=sch.average(M)
+    labels=sch.fcluster(Z, t=threshold, criterion='distance')
+    #rootnode, nodelist=sch.to_tree(Z)
+    dikeset['Label']=labels
+   
+    
+    return dikeset #, rootnode, nodelist
 
 def AGGfull(dikeset):
     theta, rho, xc, yc= AKH_HT(dikeset)
@@ -349,4 +427,36 @@ def fullTree(model, **kwargs):
     
     # Plot the corresponding dendrogram
     dendrogram(linkage_matrix, **kwargs)
+
+def distancesPlot(df):
+    t,r=whichForm(df)
+
+    theta=df[t].values
+    rho=df[r].values
+
+    X2D = (np.vstack( (theta, rho-np.mean(rho))) ).T
+    
+    #use the scaled version of the distance metric 
+    dtheta=2 
+    drho=df['seg_length'].mean()
+
+    dist1 = squareform(pdist(X2D, CyclicAngleDist))
+    dist2 = squareform(pdist(X2D, RhoDist))
+    
+    x,y=np.meshgrid( np.linspace(0,90,100), np.linspace(0, max(rho), 100))
+    d=np.sqrt( (x/dtheta)**2 + (y/drho)**2)
+    fig,ax=plt.subplots()
+    c=ax.contourf(x,y,d, levels=[1, 10, 30, 50,100],  colors=('r','orange', 'y', 'g', 'b'), extend='max')
+    fig.colorbar(c)
+    
+    ax.plot(dist1, dist2, 'k*')
+    ax2 = fig.add_axes([0.3,0.76,0.6,0.2])
+    ax2.hist(dist2.flatten())
+    ax1 = fig.add_axes([0.09,0.1,0.15,0.6])
+    ax1.hist(dist1.flatten())
+    
+
+    return fig, ax, dist1, dist2    
+    
+
 

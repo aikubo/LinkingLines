@@ -9,14 +9,21 @@ import numpy as np
 import pandas as pd 
 from fitRectangle import *
 from htMOD import HT_center
-from plotmod import HThist, plotlines
+from plotmod import HThist, plotlines, DotsHT
 from sklearn.neighbors import NearestNeighbors
 from sklearn.preprocessing import scale
 from PrePostProcess import *
 from htMOD import rotateData2
+from clusterMod import CyclicEuclideanScaled, CyclicAngleDist
 
+from PrePostProcess import completePreProcess, whichForm, midPoint
+import scipy.cluster.hierarchy as sch
+from scipy.spatial.distance import squareform
+from scipy.cluster.hierarchy import dendrogram
+from scipy.spatial.distance import pdist, squareform
 
 import matplotlib.pyplot as plt 
+from scipy import stats
 
 def clustered_lines(xs, ys, theta):
     xstart=max(xs)
@@ -41,19 +48,31 @@ def clustered_lines(xs, ys, theta):
     return x1, x2, y1, y2
 
 def checkoutCluster(dikeset, label):
-    fig, ax=plt.subplots() 
+    fig, ax=plt.subplots(1,2) 
     mask=(dikeset['Labels']==label)
     lines=dikeset[mask]
-    plotlines(lines, 'r', ax)
-    xc,yc=HT_center(dikeset)
-    x,y=endpoints2(lines)
-    plotlines(lines, 'r', ax, linewidth=3)
-    #pltRec(lines, xc, yc, ax)
-    #pltLine(lines, xc, yc, ax)
+    ax[0].scatter(dikeset['theta'], dikeset['rho'], c='k', alpha=0.1)
+    ax[0].scatter(lines['theta'], lines['rho'], c='r')
+    plotlines(lines, 'r', ax[1])
+    
     
     return fig,ax
 
+def enEchelon(lines, avgtheta):
+    Xmid=lines['Xmid'].to_numpy()
+    Ymid=lines['Ymid'].to_numpy()
     
+    slope, intercept, r_value, p_value, std_err = stats.linregress(Xmid, Ymid)
+    thetaM=np.rad2deg(np.arctan(-1/(slope+ 0.0000000000000001)))
+    
+    tdiff=CyclicAngleDist([avgtheta], [thetaM])
+    print(tdiff, thetaM, p_value)
+    #if p_value > 0.05:
+    #    tdff=np.nan
+    
+    return tdiff
+
+
 def examineClusters(clusters):
     """ Must have  ['Xstart', 'Ystart', 'Xend', 'Yend','seg_length', 'ID', 'rho', 'theta', 'Labels'] """
     #fig,ax=plt.subplots(1,3)
@@ -62,6 +81,7 @@ def examineClusters(clusters):
     notclustered=sum([clusters['Labels']==-1][0])
     xc,yc=HT_center(clusters)
     clusters_data=pd.DataFrame()
+    ids=np.arange(0, len(clusters),1)
     if "HashID" not in clusters.columns:
         clusters=giveHashID(clusters)
 
@@ -105,7 +125,7 @@ def examineClusters(clusters):
         # then calculate squares Error 
         rotation_angle=-1*avgtheta+20
         rotatedLines=rotateData2(lines, rotation_angle)
-        print(avgtheta, rotation_angle)
+        #print(avgtheta, rotation_angle)
         w,l=fit_Rec(rotatedLines, xc, yc)
         r=squaresError(rotatedLines,xc,yc)
         #f r> 1000000: 
@@ -115,9 +135,17 @@ def examineClusters(clusters):
         #sx,sy, ang=ellipse(points)
         Xe,Ye=RecEdges(lines, xc, yc)
         hashlines=hash((lines['HashID'].values.tostring()))
-        
-        clusters_data=clusters_data.append({ "Label": i, "Xstart": x1, "Ystart":y1, "Xend": x2, "Yend":y2, "X0": x0, "Y0": y0, "AvgRho":avgrho, "AvgTheta":avgtheta, "RhoRange":rrange,
-         "ThetaRange": trange, "StdRho": stdrho, "StdTheta": stdt, "R_Width": w, "R_Length": l, "Size":size, "R_error":np.sqrt(r), "Linked":clustered, "SegmentLSum":segmentL, "Hash":hashlines, 'ClusterCrossesZero': crossZero}, ignore_index=True)
+        tdiff=enEchelon(lines, avgtheta)
+        clusters_data=clusters_data.append({ "Label": i, "Xstart": x1, "Ystart":y1, "Xend": x2,
+                                            "Yend":y2, "X0": x0, "Y0": y0, "AvgRho":avgrho,
+                                            "AvgTheta":avgtheta, "RhoRange":rrange, 
+                                            "PerpOffsetDist": lines['PerpOffsetDist'].mean(),
+                                            "ThetaRange": trange, "StdRho": stdrho, 
+                                            "StdTheta": stdt, "R_Width": w, "R_Length": l, 
+                                            "Size":size, "R_error":np.sqrt(r), "Linked":clustered,
+                                            "SegmentLSum":segmentL, "Hash":hashlines, 
+                                            'ClusterCrossesZero': crossZero,
+                                            "EnEchelonAngleDist":tdiff}, ignore_index=True)
     
     
     if 'Formation' in clusters.columns: 
@@ -157,17 +185,17 @@ def examineClusters(clusters):
 
     #clusters_data["KNN2"]=distAvg
     
-    X,Y=midpoint(clusters_data)
-    #X=clusters_data['Xstart'].values
-    #Y=clusters_data['Ystart'].values
-    X=(np.vstack((X, Y, clusters_data['AvgTheta'])).T)
-    X=np.array(clusters_data['AvgTheta']).reshape(-1,1)
-    #=scale(X)
-    #rint(X.shape)
-    nbrs = NearestNeighbors(n_neighbors=3, algorithm='ball_tree').fit(X)
-    distances, indices = nbrs.kneighbors(X)
-    #s=0
-    #distAvg=[]
+    # X,Y=midpoint(clusters_data)
+    # #X=clusters_data['Xstart'].values
+    # #Y=clusters_data['Ystart'].values
+    # X=(np.vstack((X, Y, clusters_data['AvgTheta'])).T)
+    # X=np.array(clusters_data['AvgTheta']).reshape(-1,1)
+    # #=scale(X)
+    # #rint(X.shape)
+    # nbrs = NearestNeighbors(n_neighbors=3, algorithm='ball_tree').fit(X)
+    # distances, indices = nbrs.kneighbors(X)
+    # #s=0
+    # #distAvg=[]
     # for i in range(int(len(indices)/2)): 
     #     if distances[i,1]==clusters_data['R_Length'].iloc[i]:
     #         s=s+1
@@ -343,6 +371,22 @@ def checkClusterChange(df1, df2):
     
     return eqLabels #, errChange
     
+def checkClusterChange2(Segs, Line1, Line2):
+    
+    c1=np.unique(Line1['Label'])
+    c2=np.unique(Line2['Label'])
+    
+    for i in c1: 
+        lines=Segs[Segs['Label']==i]
+        for j in c2: 
+            
+            x=lines['HashID'].values
+            y=Segs[Segs['TrueLabel']==j]['HashID'].values
+            result = np.where( x==y, x, 0)
+            if np.sum(result) > 0:
+                print(i,j, result, np.sum(result))
+    
+
 
 def extendLines(lines, save=False, name='Longlines.csv'):
     t,r=whichForm(lines)
@@ -401,5 +445,78 @@ def extendLines(lines, save=False, name='Longlines.csv'):
         writeToQGIS(longlines, name)
     
     return longlines
+
+
+def persitance(df):
+    t,r=whichForm(df)
+
+    theta=df[t].values
+    rho=df[r].values
+
+    X2D = (np.vstack( (theta, rho-np.mean(rho))) ).T
+    
+    #use the scaled version of the distance metric 
+    dtheta=2 
+    drho=df['seg_length'].mean()
+    metric= lambda x,y: CyclicEuclideanScaled(x,y,dtheta,drho)
+    
+    dist = squareform(pdist(X2D, metric))
+    condensedD = squareform(dist)
+    
+    Y = sch.linkage(condensedD, method='complete')
+    Z1 = sch.dendrogram(Y, orientation='left', no_plot=True)
+    
+    dcoord=np.array(Z1['dcoord'])
+    icoord=np.array(Z1['icoord'])
+    c=Z1['color_list']
+    idx=Z1['leaves']
     
     
+    #scaling for persistance
+    #a1=(np.max(icoord)+np.max(dcoord))/2
+    #a0=(np.min(icoord)+np.min(dcoord))/2
+    
+    #dcoord=(dcoord-a0)/(a1-a0)
+    #icoord=(icoord-a0)/(a1-a0)
+
+
+    x=np.max(dcoord)
+    fig,ax=plt.subplots(2)
+    ax[0].plot([1,1], [x,x], 'k-', linewidth=10)
+    p=np.append(dcoord[:,1]-dcoord[:,0], dcoord[:,2]-dcoord[:,3])
+    birth=np.array([ dcoord[:,0], dcoord[:,3]])+1
+    death=np.array([ dcoord[:,1], dcoord[:,2]])+1
+    
+    ax[0].plot(birth, death, "*")
+    
+    ax[0].set_yscale('log')
+    ax[0].set_xscale('log')
+    ax[0].plot([1,x], [1,x], 'k-', linewidth=4)
+    
+    ax[1].hist(np.log(p+1), bins=20, color='r')
+    
+    ax[1].set_ylabel('Counts')
+    ax[1].set_xlabel('Persistance')
+    ax[0].set_xlabel('Birth')
+    ax[0].set_ylabel('Death')
+    # for ys, color in zip(dcoord, c):
+    #     #ax[0].plot(xs, ys, color)
+        
+    #     birth=np.array([ys[0]+1, ys[3]+1])
+    #     death=np.array([ys[1]+1, ys[2]+1])
+    #     ax[0].plot(birth,death, "*", color=color)
+    #     p=np.append(birth-death)
+    ax[0].set_yscale('log')
+    return fig, ax, Z1
+
+def testValidity(lines, dtheta, drho):
+    
+    if any(lines['ThetaRange'] > dtheta):
+        print("Failed Theta Validity Check 1")
+    else: 
+        print("Passed Theta Validity Check 1")
+        
+    if any(lines['RhoRange'] > drho):
+        print("Failed Theta Validity Check 1")
+    else: 
+        print("Passed Theta Validity Check 1")

@@ -222,7 +222,7 @@ def W_L(Clusters):
 def squaresError(lines, xc, yc):
     
     avgtheta=np.deg2rad(np.average(lines['theta']))
-    print(avgtheta)
+    #print(avgtheta)
     avgrho=np.average(lines['rho'])
     xs,ys=midpoint(lines)
     
