@@ -341,8 +341,11 @@ print(tdiff, thetaM, p_value)
 #tdiff=enEchelon(df,45)
 print(tdiff)
 
+tdiff2, EXstart, EXend, EYstart, EYend=enEchelon(df, AvgTheta)
+
 fig,ax=plt.subplots()
 plotlines(df, 'k', ax)
 ax.plot(Xmid, Ymid, 'r*-')
 ax.axis('equal')
+ax.plot([EXstart, EXend], [EYstart, EYend])
 

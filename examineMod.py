@@ -64,16 +64,20 @@ def enEchelon(lines, avgtheta):
     
     slope, intercept, r_value, p_value, std_err = stats.linregress(Xmid, Ymid)
     thetaM=np.rad2deg(np.arctan(-1/(slope+ 0.0000000000000001)))
-    
+    Xstart=min(Xmid)
+    Xend=max(Xmid)
+    Ystart=slope*Xstart+intercept 
+    Yend=slope*Xend+intercept 
     tdiff=CyclicAngleDist([avgtheta], [thetaM])
-    print(tdiff, thetaM, p_value)
-    #if p_value > 0.05:
-    #    tdff=np.nan
+    #print(tdiff, thetaM, p_value)
+    if p_value > 0.05:
+        tdff=0
     
-    return tdiff
+    
+    return tdiff, Xstart, Xend, Ystart, Yend
 
 
-def examineClusters(clusters):
+def examineClusters(clusters, enEchelonCutofff=7, ifEE=False):
     """ Must have  ['Xstart', 'Ystart', 'Xend', 'Yend','seg_length', 'ID', 'rho', 'theta', 'Labels'] """
     #fig,ax=plt.subplots(1,3)
     clabel=np.unique(clusters['Labels'])
@@ -88,6 +92,7 @@ def examineClusters(clusters):
     #print("Found", nclusters)
     #print( sum( clusters > -1), "clustered out of", len(p))
     sizes=[]
+    EEDikes=pd.DataFrame()
     
     cmask=np.full(len(clusters),False)
     for i in np.unique(clusters['Labels']): 
@@ -135,7 +140,7 @@ def examineClusters(clusters):
         #sx,sy, ang=ellipse(points)
         Xe,Ye=RecEdges(lines, xc, yc)
         hashlines=hash((lines['HashID'].values.tostring()))
-        tdiff=enEchelon(lines, avgtheta)
+        tdiff, EXstart, EXend, EYstart, EYend=enEchelon(lines, avgtheta)
         clusters_data=clusters_data.append({ "Label": i, "Xstart": x1, "Ystart":y1, "Xend": x2,
                                             "Yend":y2, "X0": x0, "Y0": y0, "AvgRho":avgrho,
                                             "AvgTheta":avgtheta, "RhoRange":rrange, 
@@ -148,6 +153,18 @@ def examineClusters(clusters):
                                             "EnEchelonAngleDist":tdiff}, ignore_index=True)
     
     
+        if tdiff > enEchelonCutofff: 
+            EEDikes=EEDikes.append({ "Label": i, "Xstart": EXstart, "Ystart":EYstart, "Xend": EXend,
+                                            "Yend":EYend, "CXstart": x1, "CYstart":y1, "CXend": x2,
+                                            "CYend":y2, "X0": x0, "Y0": y0, "AvgRho":avgrho,
+                                            "AvgTheta":avgtheta, "RhoRange":rrange, 
+                                            "PerpOffsetDist": lines['PerpOffsetDist'].mean(),
+                                            "ThetaRange": trange, "StdRho": stdrho, 
+                                            "StdTheta": stdt, "R_Width": w, "R_Length": l, 
+                                            "Size":size, "R_error":np.sqrt(r), "Linked":clustered,
+                                            "SegmentLSum":segmentL, "Hash":hashlines, 
+                                            'ClusterCrossesZero': crossZero,
+                                            "EnEchelonAngleDist":tdiff}, ignore_index=True)
     if 'Formation' in clusters.columns: 
         print("adding formation")
         
@@ -239,12 +256,16 @@ def examineClusters(clusters):
                               "ClusterSizeStd": np.std(clusters_data["Size"]),
                               "ClusterMax": clusters_data["Size"].max(), 
                               "AverageL": np.average(clusters_data["R_Length"]),
-                              "AverageW": np.average(clusters_data["R_Width"])},                           
+                              "AverageW": np.average(clusters_data["R_Width"])},
+                              "NEEDikes":len(EEDikes)
                               index=[0])
     
     #print(evaluation)
     #plt.tight_layout()
-    return clusters_data, evaluation
+    if ifEE:
+        return clusters_data, evalution, EEDikes
+    else:
+        return clusters_data, evaluation
 
 def ClusteredAll(dikeset,lines,cmask):
     notClustered=dikeset.iloc[~cmask]
