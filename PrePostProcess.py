@@ -13,6 +13,7 @@ Contains various preprocessing data and post processing
 """
 import pandas as pd
 import numpy as np 
+from htMOD import MidtoPerpDistance, HT_center
 
 def midPoint(df):
     """
@@ -93,7 +94,7 @@ def writeToQGISLong(df,name, myProj=None):
     
     return df
 
-def WKTtoArray(df, interp=True):
+def WKTtoArray(df, plot=True):
 
     '''
     Processes a dataframe with columns Xstart,Ystart,Xend,Yend,seg_length to a pandas dataframe with columns Xstart,Ystart,Xend,Yend,seg_length
@@ -113,7 +114,8 @@ def WKTtoArray(df, interp=True):
     xend=[]
     yend=[]
     drop=[]
-    fig,ax=plt.subplots()
+    if plot: 
+        fig,ax=plt.subplots()
     for i in range(len(df)):
         temp=df["WKT"].iloc[i]
         temp=re.split(r'[(|)]', temp)
@@ -138,19 +140,32 @@ def WKTtoArray(df, interp=True):
         
         slope, intercept, r_value, p_value, std_err = stats.linregress(tempx, tempy)
         #for x,y in zip(tempx, tempy):
-        if p_value > 0.05 and len(tempx)>3: 
-            ax.plot(tempx, tempy)
+        if any(np.isnan( [slope, intercept])):
             drop.append(i)
             continue
         
         
-        x=np.array( [ min(tempx), max(tempx)])
+        
+        if p_value > 0.05 and len(tempx)>3: 
+            if plot:
+                ax.plot(tempx, tempy)
+            drop.append(i)
+            continue
+        
+        
+        x=np.array( [ np.min(tempx), np.max(tempx)])
         y=x*slope+intercept
+        
+        if np.sum(np.isnan( [x, y]))>0:
+            drop.append(i)
+            continue
+        
         xstart.append(x[0])
         ystart.append(y[0])
         xend.append(x[1])
         yend.append(y[1])
-        #ax.plot(x, x*slope+intercept, '*-' )
+        if plot:
+            ax.plot(x, x*slope+intercept, '*-' )
         
 
 
@@ -166,7 +181,7 @@ def WKTtoArray(df, interp=True):
     df['seg_length']=length
     print( len(drop), "dropped for not being straight")
     
-    ax.axis('equal')
+    
     return df
         
 # def WKTtoArray(df):
@@ -292,7 +307,9 @@ def completePreProcess(df):
         df=giveHashID(df)
     if 'Xmid' not in df.columns: 
         df=midPoint(df)
-    
+    if 'PerpOffsetDist' not in df.columns: 
+        xc,yc=HT_center(df)
+        df=MidtoPerpDistance(df, xc, yc)
     return df 
 
 def whichForm(lines):

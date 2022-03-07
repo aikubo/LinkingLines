@@ -72,6 +72,9 @@ def enEchelon(lines, avgtheta):
     #print(tdiff, thetaM, p_value)
     if p_value > 0.05:
         tdff=0
+        
+    if np.isnan(tdiff):
+        tdiff=0
     
     
     return tdiff, Xstart, Xend, Ystart, Yend
@@ -150,7 +153,7 @@ def examineClusters(clusters, enEchelonCutofff=7, ifEE=False):
                                             "Size":size, "R_error":np.sqrt(r), "Linked":clustered,
                                             "SegmentLSum":segmentL, "Hash":hashlines, 
                                             'ClusterCrossesZero': crossZero,
-                                            "EnEchelonAngleDist":tdiff}, ignore_index=True)
+                                            "EnEchelonAngleDiff":tdiff}, ignore_index=True)
     
     
         if tdiff > enEchelonCutofff: 
@@ -164,7 +167,7 @@ def examineClusters(clusters, enEchelonCutofff=7, ifEE=False):
                                             "Size":size, "R_error":np.sqrt(r), "Linked":clustered,
                                             "SegmentLSum":segmentL, "Hash":hashlines, 
                                             'ClusterCrossesZero': crossZero,
-                                            "EnEchelonAngleDist":tdiff}, ignore_index=True)
+                                            "EnEchelonAngleDiff":tdiff}, ignore_index=True)
     if 'Formation' in clusters.columns: 
         print("adding formation")
         
@@ -248,22 +251,30 @@ def examineClusters(clusters, enEchelonCutofff=7, ifEE=False):
     
     evaluation=pd.DataFrame({ "Ic": (len(clusters)-notclustered),
                               "nClusters": nclusters,
-                              "AverageRhoRange": np.average(clusters_data["RhoRange"]),                              
+                              "AverageRhoRange": np.average(clusters_data["RhoRange"]),
+                              "MaxRhoRange": np.max(clusters_data["RhoRange"]),
+                              "StdRhoRange": np.std(clusters_data["RhoRange"]),                              
                               "AverageThetaRange": np.average(clusters_data["ThetaRange"]),
-                              "StdRhoRange": np.std(clusters_data["RhoRange"]),
+                              "MaxThetaRange": np.max(clusters_data["ThetaRange"]), 
                               "StdThetaRange": np.std(clusters_data["ThetaRange"]),
                               "AvgClusterSize": np.average(clusters_data["Size"]),
                               "ClusterSizeStd": np.std(clusters_data["Size"]),
                               "ClusterMax": clusters_data["Size"].max(), 
                               "AverageL": np.average(clusters_data["R_Length"]),
-                              "AverageW": np.average(clusters_data["R_Width"])},
-                              "NEEDikes":len(EEDikes)
+                              "MaxL": np.max(clusters_data['R_Length']),
+                              "StdL": np.std(clusters_data["R_Length"]),
+                              "AverageW": np.average(clusters_data["R_Width"]),
+                              "MaxW": np.max(clusters_data['R_Width']),
+                              "StdW": np.std(clusters_data['R_Width']),
+                              "NEEDikes":len(EEDikes),
+                              "MaxEEAngleDiff":np.max(clusters_data["EnEchelonAngleDiff"]),
+                              "AverageEAngleDiff":np.average(clusters_data["EnEchelonAngleDiff"])},
                               index=[0])
     
     #print(evaluation)
     #plt.tight_layout()
     if ifEE:
-        return clusters_data, evalution, EEDikes
+        return clusters_data, evaluation, EEDikes
     else:
         return clusters_data, evaluation
 

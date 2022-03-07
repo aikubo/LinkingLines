@@ -271,7 +271,7 @@ def HT_AGG(dikeset,d):
     
     return clusters
 
-def HT_AGG_custom(dikeset,dtheta, drho, metric=CyclicEuclideanScaled, dimensions=2, linkage='average'):
+def HT_AGG_custom(dikeset,dtheta, drho, dimensions=2, linkage='average'):
     '''
     Agglomerative clustering with custom metric on Hough transform data
 

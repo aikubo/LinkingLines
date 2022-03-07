@@ -24,7 +24,7 @@ from htMOD import HT_center
 from fitRectangle import *
 from PrePostProcess import whichForm
 
-sns.set()
+
 np.random.seed(5)
 
 
@@ -186,7 +186,7 @@ def plotlines(data, col, ax, alpha=1, myProj=None, maskar=None, linewidth=1, Col
         if xc is None or yc is None:
             xc,yc=HT_center(data)
         ax.plot(xc,yc, "*r", markeredgecolor="black")
-        ax.axis('equal')
+    ax.axis('equal')
     #if ColorBy is not None: 
     #   fig.colorbar(label=ColorBy)
 
@@ -548,3 +548,134 @@ def plotResults(data):
     #plot histogram of AvgRho
     ax[4].hist(data['AvgRho']/1000, bins=np.arange(min(data['AvgRho'])/1000, max(data['AvgRho'])/1000, 20))
     ax[4].set_xlabel('Rho (km)')
+
+# Helper function used for visualization in the following examples
+def identify_axes(ax_dict, fontsize=48):
+    """
+    Helper to identify the Axes in the examples below.
+
+    Draws the label in a large font in the center of the Axes.
+
+    Parameters
+    ----------
+    ax_dict : dict[str, Axes]
+        Mapping between the title / label and the Axes.
+    fontsize : int, optional
+        How big the label should be.
+    """
+    kw = dict(ha="center", va="center", fontsize=fontsize, color="darkgrey")
+    for k, ax in ax_dict.items():
+        ax.text(0.5, 0.5, k, transform=ax.transAxes, **kw)
+        
+def breakXaxis(xlim, numAxes=1):
+    """
+    function to break x axis into based in xlim 
+    based on matplotlib example 
+    https://matplotlib.org/stable/gallery/subplots_axes_and_figures/broken_axis.html
+
+    num axes cannot be greater than 13
+
+    input: 
+        xlim: tuple of x limits
+        nAxes: number of axes you wish to make with the same breakpoints
+
+    output:
+        fig: figure object
+        ax: list of axes objects
+    """
+    # f, axes = plt.subplots(numAxes,2)
+    # ax=axes[:,0]
+    # ax2=axes[:,1]
+    try :
+        numAxes>13
+    except ValueError:
+        print('You can not have a numAxes greater than 13 ')
+    
+        
+    mosaic="""AAAB"""
+    ax1labels=["A"]
+    ax2labels=["B"]
+    from string import ascii_uppercase
+    j=2
+    if numAxes>1: 
+        for i in range((numAxes-1)):
+            
+            letter1=ascii_uppercase[j]
+            ax1labels.append(letter1)
+            j=j+1
+            letter2=ascii_uppercase[j]
+            ax2labels.append(letter2)
+            newline="\n"+letter1*3+letter2
+            mosaic=mosaic+newline
+            j=j+1
+            
+    print(mosaic)
+    f = plt.figure(constrained_layout=True)
+    ax_dict = f.subplot_mosaic(mosaic)
+    #identify_axes(ax_dict)
+    
+    
+    ax=[ax_dict[i] for i in ax1labels]
+    ax2=[ax_dict[i] for i in ax2labels]
+
+    
+    d = .5  # proportion of vertical to horizontal extent of the slanted line
+    kwargs = dict(marker=[(-1, -d), (1, d)], markersize=12,
+              linestyle="none", color='k', mec='k', mew=1, clip_on=False)
+    
+    for i in range(numAxes):
+        if numAxes == 1:
+
+            ax.set_xlim(xlim[0])
+            ax2.set_xlim(xlim[1])
+
+            ax.spines['right'].set_visible(False)
+            ax2.spines['left'].set_visible(False)
+            #ax.yaxis.tick_top()
+            ax2.tick_params(labeleft=False, left=False)  # don't put tick labels at the top
+            #ax2.yaxis.tick_bottom()
+            
+            #plots break symbols
+
+            ax.plot([1, 1], [0, 1], transform=ax.transAxes, **kwargs)
+            ax2.plot([0, 0], [0, 1], transform=ax2.transAxes, **kwargs)
+            continue
+        
+        ax[i].set_xlim(xlim[0])
+        ax2[i].set_xlim(xlim[1])
+
+        ax[i].spines['right'].set_visible(False)
+        ax2[i].spines['left'].set_visible(False)
+        #ax[i].yaxis.tick_top()
+        ax2[i].tick_params(labelleft=False, left=False)  # don't put tick labels at the top
+        #ax2[i].yaxis.tick_bottom()
+        
+        #plots break symbols
+        ax[i].plot([1, 1], [0, 1], transform=ax[i].transAxes, **kwargs)
+        ax2[i].plot([0, 0], [0, 1], transform=ax2[i].transAxes, **kwargs)
+
+    return f, ax, ax2
+
+def splitData(xlim, x):
+    """
+    function to split data into two groups based on xlim
+    assume only one breakpoint
+    """
+    x1=[]
+    x2=[]
+    for i in range(len(x)):
+        if x[i]<max(xlim[0]):
+            x1.append(x[i])
+        else:
+            x2.append(x[i])
+    return x1, x2
+
+def plotBreak(xlim, x, y, ax1, ax2,marker, **kwargs):
+    """
+    function to plot breakpoints
+    """
+    x1, x2=splitData(xlim, x)
+    # ax1.plot(x1, y[0:len(x1)],marker,   **kwargs)
+    # ax2.plot(x2, y[len(x1):], marker,  **kwargs)
+    ax1.plot(x,y, marker, **kwargs)
+    ax2.plot(x,y, marker, **kwargs)
