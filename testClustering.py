@@ -310,42 +310,64 @@ if test5:
     ax.set_xlabel('RhoThreshold/TrueSpacing')
 
 from examineMod import enEchelon
+test7=False
+if test7:
+    print('entering test 7')
+    
+    AvgTheta=80
+    df=EnEchelonSynthetic(5, AvgTheta, 10000, 200)
+    df=completePreProcess(df)
+    dikes = fragmentDikes(df)
+    theta, rho, xc, yc= HT(dikes, xc=0, yc=0)
+    dikes['theta']=theta
+    dikes['rho']=rho
+    dikes= MidtoPerpDistance(dikes, xc, yc)
+    midist=dikes['PerpOffsetDist'].values
+    df['Label']=np.ones(len(df))
+    Xmid=df['Xmid'].to_numpy()
+    Ymid=df['Ymid'].to_numpy()
+    
+    slope, intercept, r_value, p_value, std_err = stats.linregress(Xmid, Ymid)
+    thetaM=np.rad2deg(np.arctan(-1/(slope+ 0.0000000000000001)))
+    if np.isnan(slope):
+        thetaM=0
+        p_value=0.05
+    
+    
+    tdiff=CyclicAngleDist([AvgTheta], [thetaM])
+    print(tdiff, thetaM, p_value)
+    #if p_value > 0.05:
+    #    tdff=np.nan
+    
+    #tdiff=enEchelon(df,45)
+    print(tdiff)
+    
+    tdiff2, EXstart, EXend, EYstart, EYend=enEchelon(df, AvgTheta)
+    
+    fig,ax=plt.subplots()
+    plotlines(df, 'k', ax)
+    ax.plot(Xmid, Ymid, 'r*-')
+    ax.axis('equal')
+    ax.plot([EXstart, EXend], [EYstart, EYend])
 
-print('entering test 7')
 
-AvgTheta=80
-df=EnEchelonSynthetic(5, AvgTheta, 10000, 200)
-df=completePreProcess(df)
-dikes = fragmentDikes(df)
-theta, rho, xc, yc= HT(dikes, xc=0, yc=0)
-dikes['theta']=theta
-dikes['rho']=rho
-dikes= MidtoPerpDistance(dikes, xc, yc)
-midist=dikes['PerpOffsetDist'].values
-df['Label']=np.ones(len(df))
-Xmid=df['Xmid'].to_numpy()
-Ymid=df['Ymid'].to_numpy()
+print ("Test 8 ")
 
-slope, intercept, r_value, p_value, std_err = stats.linregress(Xmid, Ymid)
-thetaM=np.rad2deg(np.arctan(-1/(slope+ 0.0000000000000001)))
-if np.isnan(slope):
-    thetaM=0
-    p_value=0.05
+print("Are sklearn and scipy the same?")
 
+from clusterMod import HT_AGG_custom as AggHT
+from clusterMod import HT_AGG_custom2
+drho=572
+dtheta=2
 
-tdiff=CyclicAngleDist([AvgTheta], [thetaM])
-print(tdiff, thetaM, p_value)
-#if p_value > 0.05:
-#    tdff=np.nan
+test1, clusters, M=AggHT(testData, dtheta, drho)
 
-#tdiff=enEchelon(df,45)
-print(tdiff)
+test2, Z=HT_AGG_custom2(testData, dtheta, drho)
 
-tdiff2, EXstart, EXend, EYstart, EYend=enEchelon(df, AvgTheta)
+print("Sklearn", test1['Labels'])
+print("Scipy", test2['Labels'])
 
-fig,ax=plt.subplots()
-plotlines(df, 'k', ax)
-ax.plot(Xmid, Ymid, 'r*-')
-ax.axis('equal')
-ax.plot([EXstart, EXend], [EYstart, EYend])
+from examineMod import checkClusterChange
+
+print(checkClusterChange(test1, test2))
 

@@ -23,7 +23,7 @@ import matplotlib.colors as mcolors
 from htMOD import HT_center
 from fitRectangle import *
 from PrePostProcess import whichForm
-
+import scipy.cluster.hierarchy as sch
 
 np.random.seed(5)
 
@@ -52,16 +52,71 @@ def RGBtoHex(vals, rgbtype=1):
   #Ensure values are rounded integers, convert to hex, and concatenate
   return '#' + ''.join(['{:02X}'.format(int(round(x))) for x in vals])
 
+def clustered_lines(xs, ys, theta, length):
+    xstart=np.max(xs)
+    ystart=np.max(ys)
+    
+    xend=np.min(xs)
+    yend=np.min(ys)
+    
+    xmid=(xstart+xend)/2
+    ymid=(ystart+yend)/2
+    
+    
+    a = np.cos(np.deg2rad(theta))
+    b = np.sin(np.deg2rad(theta))
+    
+    x0 = xmid
+    y0 = ymid
+    x1 = int(x0 + length/2 * (-b))
+    y1 = int(y0 + length/2 * (a))
+    x2 = int(x0 - length/2 * (-b))
+    y2 = int(y0 - length/2 * (a))
+    
+    return x1, x2, y1, y2
 
-def pltRec(lines, xc, yc, a): 
+def clusteredLinesComplete(lines):
+    xs,ys=endpoints2(lines)
+    avgtheta=np.mean(lines['theta'].values)
+    rotation_angle=-1*avgtheta #+20
+    rotatedLines=rotateData2(lines, rotation_angle)
+    #print(avgtheta, rotation_angle)
+    w,l=fit_Rec(rotatedLines, xc, yc)
+    xstart=np.max(xs)
+    ystart=np.max(ys)
+    
+    xend=np.min(xs)
+    yend=np.min(ys)
+    
+    xmid=(xstart+xend)/2
+    ymid=(ystart+yend)/2
+    
+    
+    a = np.cos(np.deg2rad(theta))
+    b = np.sin(np.deg2rad(theta))
+    
+    x0 = xmid
+    y0 = ymid
+    x1 = int(x0 + length/2 * (-b))
+    y1 = int(y0 + length/2 * (a))
+    x2 = int(x0 - length/2 * (-b))
+    y2 = int(y0 - length/2 * (a))
+    
+    
+    return 
+
+def pltRec(lines, xc, yc): 
     """
     plots the rectangle defined by the center, a, and the lines
     """
-
+    fig,a=plt.subplots()
     xi,yi=endpoints2(lines)
     x0=xc
-    y0=xc
-    ang=-np.deg2rad(np.mean(lines['theta']))
+    y0=yc
+
+    ang=-np.mean(np.deg2rad(lines['theta'].values))
+    
+    
     xp, yp= rotateXYShift(ang, xi,yi, x0,y0)
     #plotlines(lines, 'k.-', a)
     
@@ -94,6 +149,12 @@ def pltRec(lines, xc, yc, a):
     for i in range(0,len(lines)):
          a.plot( [xi[i], xi[i+len(lines)]],  [yi[i], yi[i+len(lines)]], 'k.-')
 
+    xstart, xend, ystart, yend=clustered_lines(xi, yi, np.mean(lines['theta'].values), length)
+    
+    a.plot( [xstart, xend], [ystart, yend], 'g.-')
+    
+    a.axis('equal')
+
 def labelcolors(labels, colormap):
     n=len(np.unique(labels))
     c=colormap(np.linspace(0, 1, n))
@@ -107,7 +168,9 @@ def labelcolors(labels, colormap):
         
     return colors, colorsShort
 
-def plotlines(data, col, ax, alpha=1, myProj=None, maskar=None, linewidth=1, ColorBy=None, center=False, xc=None, yc=None, extend=False):
+def plotlines(data, col, ax, alpha=1, myProj=None, maskar=None, linewidth=1, 
+              ColorBy=None, center=False, xc=None, yc=None, extend=False, 
+              cmap=cm.turbo):
 
     #plots the line segments contained in data[maskar]
     # in the color col 
@@ -131,11 +194,12 @@ def plotlines(data, col, ax, alpha=1, myProj=None, maskar=None, linewidth=1, Col
             col=col[maskar]
     else :
         temp=data
-    
+
+        
     if ColorBy is not None: 
         C=data[ColorBy]
         norm=Normalize(vmin=min(C), vmax=max(C))
-        cmap=cm.turbo
+
         m = cm.ScalarMappable(norm=norm, cmap=cmap)   
         col=m.to_rgba(C)
         
@@ -407,16 +471,16 @@ def DotsHT(fig,ax,lines, ColorBy="R_length", label=None, cmap=cm.turbo, marker='
 
 
 def DotsLinesHT(lines, ColorBy="seg_length",cmap=cm.turbo):
-    t
+    t,r=whichForm(lines)
     #plt.rcParams.update({'font.size': 50, 'font.weight': 'normal'})
     #sns.set_context("talk")
     fig,ax=plt.subplots(1,2)    #lines['StdRho'].mean()*2
-    plotlines(lines, 'k', ax[0], center=True)
+    plotlines(lines, 'k', ax[0], ColorBy=ColorBy, cmap=cmap)
     ax[1].set_xlabel('Theta (degrees)')
     ax[1].set_ylabel('Rho (m)')
 
     #ax[1], h2=HThist(lines['AvgRho'], lines['AvgTheta'], rstep, tstep, weights=lines['R_Length'], ax=ax[1],rbins=rbins)
-    c2=ax[1].scatter(lines['AvgTheta'], lines['AvgRho'], c=(lines[ColorBy]), cmap=cmap, edgecolor='black')
+    c2=ax[1].scatter(lines[t], lines[r], c=(lines[ColorBy]), cmap=cmap, edgecolor='black')
     ax[1].set_title('HT')
     
     
@@ -679,3 +743,44 @@ def plotBreak(xlim, x, y, ax1, ax2,marker, **kwargs):
     # ax2.plot(x2, y[len(x1):], marker,  **kwargs)
     ax1.plot(x,y, marker, **kwargs)
     ax2.plot(x,y, marker, **kwargs)
+    
+def persistancePlot(Z, fig=None,ax=None, log=False):
+    
+    if fig is None and ax is None: 
+        fig, ax=plt.subplots()
+        
+    Z1 = sch.dendrogram(Z, orientation='left', no_plot=True)
+    
+    dcoord=np.array(Z1['dcoord'])
+    icoord=np.array(Z1['icoord'])
+    c=Z1['color_list']
+    idx=Z1['leaves']
+    
+    
+    #scaling for persistance
+    #a1=(np.max(icoord)+np.max(dcoord))/2
+    #a0=(np.min(icoord)+np.min(dcoord))/2
+    
+    #dcoord=(dcoord-a0)/(a1-a0)
+    #icoord=(icoord-a0)/(a1-a0)
+    x=np.max(dcoord)
+    
+    #ax[0].plot([1,1], [x,x], 'k-', linewidth=10)
+    p=np.append(dcoord[:,1]-dcoord[:,0], dcoord[:,2]-dcoord[:,3])
+    birth=np.array([ dcoord[:,0], dcoord[:,3]])+1
+    death=np.array([ dcoord[:,1], dcoord[:,2]])+1
+    
+    ax.scatter(birth, p, s=p+5, alpha=0.6, edgecolors="k")
+    
+    if log:
+        
+        ax.set_yscale('log')
+        ax.set_xscale('log')
+
+    #
+    ax.set_xlabel('Birth')
+    ax.set_ylabel('Persistance')
+    ax.set_xlim((0,np.max(birth)))
+    ax.set_ylim((0,np.max(p)))
+
+    return fig, ax, p, birth

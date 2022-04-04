@@ -270,14 +270,37 @@ def EnEchelonSynthetic(ndikes, angle, RhoStart, RhoSpacing, Overlap=0, CartRange
     Ystart=slopes*Xstart+b
     Xend=Xstart-length/np.sqrt(1+slopes**2)
     Yend=slopes*Xend+b
-
-    df=pd.DataFrame({'Xstart':Xstart, 'Xend': Xend, 'Ystart': Ystart, 'Yend':Yend, 'theta':angles, 'rho':rhos, 'Label': np.ones(ndikes)})
+    l=np.sqrt( (Xstart-Xend)**2 + (Ystart-Yend)**2)
+    df=pd.DataFrame({'Xstart':Xstart, 'Xend': Xend, 'Ystart': Ystart, 'Yend':Yend, 'theta':angles, 'seg_length':l, 'rho':rhos, 'Label': np.ones(ndikes)})
     
     df=df.drop(df[ abs(df['Ystart']) > CartRange].index)
     
     return df 
 
-
+def fromHT(angles, rhos, length=10000, xc=0, yc=0, CartRange=100000, label=None, xrange=None):
+    ndikes=len(angles)
+    b=rhos/np.sin(np.deg2rad(angles))
+    slopes=-1/(np.tan(np.deg2rad(angles))+0.000000001)
+    
+    if xrange is None:
+        Xstart=np.random.normal(-np.max(abs(rhos)), np.max(abs(rhos)), ndikes)
+        Xend=Xstart-length/np.sqrt(1+slopes**2)
+    else:
+        Xstart=xc-xrange/2
+        Xend=xc+xrange/2
+    
+    
+    Ystart=slopes*Xstart+b
+    
+    Yend=slopes*Xend+b
+    
+    l=np.sqrt( (Xstart-Xend)**2 + (Ystart-Yend)**2)
+    df=pd.DataFrame({'Xstart':Xstart, 'Xend': Xend, 'Ystart': Ystart, 'Yend':Yend, 'theta':angles, 'seg_length':l, 'rho':rhos, 'Label': np.ones(ndikes)})
+    
+    df=df.drop(df[ abs(df['Ystart']) > CartRange].index)
+    
+    
+    return df 
 
 def fragmentDikes(df):
     m=(df['Ystart'].values-df['Yend'].values)/(df['Xstart'].values-df['Xend'].values)
@@ -299,7 +322,8 @@ def fragmentDikes(df):
 
         dfFrag=dfFrag.append(pd.DataFrame({'Xstart':xrange1, 'Xend': xrange2, 
                                            'Ystart': yrange1, 'Yend':yrange2,
-                                           'seg_length':L, 'Label': np.ones(nSegments)*i, 
+                                           'seg_length':L, 'Xmid': (xrange1+xrange2)/2, 'Ymid': (yrange1+yrange2)/2 ,
+                                           'Label': np.ones(nSegments)*i, 
                                            'Original Label':np.ones(nSegments)*df['Label'].iloc[i]
                                                }), ignore_index=True)
     return dfFrag

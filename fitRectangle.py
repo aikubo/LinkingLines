@@ -147,11 +147,16 @@ def testRec(lines, xc, yc):
     
 
 def fit_Rec(lines,xc,yc):
+    
     xi,yi=endpoints2(lines)
     x0=xc
-    y0=xc
-    ang=-np.deg2rad(np.mean(lines['theta']))
+    y0=yc
+
+    ang=-np.mean(np.deg2rad(lines['theta'].values))
+    
+    
     xp, yp= rotateXYShift(ang, xi,yi, x0,y0)
+    #plotlines(lines, 'k.-', a)
     
     width=np.ptp(xp)
     length=np.ptp(yp)
@@ -159,38 +164,85 @@ def fit_Rec(lines,xc,yc):
     # if width>length :
     #     length=width
     #     width=length
+    xc=(max(xp)-min(xp))/2 + min(xp)
+    yc=(max(yp)-min(yp))/2 + min(yp)
+    
     xr=xc+width/2
-    xl=xc+-width/2
+    xl=xc-width/2
     yu=yc+length/2
     yd=yc-length/2
     xs=np.append(xr,xl)
     ys=np.append(yu,yd)
-    xsi,ysi=unrotate(ang,xs,ys,x0,y0)
     
-    return width, length
+    
+    xpi, ypi=unrotate(ang, xp, yp, x0, y0)
 
-def RecEdges(lines, xc,yc):
-    xi,yi=endpoints2(lines)
-    x0=xc
-    y0=xc
-    ang=-np.deg2rad(np.mean(lines['theta']))
+    Xedges=np.array([xs[0], xs[0], xs[1], xs[1], xs[0]])
+    Yedges=np.array([ys[1], ys[0], ys[0], ys[1], ys[1]])
+    # a.plot(Xedges, Yedges, 'r.-')
+    
+    xs,ys=unrotate(ang,Xedges,Yedges,x0,y0)
 
+   
+    #xstart, xend, ystart, yend=clustered_lines(xi, yi, np.mean(lines['theta'].values), length)
+    
+
+    r=np.sum((yc-yp)**2)/lines['seg_length'].sum() #len(lines)
+    
+    
+    return width, length, r, xs, ys
+
+def RecEdges( xi,yi, avgtheta, x0,y0):
+    ang=-1*np.deg2rad(avgtheta)
+    
     xp, yp= rotateXYShift(ang, xi,yi, x0,y0)
-    
-    xc=(max(xp)-min(xp))/2
-    yc=(max(yp)-min(yp))/2
+    #plotlines(lines, 'k.-', a)
     
     width=np.ptp(xp)
     length=np.ptp(yp)
+    
+    # if width>length :
+    #     length=width
+    #     width=length
+    xc=(max(xp)-min(xp))/2 + min(xp)
+    yc=(max(yp)-min(yp))/2 + min(yp)
+    
     xr=xc+width/2
-    xl=xc+-width/2
+    xl=xc-width/2
     yu=yc+length/2
     yd=yc-length/2
     xs=np.append(xr,xl)
     ys=np.append(yu,yd)
-    xsi,ysi=unrotate(ang,xs,ys,x0,y0)
     
-    return xsi, ysi
+    
+    xpi, ypi=unrotate(ang, xp, yp, x0, y0)
+
+    Xedges=np.array([xs[0], xs[0], xs[1], xs[1], xs[0]])
+    Yedges=np.array([ys[1], ys[0], ys[0], ys[1], ys[1]])
+    # a.plot(Xedges, Yedges, 'r.-')
+    
+    xs,ys=unrotate(ang,Xedges,Yedges,x0,y0)
+    # xi,yi=endpoints2(lines)
+    # x0=xc
+    # y0=xc
+    # ang=-np.deg2rad(np.mean(lines['theta']))
+
+    # xp, yp= rotateXYShift(ang, xi,yi, x0,y0)
+    
+    # xc=(max(xp)-min(xp))/2
+    # yc=(max(yp)-min(yp))/2
+    
+    # width=np.ptp(xp)
+    # length=np.ptp(yp)
+    # xr=xc+width/2
+    # xl=xc+-width/2
+    # yu=yc+length/2
+    # yd=yc-length/2
+    # xs=np.append(xr,xl)
+    # ys=np.append(yu,yd)
+    # xsi,ysi=unrotate(ang,xs,ys,x0,y0)
+    
+    return xs, ys
 
 
 def pltLine(lines, xc, yc, ax):

@@ -9,7 +9,7 @@ import numpy as np
 import pandas as pd 
 from fitRectangle import *
 from htMOD import HT_center
-from plotmod import HThist, plotlines, DotsHT
+from plotmod import HThist, plotlines, DotsHT, clustered_lines
 from sklearn.neighbors import NearestNeighbors
 from sklearn.preprocessing import scale
 from PrePostProcess import *
@@ -21,31 +21,12 @@ import scipy.cluster.hierarchy as sch
 from scipy.spatial.distance import squareform
 from scipy.cluster.hierarchy import dendrogram
 from scipy.spatial.distance import pdist, squareform
+import statsmodels.api as sm
 
 import matplotlib.pyplot as plt 
 from scipy import stats
 
-def clustered_lines(xs, ys, theta):
-    xstart=max(xs)
-    ystart=max(ys)
-    
-    xend=min(xs)
-    yend=min(ys)
-    
-    xmid=(xstart+xend)/2
-    ymid=(ystart+yend)/2
-    l=np.sqrt( (xstart-xend)**2 + (ystart-yend)**2)
-    a = np.cos(np.deg2rad(theta))
-    b = np.sin(np.deg2rad(theta))
-    
-    x0 = xmid
-    y0 = ymid
-    x1 = int(x0 + l/2 * (-b))
-    y1 = int(y0 + l/2 * (a))
-    x2 = int(x0 - l/2 * (-b))
-    y2 = int(y0 - l/2 * (a))
-    
-    return x1, x2, y1, y2
+
 
 def checkoutCluster(dikeset, label):
     fig, ax=plt.subplots(1,2) 
@@ -58,26 +39,118 @@ def checkoutCluster(dikeset, label):
     
     return fig,ax
 
-def enEchelon(lines, avgtheta):
-    Xmid=lines['Xmid'].to_numpy()
-    Ymid=lines['Ymid'].to_numpy()
+# def overlap(min1, max1, min2, max2):
+#     return max(0, min(max1, max2) - max(min1, min2))
+
+def overlapSegments(lines):
+    """
+    Calculate overlap between lines 
     
-    slope, intercept, r_value, p_value, std_err = stats.linregress(Xmid, Ymid)
+
+    """
+    Xstart=lines['Xstart'].to_numpy()
+    Ystart=lines['Xstart'].to_numpy()
+    Xend=lines['Xend'].to_numpy()
+    Yend=lines['Yend'].to_numpy()
+    step=lines['seg_length'].min()+1
+    totalL=np.sum( np.sqrt( (Xstart-Xend)**2 + (Ystart-Yend)**2))
+    xs=np.floor(np.concatenate([np.arange(min(x,y), max(x,y), step) for x,y in zip(Xstart,Xend)]))
+    ys=np.floor(np.concatenate([np.arange(min(x,y), max(x,y), step) for x,y in zip(Ystart,Yend)]))
+    u,ycounts=np.unique(ys, return_counts=True)
+    u,xcounts=np.unique(xs, return_counts=True)
+    
+    overlapx=np.sum(xcounts[xcounts>1])*step
+    overlapy=np.sum(ycounts[ycounts>1])*step
+    
+    overlap=np.sqrt(overlapx**2 +overlapy**2)
+    #for i in len(Xstart):
+        
+    
+    return overlap/totalL
+
+def overlapSegments2(Xstart, Ystart, Xend, Yend, slope,step):
+    """
+    Calculate overlap between lines 
+    
+
+    """
+    
+    xs=[np.arange(min(x,y), max(x,y), step/2) for x,y in zip(Xstart,Xend)]
+    #totalL=int(np.sum( np.sqrt( (Xstart-Xend)**2 + (Ystart-Yend)**2)))
+    
+    arr=np.zeros( (len(xs),)+xs[0].shape)
+    for i,v in enumerate(xs):
+        arr[i]=np.floor(v)
+    u,xcounts=np.unique(arr, return_counts=True)
+    
+    overlapx=np.sum(xcounts[xcounts>1])*step
+    overlapy=slope*overlapx
+    
+    overlap=np.sqrt(overlapx**2 +overlapy**2)
+    #for i in len(Xstart):
+        
+    
+    return overlap
+
+def overlapSegments4(Xstart, Xend, slope,step):
+    """
+    Calculate overlap between lines 
+    
+
+    """
+    step=1
+    xs=[np.arange(min(x,y), max(x,y), step) for x,y in zip(np.floor(Xstart),Xend)]
+    
+    l=np.max([len(xi) for xi in xs])
+    xs_sameLength=[np.append(xi,[np.nan]*(l-len(xi))) for xi in xs]
+
+    arr=np.vstack(xs_sameLength) #better
+    u,xcounts=np.unique(arr[~np.isnan(arr)], return_counts=True)
+    
+    overlapx=np.sum(xcounts[xcounts>1])*step
+    overlapy=slope*overlapx
+    
+    overlap=np.sqrt(overlapx**2 +overlapy**2)
+        
+    
+    return overlap
+
+
+
+
+def enEchelon(d, avgtheta):
+    
+    if len(d) <2: 
+        return 0, d["Xstart"], d["Xend"], d["Ystart"],d["Yend"]
+    
+    Xmid=d['Xmid'].to_numpy()
+    Ymid=d['Ymid'].to_numpy()
+    
+    slope, intercept, r_value, p_value_bad, std_err = stats.linregress(Xmid, Ymid)
     thetaM=np.rad2deg(np.arctan(-1/(slope+ 0.0000000000000001)))
+    # we don't actually want p from linregress... 
     Xstart=min(Xmid)
     Xend=max(Xmid)
     Ystart=slope*Xstart+intercept 
     Yend=slope*Xend+intercept 
     tdiff=CyclicAngleDist([avgtheta], [thetaM])
     #print(tdiff, thetaM, p_value)
-    if p_value > 0.05:
+    mod = sm.OLS(Ymid,Xmid)
+    fii = mod.fit()
+    
+    p_values = fii.summary2().tables[1]['P>|t|']
+    
+    if p_values.values > 0.05:
         tdff=0
+    else: 
+        tdiff=CyclicAngleDist([avgtheta], [thetaM])
         
     if np.isnan(tdiff):
         tdiff=0
     
     
-    return tdiff, Xstart, Xend, Ystart, Yend
+    return tdiff, p_values.values, Xstart, Xend, Ystart, Yend
+
 
 
 def examineClusters(clusters, enEchelonCutofff=7, ifEE=False):
@@ -111,7 +184,7 @@ def examineClusters(clusters, enEchelonCutofff=7, ifEE=False):
 
         x0=(max(x)-min(x))/2
         y0=(max(y)-min(y))/2
-        size=sum(mask)
+        size=np.sum(mask)
         rrange=max(lines['rho'])-min(lines['rho'])
         trange=(max(lines['theta'])-min(lines['theta']))%180
         avgrho=np.average(lines['rho'])
@@ -131,43 +204,47 @@ def examineClusters(clusters, enEchelonCutofff=7, ifEE=False):
         
         # rotate data so all are at 20 deg then fit rectangle 
         # then calculate squares Error 
-        rotation_angle=-1*avgtheta+20
-        rotatedLines=rotateData2(lines, rotation_angle)
+        #rotation_angle=-1*avgtheta #+20
+        #rotatedLines=rotateData2(lines, rotation_angle)
         #print(avgtheta, rotation_angle)
-        w,l=fit_Rec(rotatedLines, xc, yc)
-        r=squaresError(rotatedLines,xc,yc)
-        #f r> 1000000: 
-        #   continue 
+        w,l,r,Xe, Ye=fit_Rec(lines, xc, yc)
+
         x1, x2, y1, y2=clustered_lines(x,y,avgtheta)
-        #points=(np.vstack((x, y)).T)
-        #sx,sy, ang=ellipse(points)
-        Xe,Ye=RecEdges(lines, xc, yc)
+
+        
         hashlines=hash((lines['HashID'].values.tostring()))
-        tdiff, EXstart, EXend, EYstart, EYend=enEchelon(lines, avgtheta)
+        tdiff, EE_pvalue, EXstart, EXend, EYstart, EYend=enEchelon(lines, avgtheta)
+        slope=-1/(np.tan(avgtheta)+0.00000000001)
+        step=lines['seg_length'].min()+1
+        if size>1: 
+            overlap= (l-segmentL)/segmentL#overlapSegments4(x[0:size], x[size:size*2], slope,step)
+        else:
+            overlap=0
         clusters_data=clusters_data.append({ "Label": i, "Xstart": x1, "Ystart":y1, "Xend": x2,
                                             "Yend":y2, "X0": x0, "Y0": y0, "AvgRho":avgrho,
-                                            "AvgTheta":avgtheta, "RhoRange":rrange, 
+                                            "AvgTheta":avgtheta, "AvgSlope": slope, "RhoRange":rrange, 
                                             "PerpOffsetDist": lines['PerpOffsetDist'].mean(),
                                             "ThetaRange": trange, "StdRho": stdrho, 
                                             "StdTheta": stdt, "R_Width": w, "R_Length": l, 
                                             "Size":size, "R_error":np.sqrt(r), "Linked":clustered,
                                             "SegmentLSum":segmentL, "Hash":hashlines, 
                                             'ClusterCrossesZero': crossZero,
-                                            "EnEchelonAngleDiff":tdiff}, ignore_index=True)
+                                            "EnEchelonAngleDiff":tdiff, "Overlap": overlap,
+                                            "EEPvalue":EE_pvalue}, ignore_index=True)
     
     
-        if tdiff > enEchelonCutofff: 
-            EEDikes=EEDikes.append({ "Label": i, "Xstart": EXstart, "Ystart":EYstart, "Xend": EXend,
-                                            "Yend":EYend, "CXstart": x1, "CYstart":y1, "CXend": x2,
-                                            "CYend":y2, "X0": x0, "Y0": y0, "AvgRho":avgrho,
-                                            "AvgTheta":avgtheta, "RhoRange":rrange, 
-                                            "PerpOffsetDist": lines['PerpOffsetDist'].mean(),
-                                            "ThetaRange": trange, "StdRho": stdrho, 
-                                            "StdTheta": stdt, "R_Width": w, "R_Length": l, 
-                                            "Size":size, "R_error":np.sqrt(r), "Linked":clustered,
-                                            "SegmentLSum":segmentL, "Hash":hashlines, 
-                                            'ClusterCrossesZero': crossZero,
-                                            "EnEchelonAngleDiff":tdiff}, ignore_index=True)
+        # if tdiff > enEchelonCutofff: 
+        #     EEDikes=EEDikes.append({ "Label": i, "Xstart": EXstart, "Ystart":EYstart, "Xend": EXend,
+        #                                     "Yend":EYend, "CXstart": x1, "CYstart":y1, "CXend": x2,
+        #                                     "CYend":y2, "X0": x0, "Y0": y0, "AvgRho":avgrho,
+        #                                     "AvgTheta":avgtheta, "RhoRange":rrange, 
+        #                                     "PerpOffsetDist": lines['PerpOffsetDist'].mean(),
+        #                                     "ThetaRange": trange, "StdRho": stdrho, 
+        #                                     "StdTheta": stdt, "R_Width": w, "R_Length": l, 
+        #                                     "Size":size, "R_error":np.sqrt(r), "Linked":clustered,
+        #                                     "SegmentLSum":segmentL, "Hash":hashlines, 
+        #                                     'ClusterCrossesZero': crossZero,
+        #                                     "EnEchelonAngleDiff":tdiff, "Overlap":overlap/segmentL}, ignore_index=True)
     if 'Formation' in clusters.columns: 
         print("adding formation")
         
@@ -348,18 +425,19 @@ def TopHTSection(lines, rstep, tstep):
     
     return toplines
 
-def plotlabel(df, linked, label, hashlabel=False):
+def plotlabel(df, linked, label, hashlabel=False, EE=False):
     fig,ax=plt.subplots()
     print(label)
     if hashlabel:
         l=linked['Label'].loc[linked['Hash']==label].astype(int).values[0]
         label=l 
-    print(label)
+        print(label)
 
     mask=df['Labels']==label
     xc,yc=HT_center(df)
     lines=df[mask]
     plotlines(lines,"r", ax)
+    
     # x,y=endpoints2(lines)
     # w,l=fit_Rec(lines, xc, yc)
     # r=squaresError(lines,xc,yc)
@@ -367,15 +445,37 @@ def plotlabel(df, linked, label, hashlabel=False):
 
     # x1, x2, y1, y2=clustered_lines(x,y,avgtheta)
     linkedlines=linked[linked['Label']==label]
-    plotlines(linkedlines,"g", ax)
+    plotlines(linkedlines,"k", ax)
     
     
     ax.set_title("Label "+str(label)+ "| theta:"+str(linkedlines['AvgTheta'].values)+" rho:"+str(linkedlines['AvgRho'].values))
-    ax.text( .89, .89, "W:"+str(linkedlines['R_Width'].values),transform=ax.transAxes )
-    ax.text( .84, .84, "L:"+str(linkedlines['R_Length'].values),transform=ax.transAxes  )
+    ax.text( .80, .89, "W:"+str(linkedlines['R_Width'].values),transform=ax.transAxes )
+    ax.text( .80, .84, "L:"+str(linkedlines['R_Length'].values),transform=ax.transAxes  )
     ax.text( .80, .80, "errors:"+str(linkedlines['R_error'].values),transform=ax.transAxes  )
     print("errors:"+str(linkedlines['R_error']))
     
+    if EE: 
+        Xmid=lines['Xmid'].to_numpy()
+        Ymid=lines['Ymid'].to_numpy()
+        tdiff, EXstart, EXend, EYstart, EYend=enEchelon(lines, linkedlines['AvgTheta'].values[0])
+        ax.plot( [EXstart, EXend], [EYstart, EYend], 'g*-')
+        ax.plot(Xmid, Ymid, 'bp', markersize=2)
+        
+        
+    ax.axis('equal')
+
+def checkLineClusterChange(lines1, lines2):
+    hash1=np.sort(lines1['Hash'])
+    hash2=np.sort(lines2['Hash'])
+    hash1.flags.writeable = False
+    hash2.flags.writeable = False
+    if hash(str(hash1)) == hash(str(hash2)):
+        print("These clusters are the same")
+    else: 
+        print("These clusters are not the same")
+    
+    return 
+
 def checkClusterChange(df1, df2):
     s=0
     eqLabels=[]
@@ -384,14 +484,14 @@ def checkClusterChange(df1, df2):
     ndikes=0
     for i in range(len(df1)):
         for j in range(len(df2)):
-            if df1['Hash'].iloc[i]==df2['Hash'].iloc[j]:
+            if df1['HashID'].iloc[i]==df2['HashID'].iloc[j]:
                 s=s+1
-                ndikes=df1['Size'].iloc[i]+ndikes
-                eqLabels.append(df1['Hash'].iloc[i])
+                #ndikes=df1['Size'].iloc[i]+ndikes
+                eqLabels.append(df1['HashID'].iloc[i])
                 #errChange.append(df1['R_error'].iloc[i]-df2['R_error'].iloc[j])
-                print(ndikes)
+                #print(ndikes)
                 #eqLabels=np.append(eqLabels, [df1['Label'].iloc[i], df2['Label'].iloc[j]])
-    print(s, len(df1), len(df2), ndikes)
+    print(s, len(df1), len(df2))
     
     if (s==len(df1) and s==len(df2)):
         print("These clusters are the same")

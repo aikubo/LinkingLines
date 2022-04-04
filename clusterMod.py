@@ -289,11 +289,12 @@ def HT_AGG_custom(dikeset,dtheta, drho, dimensions=2, linkage='average'):
 
     #scale m unit values
     dikeset['ScaledRho']=dikeset[r].values # - dikeset[r].mean()
-    dikeset['ScaledPerpOffsetDist']=dikeset['PerpOffsetDist'].values-dikeset['PerpOffsetDist'].mean()
+    
     # create X vector with theta and rho and midist
     if dimensions == 2:
         X=(np.vstack((dikeset[t], dikeset['ScaledRho'])).T)
     elif dimensions == 3:
+        dikeset['ScaledPerpOffsetDist']=dikeset['PerpOffsetDist'].values-dikeset['PerpOffsetDist'].mean()
         X=(np.vstack((dikeset[t], dikeset['ScaledRho'], dikeset['ScaledPerpOffsetDist'])).T)
 
     threshold=1
@@ -308,7 +309,7 @@ def HT_AGG_custom(dikeset,dtheta, drho, dimensions=2, linkage='average'):
     # the imput X value
     M= squareform(pdist(X, metric))
     #Mpdist()
-   
+
 
     # fit the data to the AGG model
     ag = AGG(n_clusters=None, affinity='precomputed', distance_threshold=threshold, linkage=linkage)
@@ -317,7 +318,7 @@ def HT_AGG_custom(dikeset,dtheta, drho, dimensions=2, linkage='average'):
     
     return dikeset, clusters, M
 
-def HT_AGG_custom2(dikeset,dtheta, drho, metric=CyclicEuclideanScaled, dimensions=2, linkage='complete'):
+def HT_AGG_custom2(dikeset,dtheta, drho, dimensions=2, linkage='average'):
     '''
     Agglomerative clustering with custom metric on Hough transform data
 
@@ -335,11 +336,12 @@ def HT_AGG_custom2(dikeset,dtheta, drho, metric=CyclicEuclideanScaled, dimension
 
     #scale m unit values
     dikeset['ScaledRho']=dikeset[r].values - dikeset[r].mean()
-    dikeset['ScaledPerpOffsetDist']=dikeset['PerpOffsetDist'].values-dikeset['PerpOffsetDist'].mean()
+    
     # create X vector with theta and rho and midist
     if dimensions == 2:
         X=(np.vstack((dikeset[t], dikeset['ScaledRho'])).T)
     elif dimensions == 3:
+        dikeset['ScaledPerpOffsetDist']=dikeset['PerpOffsetDist'].values-dikeset['PerpOffsetDist'].mean()
         X=(np.vstack((dikeset[t], dikeset['ScaledRho'], dikeset['ScaledPerpOffsetDist'])).T)
 
     threshold=1
@@ -356,10 +358,10 @@ def HT_AGG_custom2(dikeset,dtheta, drho, metric=CyclicEuclideanScaled, dimension
     Z=sch.average(M)
     labels=sch.fcluster(Z, t=threshold, criterion='distance')
     #rootnode, nodelist=sch.to_tree(Z)
-    dikeset['Label']=labels
+    dikeset['Labels']=labels
    
     
-    return dikeset #, rootnode, nodelist
+    return dikeset, Z #, rootnode, nodelist
 
 def AGGfull(dikeset):
     theta, rho, xc, yc= AKH_HT(dikeset)

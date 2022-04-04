@@ -74,7 +74,8 @@ def plotSensitivityRhoColumns(evals, columns):
             name=str(t)+"$^\circ$"
             kwargs=dict( label=name, markersize=7, alpha=0.5)
             plotBreak(xlim, rhos, y1, ax11[j], ax12[j], m, **kwargs)
-            ax11[j].set_title(i)
+            ax11[j].set_ylabel(i)
+    plt.tight_layout()
     return f1, (ax11, ax12)
 
 
@@ -93,13 +94,19 @@ def plotSensitivityThetaColumns(evals, columns):
             kwargs=dict( label=name, markersize=7, alpha=0.5)
             ax[j].plot(theta, y1, m, **kwargs)
             ax[j].set_ylabel(i)
-            
-    ax[j].set_xlabel("Theta $^\circ$ ")
+    
+    ax[j].set_xlabel("Theta ($^\circ$) ")
+    plt.tight_layout()
+    
     return f1, ax
 
 
 f1, ax1=plotSensitivityRhoColumns(evals, columns[1:5])
-f1.legend()
+ax=ax1[0]
+handles, labels = ax[0].get_legend_handles_labels()
+f1.legend(handles, labels, loc='upper left')
+
+
 f1.savefig("CJDS_sensitivty_rho1.eps",dpi=600)
 f2, ax2=plotSensitivityRhoColumns(evals, columns[5:10])
 f2.savefig("CJDS_sensitivty_rho2.eps",dpi=600)
@@ -109,7 +116,9 @@ f4, ax4=plotSensitivityRhoColumns(evals, columns[15:19])
 f4.savefig("CJDS_sensitivty_rho4.eps",dpi=600)
 
 f5, ax5=plotSensitivityThetaColumns(evals, columns[1:5])
-f5.legend()
+handles, labels = ax5[0].get_legend_handles_labels()
+f5.legend(handles, labels, loc='upper left')
+
 f5.savefig("CJDS_sensitivty_rho5.eps",dpi=600)
 f6, ax6=plotSensitivityThetaColumns(evals, columns[5:10])
 f6.savefig("CJDS_sensitivty_rho6.eps",dpi=600)

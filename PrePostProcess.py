@@ -159,6 +159,10 @@ def WKTtoArray(df, plot=True):
         if np.sum(np.isnan( [x, y]))>0:
             drop.append(i)
             continue
+        if np.sqrt( (x[1]-x[0])**2 + (y[1]-y[0])**2)<1:
+            drop.append(i)
+            continue
+        
         
         xstart.append(x[0])
         ystart.append(y[0])
@@ -170,6 +174,7 @@ def WKTtoArray(df, plot=True):
 
 
     length=np.sqrt((np.array(xstart)-np.array(xend))**2+(np.array(ystart)-np.array(yend))**2)
+    
     if len(drop) >= 0:
          df=df.drop(drop)
 

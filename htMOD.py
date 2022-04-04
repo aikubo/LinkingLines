@@ -8,6 +8,7 @@ Created on Thu Apr  1 12:49:07 2021
 import pandas as pd 
 import numpy as np
 import matplotlib.pyplot as plt
+from fitRectangle import *
 #from PrePostProcess import midPoint
 
 def AKH_HT(data, xc=None, yc=None):
@@ -71,23 +72,22 @@ def HT_center(data):
     
     return xc,yc
 
-def rotateData2(data, rotation_angle, xc=None, yc=None):
+def rotateData2(x,y, rotation_angle, xc, yc):
 
     """
     Rotates a dataframe of line segments by a given angle.
 
     Parameters
     ----------
-    data: pandas.Dataframe
-        dataframe of the line segments
-        must contain ["Xstart", "Ystart", "Xend", "Yend"]
+    x,y : numpy.Array
+        array of endpoints such as output from fitRectangle/endpoints2
 
     rotation_angle: float
         angle of rotation in degrees
 
-    xc, yc: float, optional
+    xc, yc: float
         x and y location of the center of the HT.
-        If none is given, the center is calculated from the dataframe.
+        
 
     Returns
     -------
@@ -96,21 +96,23 @@ def rotateData2(data, rotation_angle, xc=None, yc=None):
     """
 
     
-    if xc == None or yc == None:
-        xc,yc=HT_center(data)
+    #if xc == None or yc == None:
+    #    xc,yc=HT_center(data)
 
-    rotation_angle=float(rotation_angle)
-    o_x1 = data['Xstart'].values - xc
-    o_x2 = data['Xend'].values - xc
-    o_y1 = data['Ystart'].values - yc
-    o_y2 = data['Yend'].values - yc
-    #print(xc,yc)
+    # rotation_angle=float(rotation_angle)
+    # o_x1 = data['Xstart'].values - xc
+    # o_x2 = data['Xend'].values - xc
+    # o_y1 = data['Ystart'].values - yc
+    # o_y2 = data['Yend'].values - yc
+    # #print(xc,yc)
     
-    x1 = o_x1*np.cos(np.deg2rad(rotation_angle)) - o_y1*np.sin(np.deg2rad(rotation_angle))
-    y1 = o_x1*np.sin(np.deg2rad(rotation_angle)) + o_y1*np.cos(np.deg2rad(rotation_angle))
+    # x1 = o_x1*np.cos(np.deg2rad(rotation_angle)) - o_y1*np.sin(np.deg2rad(rotation_angle))
+    # y1 = o_x1*np.sin(np.deg2rad(rotation_angle)) + o_y1*np.cos(np.deg2rad(rotation_angle))
     
-    x2 = o_x2*np.cos(np.deg2rad(rotation_angle)) - o_y2*np.sin(np.deg2rad(rotation_angle))
-    y2 = o_x2*np.sin(np.deg2rad(rotation_angle)) + o_y2*np.cos(np.deg2rad(rotation_angle))
+    # x2 = o_x2*np.cos(np.deg2rad(rotation_angle)) - o_y2*np.sin(np.deg2rad(rotation_angle))
+    # y2 = o_x2*np.sin(np.deg2rad(rotation_angle)) + o_y2*np.cos(np.deg2rad(rotation_angle))
+    
+    ang=np.deg2rad(rotation_angle)
     
     dataRotated=data.copy()
     
@@ -199,8 +201,13 @@ def MidtoPerpDistance(df, xc, yc):
     df: pandas.Dataframe
     with new columns of ['PerpOffDist', 'PerpIntX', 'PerpIntY']
     """
-    if 'Xmid' not in df.columns:
-        df=midPoint(df)
+    
+    try: 
+        'Xmid' not in df.columns
+    except: 
+        print("Xmid must be calculate first")
+    # if 'Xmid' not in df.columns:
+    #     df=midPoint(df)
         
     
     theta,rho,xc,yc=AKH_HT(df, xc, yc)
