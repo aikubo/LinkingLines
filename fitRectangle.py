@@ -180,7 +180,11 @@ def fit_Rec(lines,xc,yc):
     Xedges=np.array([xs[0], xs[0], xs[1], xs[1], xs[0]])
     Yedges=np.array([ys[1], ys[0], ys[0], ys[1], ys[1]])
     # a.plot(Xedges, Yedges, 'r.-')
+    Xmid=(np.max(xs)+np.min(xs))/2
     
+    Ymid=(np.max(ys)+np.min(ys))/2
+
+    Xmid, Ymid=unrotate(ang, Xmid, Ymid, x0, y0)
     xs,ys=unrotate(ang,Xedges,Yedges,x0,y0)
 
    
@@ -190,7 +194,7 @@ def fit_Rec(lines,xc,yc):
     r=np.sum((yc-yp)**2)/lines['seg_length'].sum() #len(lines)
     
     
-    return width, length, r, xs, ys
+    return width, length, r, xs, ys, Xmid, Ymid
 
 def RecEdges( xi,yi, avgtheta, x0,y0):
     ang=-1*np.deg2rad(avgtheta)

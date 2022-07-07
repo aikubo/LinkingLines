@@ -48,7 +48,7 @@ fig2,ax2=DotsLinesHT(df1, ColorBy='theta')
 rho=angles*100
 df11=fromHT(angles, rho)
 
-rho=angles*-100
+rho=angles*500
 df12=fromHT(angles, rho)
 
 label=[1]*len(df11)+[2]*len(df12)

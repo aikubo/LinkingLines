@@ -14,6 +14,10 @@ Contains various preprocessing data and post processing
 import pandas as pd
 import numpy as np 
 from htMOD import MidtoPerpDistance, HT_center
+from htMOD import AKH_HT as HT 
+from datetime import datetime
+import re
+from scipy import stats
 
 def midPoint(df):
     """
@@ -94,7 +98,7 @@ def writeToQGISLong(df,name, myProj=None):
     
     return df
 
-def WKTtoArray(df, plot=True):
+def WKTtoArray(df, plot=False):
 
     '''
     Processes a dataframe with columns Xstart,Ystart,Xend,Yend,seg_length to a pandas dataframe with columns Xstart,Ystart,Xend,Yend,seg_length
@@ -104,9 +108,8 @@ def WKTtoArray(df, plot=True):
     Output:
         df: a pandas dataframe with columns Xstart,Ystart,Xend,Yend,seg_length
     '''
-    import matplotlib.pyplot as plt
-    import re
-    from scipy import stats
+    #import matplotlib.pyplot as plt
+
             
     xstart=[]
     ystart=[]
@@ -301,21 +304,72 @@ def preprocess(df):
         
     return df
 
-def completePreProcess(df):
-    
+def DikesetReProcess(df):
+
     if 'Xstart' not in df.columns:
         df=WKTtoArray(df)
-
     if 'seg_length' not in df.columns:        
         df=segLength(df)
+        
+    xc,yc=HT_center(df)
+    
     if 'HashID' not in df.columns: 
         df=giveHashID(df)
     if 'Xmid' not in df.columns: 
         df=midPoint(df)
-    if 'PerpOffsetDist' not in df.columns: 
-        xc,yc=HT_center(df)
+        
+    if 'theta' not in df.columns or 'rho' not in df.columns:
+        theta,rho,xc,yc=HT(df)
+        df['theta']=theta
+        df['rho']=rho
+    if 'xc' not in df.columns:
+        theta,rho,xc,yc=HT(df)
+        df['theta']=theta
+        df['rho']=rho
+        df=df.assign(yc=yc)
+        df=df.assign(xc=xc)
         df=MidtoPerpDistance(df, xc, yc)
+    elif xc is not df['xc'].iloc[0]:
+        theta,rho,xc,yc=HT(df)
+        df['theta']=theta
+        df['rho']=rho
+        df=MidtoPerpDistance(df, xc, yc)
+        df=df.assign(yc=yc)
+        df=df.assign(xc=xc)
+
+        
+    if 'PerpOffsetDist' not in df.columns: 
+        df=MidtoPerpDistance(df, xc, yc)
+
+    now = datetime.now() 
+    d = now.strftime("%d %b, %Y")
+
+    df=df.assign(Date_Changed=d)
     return df 
+
+
+def completePreProcess(df):
+       
+    df=WKTtoArray(df)
+
+    df=segLength(df)
+
+    df=giveHashID(df)
+
+    df=midPoint(df)
+
+    theta,rho,xc,yc=HT(df)
+    df['theta']=theta
+    df['rho']=rho
+    df['yc']=yc
+    df['xc']=xc
+    df=MidtoPerpDistance(df, xc, yc)
+    now = datetime.now() 
+    d = now.strftime("%d %b, %Y")
+
+    df['Date Changed']=[d]*len(df)
+    
+    return df
 
 def whichForm(lines):
     '''

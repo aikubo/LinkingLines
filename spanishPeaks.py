@@ -10,7 +10,7 @@ from htMOD import AKH_HT as HT
 from htMOD import transformXstart
 from sklearn.preprocessing import scale
 import numpy as np 
-from clusterMod import *
+from clusterMod import HT_AGG_custom
 import matplotlib.pyplot as plt
 from plotmod import plotlines, labelcolors, plotbyAngle, BA_HT, DotsHT
 from examineMod import examineClusters, plotlabel
@@ -21,6 +21,7 @@ import matplotlib.colors as colors
 from matplotlib.lines import Line2D      
 from plotmod import plotlines
 import seaborn as sns
+from PrePostProcess import *
 
 sns.set_context("talk")
 # dikeset=pd.read_csv('/home/akh/myprojects/Linking-and-Clustering-Dikes/dikedata/DikeMountain_Peaks_3857WKT.csv')
@@ -31,22 +32,23 @@ sns.set_context("talk")
 # dikeset['rho']=rho
 # dikeset['theta']=theta
 
-dikeset=pd.read_csv('/home/akh/myprojects/Linking-and-Clustering-Dikes/dikedata/DikeMountain_SpanishPeaks_3857.csv')
-theta, rho, xc, yc= HT(dikeset)
+dikeset=pd.read_csv('/home/akh/myprojects/Linking-and-Clustering-Dikes/dikedata/spanish peaks/DikeMountain_SpanishPeaks_3857.csv')
+dikeset=DikesetReProcess(dikeset)
 trange=2 
-rrange=5000 
+rrange=2000
 
-stdT=np.std(theta)
-stdRho=np.std(rho)
-d2=trange/stdT
-
-clustering=HT_AGG(dikeset,d2)
-dikeset['Labels']=clustering.labels_
-dikeset['p']=rho
+theta, rho, xc,  yc=HT(dikeset)
+print(xc,yc)
+dikeset= MidtoPerpDistance(dikeset, xc, yc)
 dikeset['theta']=theta
+dikeset['rho']=rho
+
+dikeset, Z=HT_AGG_custom(dikeset, trange, rrange)
+
 Splines,IC=examineClusters(dikeset)
 
-Splines=transformXstart(Splines)
+np.save('/home/akh/myprojects/Linking-and-Clustering-Dikes/dikedata/spanish peaks/SP.npy', Z)
+Splines.to_csv('/home/akh/myprojects/Linking-and-Clustering-Dikes/dikedata/spanish peaks/SpanishPeaks_3857_LINKED_2_2000.csv')
 
 #fig, ax= DotsHT(Splines, ColorBy="Xstart")
 

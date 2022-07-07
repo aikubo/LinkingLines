@@ -11,7 +11,7 @@ import numpy as np
 from htMOD import AKH_HT as HT
 from htMOD import MidtoPerpDistance
 from clusterMod import HT_AGG_custom as AggHT
-from clusterMod import HT_AGG_custom2
+from clusterMod import HT_AGG_custom
 from examineMod import examineClusters
 from plotmod import *
 import scipy.cluster.hierarchy as sch
@@ -20,6 +20,7 @@ dikeset=pd.read_csv('/home/akh/myprojects/Linking-and-Clustering-Dikes/dikedata/
 # already straightened dikes and did preprecessing
 
 #do the hough transform 
+xc,yc=HT_center(dikeset)
 # theta,rho,xc,yc=HT(dikeset)
 # dikeset['theta']=theta
 # dikeset['rho']=rho
@@ -36,7 +37,7 @@ lines1,evaluation,EEdikes=examineClusters(dikeset, ifEE=True)
 evaluation['Theta_Threshold']=dtheta
 evaluation['Rho_Threshold']=drho
 
-dikeset2, Z=HT_AGG_custom2(dikeset, dtheta, drho)
+dikeset2, Z=HT_AGG_custom(dikeset, dtheta, drho)
 
 lines2,evaluation2,EEdikes2=examineClusters(dikeset2, ifEE=True)
 dikeset['TrueLabel']=dikeset["Labels"]
@@ -52,15 +53,8 @@ yes
 # lines,evaluation,EEdikes=examineClusters(dikeset)
 
 
-lines=pd.read_csv('/home/akh/myprojects/Linking-and-Clustering-Dikes/dikedata/crb/CJDS_Lines_3_500_March11.csv')
-fig,ax=plt.subplots(); c=ax.scatter(lines['Overlap'], lines['EnEchelonAngleDiff'], c=lines['AvgTheta'], alpha=0.6, edgecolor='k', cmap="turbo")
-ax.set_xlabel("Segment Overlap (%)")
-fig.colorbar(c, label='Average Angle ($^\circ$)')
-ax.set_ylabel("En Echelon Angle Difference ($^\circ$)")
+#lines=pd.read_csv('/home/akh/myprojects/Linking-and-Clustering-Dikes/dikedata/crb/CJDS_500m_3deg_level1.csv')
 
-Z=np.load('/home/akh/myprojects/Linking-and-Clustering-Dikes/dikedata/crb/CJDS_MarchLines_3_500_distances.npy')
-
-fig, ax, p, b=persistancePlot(Z)
 
 
 import scipy.cluster.hierarchy as sch
@@ -96,13 +90,72 @@ import scipy.cluster.hierarchy as sch
     # plt.tight_layout()
     # fig.savefig(name, dpi=600)
 '''
-labels=sch.fcluster(Z, t=1, criterion='distance')
-#dikeset5=dikeset
-dikeset['Labels']=labels
-lines,evaluation=examineClusters(dikeset)
 
+Z=np.load('/home/akh/myprojects/Linking-and-Clustering-Dikes/dikedata/crb/CJDS_MarchLines_3_500_distances.npy')
+
+#labels=sch.fcluster(Z, t=1, criterion='distance')
+#dikeset5=dikeset
+#dikeset['Labels']=labels
+#lines,evaluation=examineClusters(dikeset)
+lines= pd.read_csv("/home/akh/myprojects/Linking-and-Clustering-Dikes/dikedata/crb/CJDS_500m_3deg_level1.csv")
 
 EEDikes_lines=lines.loc[lines['EnEchelonAngleDiff']>5]
+
+
+
+fig,ax=plt.subplots(); c=ax.scatter(lines['Overlap'], lines['EnEchelonAngleDiff'], c=lines['AvgTheta'], alpha=0.6, edgecolor='k', cmap="turbo")
+ax.set_xlabel("Segment Overlap (%)")
+fig.colorbar(c, label='Average Angle ($^\circ$)')
+ax.set_ylabel("En Echelon Angle Difference ($^\circ$)")
+
+
+fig, ax, p, b=persistancePlot(Z)
+
+fig,ax=plt.subplots(2,2)
+
+DotsHT(fig, ax[0,0], lines, ColorBy='PerpOffsetDist')
+ax[0,1].hist(lines['PerpOffsetDist'])
+ax[0,1].set_xlabel("PerpOffsetDist (m)")
+ax[0,1].set_ylabel("Counts")
+psplit= np.mean(lines['PerpOffsetDist'].values)
+
+lines1=lines[ lines['PerpOffsetDist'] > psplit]
+lines2=lines[ lines['PerpOffsetDist'] < psplit]
+
+DotsHT(fig, ax[1,0], lines1, ColorBy='PerpOffsetDist')
+DotsHT(fig, ax[1,1], lines2, ColorBy='PerpOffsetDist')
+
+
+x=np.linspace(-90,90,10)
+slope1=(-2.8e4-2.9e4)/(-87.9-87.9)
+b=2.9e4-87.9*slope1
+ax[1,0].plot([-87.9, 87.9],[-2.8e4, 2.9e4], 'r*-', linewidth=2)
+
+def mysigmoid(x, c=1, a=1, b=0):
+    return a/(1+np.e**( -c*(x-c)))+b
+
+ax[1,1].plot(x, mysigmoid(x, 0.06, -100000, 50000), 'y', linewidth=2)
+x=np.random.normal(0, 30, 200) #np.linspace(-90,90,100)
+y1=x*slope1+b
+y2=mysigmoid(x, 0.06, -100000, 50000)
+
+from synthetic import fromHT, makeRadialSwarmdf
+
+df1=fromHT(x,y1, length=50000, xc=xc, yc=yc, CartRange=300000)
+df2=fromHT(x,y2, length=50000, xc=xc, yc=yc, CartRange=300000)
+label=[1]*len(df1)+[2]*len(df2)
+
+linefit=df1.append(df2)
+linefit['Label']=label
+
+fig2,ax2=DotsLines(linefit, ColorBy='Label', cmap='viridis')
+ax2[1].scatter(lines['AvgTheta'], lines['AvgRho'], alpha=0.1)
+radEx=makeRadialSwarmdf(50000, center=[xc,yc])
+
+#ig2,ax2=DotsLines(radEx, ColorBy='theta', cmap='viridis')
+
+
+
 # labels15=sch.fcluster(Z, t=15, criterion='distance')
 # dikeset15=dikeset
 # dikeset15['Labels']=labels15

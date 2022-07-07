@@ -32,7 +32,7 @@ def AKH_HT(data, xc=None, yc=None):
     """
     
   
-    if xc is None and yc is None:
+    if xc is None or yc is None:
         xc,yc=HT_center(data)
 
     o_x1 = data['Xstart'].values - xc
@@ -51,6 +51,7 @@ def AKH_HT(data, xc=None, yc=None):
     
     return theta, rho, xc, yc
 
+    
 def HT_center(data):
     """
     Finds the center of a dataframe of line segments.
@@ -72,7 +73,7 @@ def HT_center(data):
     
     return xc,yc
 
-def rotateData2(x,y, rotation_angle, xc, yc):
+def rotateData2(data, rotation_angle):
 
     """
     Rotates a dataframe of line segments by a given angle.
@@ -96,21 +97,21 @@ def rotateData2(x,y, rotation_angle, xc, yc):
     """
 
     
-    #if xc == None or yc == None:
-    #    xc,yc=HT_center(data)
 
-    # rotation_angle=float(rotation_angle)
-    # o_x1 = data['Xstart'].values - xc
-    # o_x2 = data['Xend'].values - xc
-    # o_y1 = data['Ystart'].values - yc
-    # o_y2 = data['Yend'].values - yc
-    # #print(xc,yc)
+    xc,yc=HT_center(data)
+
+    rotation_angle=float(rotation_angle)
+    o_x1 = data['Xstart'].values - xc
+    o_x2 = data['Xend'].values - xc
+    o_y1 = data['Ystart'].values - yc
+    o_y2 = data['Yend'].values - yc
+    #print(xc,yc)
     
-    # x1 = o_x1*np.cos(np.deg2rad(rotation_angle)) - o_y1*np.sin(np.deg2rad(rotation_angle))
-    # y1 = o_x1*np.sin(np.deg2rad(rotation_angle)) + o_y1*np.cos(np.deg2rad(rotation_angle))
+    x1 = o_x1*np.cos(np.deg2rad(rotation_angle)) - o_y1*np.sin(np.deg2rad(rotation_angle))
+    y1 = o_x1*np.sin(np.deg2rad(rotation_angle)) + o_y1*np.cos(np.deg2rad(rotation_angle))
     
-    # x2 = o_x2*np.cos(np.deg2rad(rotation_angle)) - o_y2*np.sin(np.deg2rad(rotation_angle))
-    # y2 = o_x2*np.sin(np.deg2rad(rotation_angle)) + o_y2*np.cos(np.deg2rad(rotation_angle))
+    x2 = o_x2*np.cos(np.deg2rad(rotation_angle)) - o_y2*np.sin(np.deg2rad(rotation_angle))
+    y2 = o_x2*np.sin(np.deg2rad(rotation_angle)) + o_y2*np.cos(np.deg2rad(rotation_angle))
     
     ang=np.deg2rad(rotation_angle)
     
@@ -213,11 +214,23 @@ def MidtoPerpDistance(df, xc, yc):
     theta,rho,xc,yc=AKH_HT(df, xc, yc)
     intx=rho*np.cos(np.deg2rad(theta))
     inty=rho*np.sin(np.deg2rad(theta))
-    df['PerpOffsetDist']=np.sqrt( (df['Xmid']-intx)**2 +  (df['Ymid']-inty)**2)
+    df['PerpOffsetDist']=np.sqrt( (df['Xmid'].values-intx)**2 +  (df['Ymid'].values-inty)**2)*np.sign((df['Ymid'].values-inty))
     df['PerpIntX']=intx
     df['PerpIntY']=inty
     
     return df
 
+def moveHTcenter(data, xc=None, yc=None):
+    if xc is None and yc is None:
+        xc,yc=HT_center(data)
+        
+    o_x1 = data['Xstart'].values - xc
+    o_x2 = data['Xend'].values - xc
+    o_y1 = data['Ystart'].values - yc
+    o_y2 = data['Yend'].values - yc
+    
+    df2=pd.DataFrame({'Xstart':o_x1, 'Ystart':o_y1, 'Xend':o_x2, 'Yend':o_y2})
+    
+    return df2
     
     

@@ -9,6 +9,7 @@ Created on Thu Apr  1 13:12:50 2021
 from sklearn.preprocessing import scale, RobustScaler, PowerTransformer
 from sklearn.cluster import AgglomerativeClustering as AGG
 from sklearn.cluster import DBSCAN
+from sklearn.metrics import pairwise_distances_chunked
 from sklearn.preprocessing import StandardScaler
 from sklearn.neighbors import NearestNeighbors
 import numpy as np 
@@ -22,6 +23,7 @@ from PrePostProcess import whichForm
 from scipy.spatial.distance import pdist, squareform
 import scipy.cluster.hierarchy as sch
 import matplotlib.pyplot as plt
+import warnings
 
 def CylDistanceAngleModified(u, v):
     '''
@@ -271,54 +273,9 @@ def HT_AGG(dikeset,d):
     
     return clusters
 
-def HT_AGG_custom(dikeset,dtheta, drho, dimensions=2, linkage='average'):
-    '''
-    Agglomerative clustering with custom metric on Hough transform data
-
-    Input:
-        dikeset: dataframe with Hough transform data
-        metric: metric to use for clustering
-        dimensions (optional): number of dimensions to use for clustering
-        linkage (optional) : 
-    Output: 
-        dikeset: dataframe with cluster labels
-        clusters: fitted AgglomeratieClustering object 
-
-    '''
-    t,r=whichForm(dikeset)
-
-    #scale m unit values
-    dikeset['ScaledRho']=dikeset[r].values # - dikeset[r].mean()
-    
-    # create X vector with theta and rho and midist
-    if dimensions == 2:
-        X=(np.vstack((dikeset[t], dikeset['ScaledRho'])).T)
-    elif dimensions == 3:
-        dikeset['ScaledPerpOffsetDist']=dikeset['PerpOffsetDist'].values-dikeset['PerpOffsetDist'].mean()
-        X=(np.vstack((dikeset[t], dikeset['ScaledRho'], dikeset['ScaledPerpOffsetDist'])).T)
-
-    threshold=1
-    
- 
-    #if metric == CyclicEuclideanScaled: 
-    metric= lambda u, v: CyclicEuclideanScaled(u,v, dtheta,drho)
-        
-    # Create a new AGG instance with the specified metric and dimensions
-    
-    # I have no idea why but using sklearn pairwise_distances changes 
-    # the imput X value
-    M= squareform(pdist(X, metric))
-    #Mpdist()
 
 
-    # fit the data to the AGG model
-    ag = AGG(n_clusters=None, affinity='precomputed', distance_threshold=threshold, linkage=linkage)
-    clusters=ag.fit(M)
-    dikeset['Labels']=clusters.labels_
-    
-    return dikeset, clusters, M
-
-def HT_AGG_custom2(dikeset,dtheta, drho, dimensions=2, linkage='average'):
+def HT_AGG_custom(dikeset,dtheta, drho, dimensions=2, linkage='complete', parallel=False):
     '''
     Agglomerative clustering with custom metric on Hough transform data
 
@@ -339,7 +296,7 @@ def HT_AGG_custom2(dikeset,dtheta, drho, dimensions=2, linkage='average'):
     
     # create X vector with theta and rho and midist
     if dimensions == 2:
-        X=(np.vstack((dikeset[t], dikeset['ScaledRho'])).T)
+        X=(np.vstack((dikeset[t], dikeset['rho'])).T)
     elif dimensions == 3:
         dikeset['ScaledPerpOffsetDist']=dikeset['PerpOffsetDist'].values-dikeset['PerpOffsetDist'].mean()
         X=(np.vstack((dikeset[t], dikeset['ScaledRho'], dikeset['ScaledPerpOffsetDist'])).T)
@@ -354,14 +311,25 @@ def HT_AGG_custom2(dikeset,dtheta, drho, dimensions=2, linkage='average'):
     
     # I have no idea why but using sklearn pairwise_distances changes 
     # the imput X value
+    if parallel: 
+        nCores=-1
+    else: 
+        nCores=2
+        
+    # gen = pairwise_distances_chunked(X, method=metric, n_jobs=nCores)
+    # Z_all= np.concatenate(list(gen), axis=0)
+    # Z = squareform(Z_all)
+           
     M= pdist(X, metric)
-    Z=sch.average(M)
+    
+    Z=sch.complete(M)
     labels=sch.fcluster(Z, t=threshold, criterion='distance')
     #rootnode, nodelist=sch.to_tree(Z)
     dikeset['Labels']=labels
    
     
     return dikeset, Z #, rootnode, nodelist
+
 
 def AGGfull(dikeset):
     theta, rho, xc, yc= AKH_HT(dikeset)

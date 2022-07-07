@@ -17,44 +17,6 @@ import seaborn as sns
 from jitteringHTcenter import moveHTcenter, rotateHT
 from matplotlib import cm
 
-# def fragmentDikes(df, maxL=20000, ndikesMax=None, distortion=0):
-#     np.random.seed(5)
-#     dfFrag=pd.DataFrame(columns=df.columns)
-#     ndikes=0
-#     if ndikesMax is None: 
-#         ndikesMax=2000
-        
-       
-#     for i in range(len(df)):
-#         nSegments=np.random.randint(3)
-#         if ndikes < ndikesMax: 
-#             for j in range(nSegments):
-#                 high=max(0, df['Xend'].iloc[i])
-#                 low=min(0, df['Xend'].iloc[i])
-#                 xrange=np.random.randint(low,high, size=2)
-#                 m=df['Slope'].iloc[i]*(1+np.random.rand()*distortion)
-#                 yrange=m*xrange
-                
-#                 L=np.sqrt((xrange[0]-xrange[1])**2+(yrange[0]-yrange[1])**2)
-#                 if L > maxL: 
-#                     continue
-                
-#                 if max(abs(yrange)) > df['Yend'].max() :
-#                     continue 
-#                 dfFrag=dfFrag.append(pd.DataFrame({'Xstart':xrange[0], 'Xend': xrange[1], 
-#                                                    'Ystart': yrange[0], 'Yend':yrange[1], 
-#                                                    'Slope':m, 'Length':L
-#                                                        }, index=[0]), ignore_index=True)
-#                 ndikes=ndikes+1
-                
-#     # a=np.full(len(dfFrag), False)
-#     # a[:int(len(dfFrag)/mask)]=True 
-#     # np.random.shuffle(a)
-#     # dfFrag=dfFrag.iloc[a]
-    
-    
-#     return dfFrag 
-
 
 def makeRadialSwarm(radius, doubled=True, anglestart=-90, anglestop=90, ndikes=50, center=[0,0]):
     
@@ -79,29 +41,36 @@ def makeRadialSwarm(radius, doubled=True, anglestart=-90, anglestop=90, ndikes=5
     print(center)
     return Xstart, Ystart, Xend, Yend
 
-def makeRadialSwarmdf(radius, doubled=True, anglestart=-90, anglestop=90, ndikes=50, center=[0,0]):
+def makeRadialSwarmdf(radius, doubled=True, anglestart=-90, anglestop=90, ndikes=50, center=[0,0], label=1, CartRange=100000):
     
     #center=np.array([0,0])
     angles=np.linspace(anglestart, anglestop, ndikes)
-    m=np.tan(np.deg2rad(angles))
+    m=-1/np.tan(np.deg2rad(angles))
     
     Xstart=np.zeros(ndikes)+center[0]
     Ystart=np.zeros(ndikes)+center[1]
-    Xend=radius/np.sqrt(1+m**2)+center[0]
-    Yend=Xend*m+center[1]
-    
+    Xend=radius*np.cos(np.deg2rad((angles)))+center[0]#/np.sqrt(1+m**2)+center[0]
+    Yend=radius*np.sin(np.deg2rad((angles)))+center[1] #Xend*m+center[1]
+    rho=center[0]*np.cos(np.deg2rad(angles))+center[1]*np.sin(np.deg2rad(angles))
     if doubled:
         
         Xstart=np.append(Xstart, np.zeros(ndikes)+center[0])
         Ystart=np.append(Ystart, np.zeros(ndikes)+center[1])
-        Yend=np.append(Yend, -1*Xend*m+center[1])
-        Xend=np.append(Xend, -1*radius/np.sqrt(1+m**2)+center[0])
-        
-        
-    Xstart[abs(Xstart)<10**-6]=1
+        Yend=np.append(Yend, -radius*np.cos(np.deg2rad(90-(angles)))+center[0])
+        Xend=np.append(Xend, -radius*np.sin(np.deg2rad(90-(angles)))+center[1])
+        #theta2=
+        #angles=np.append(angles, )
+     
     
-    df=pd.DataFrame({'Xstart':Xstart, 'Xend': Xend, 'Ystart': Ystart, 'Yend':Yend})
-                     
+    df=pd.DataFrame({'Xstart':Xstart, 'Xend': Xend, 
+                     'Ystart': Ystart, 'Yend':Yend})
+                    # 'theta': angles, 'rho':rho})
+    df=df.drop(df[ abs(df['Ystart']) > CartRange].index)
+    df=df.drop(df[ abs(df['Yend']) > CartRange].index)
+    df=df.drop(df[ abs(df['Xstart']) > CartRange].index)
+    df=df.drop(df[ abs(df['Xend']) > CartRange].index)
+    labels=[label]*len(df)
+    df['Label']=labels
     return df
 
 def addSwarms(dflist):
@@ -125,7 +94,7 @@ def makeLinearSwarm(length, slope,  ndikes=20):
     return Xstart, Ystart, Xend, Yend
 
 # make linear dike swarms of angle and rho distributions 
-def makeLinear2(length, angle, angleSTD, rho, rhoSTD, ndikes=100, CartRange=300000):
+def makeLinear2(length, angle, angleSTD, rho, rhoSTD, ndikes=100, CartRange=300000, label=1):
     angles=np.random.normal(angle, angleSTD, ndikes)
     rhos=np.random.normal(rho, rhoSTD, ndikes)
 
@@ -136,11 +105,13 @@ def makeLinear2(length, angle, angleSTD, rho, rhoSTD, ndikes=100, CartRange=3000
     Ystart=slopes*Xstart+b
     Xend=Xstart-length/np.sqrt(1+slopes**2)
     Yend=slopes*Xend+b
-
+    
     df=pd.DataFrame({'Xstart':Xstart, 'Xend': Xend, 'Ystart': Ystart, 'Yend':Yend, 'theta':angles, 'rho':rhos})
     
     df=df.drop(df[ abs(df['Ystart']) > CartRange].index)
-
+    labels=[label]*len(df)
+    df['Label']=labels
+    
     return df
 
 
@@ -277,28 +248,48 @@ def EnEchelonSynthetic(ndikes, angle, RhoStart, RhoSpacing, Overlap=0, CartRange
     
     return df 
 
-def fromHT(angles, rhos, length=10000, xc=0, yc=0, CartRange=100000, label=None, xrange=None):
+def fromHT(angles, rhos, scale=10000, length=10000, xc=0, yc=0, CartRange=100000, label=1, xrange=None):
     ndikes=len(angles)
-    b=rhos/np.sin(np.deg2rad(angles))
-    slopes=-1/(np.tan(np.deg2rad(angles))+0.000000001)
     
+    slopes=-1/(np.tan(np.deg2rad(angles))+0.000000001)
+    print(slopes)
+    b=rhos/np.sin(np.deg2rad(angles))+yc-xc*slopes
+    print(b)
     if xrange is None:
-        Xstart=np.random.normal(-np.max(abs(rhos)), np.max(abs(rhos)), ndikes)
-        Xend=Xstart-length/np.sqrt(1+slopes**2)
+        a=np.array([1,-1])
+        c=np.random.choice(a, ndikes)
+        Xstart= c*scale*np.random.randn(ndikes)+xc
+        Xend=Xstart+ c*length*np.cos(np.arctan(slopes))
+        Ystart=slopes*Xstart+b+yc
+    
+        Yend=Ystart+c*length*np.sin(np.arctan(slopes))#Ystart+length*np.sin(np.deg2rad((angles)))
+        
     else:
         Xstart=xc-xrange/2
         Xend=xc+xrange/2
+        Ystart=Xstart*slopes+b
+        Yend=Xend*slopes+b
     
     
-    Ystart=slopes*Xstart+b
+    if type(label) is int:
+        labels=np.ones(ndikes)*label
+    else:
+        labels=np.linspace(1,ndikes)
     
-    Yend=slopes*Xend+b
+    print(Xstart, Xend)
+    print(Ystart, Yend)
     
+
     l=np.sqrt( (Xstart-Xend)**2 + (Ystart-Yend)**2)
-    df=pd.DataFrame({'Xstart':Xstart, 'Xend': Xend, 'Ystart': Ystart, 'Yend':Yend, 'theta':angles, 'seg_length':l, 'rho':rhos, 'Label': np.ones(ndikes)})
-    
-    df=df.drop(df[ abs(df['Ystart']) > CartRange].index)
-    
+    df=pd.DataFrame({'Xstart':Xstart, 'Xend': Xend, 'Ystart': Ystart, 'Yend':Yend, 
+                     'theta':angles, 'seg_length':l, 'rho':rhos, 
+                     'slope': slopes, 'intercept': b, 'Label': labels})
+    theta1, rho1, xc,yc=HT(df)
+    if any(~np.isclose(theta1, angles)):
+        print( "ERROR angles not equivilent")
+        
+    df=df.drop(df[ abs(df['Ystart'])-yc > CartRange].index)
+
     
     return df 
 
