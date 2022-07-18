@@ -89,24 +89,29 @@ def makeLinearSwarm(length, slope,  ndikes=20):
     Ystart=Xstart*slope+b
     Xend=Xstart+length/np.sqrt(1+slope**2)
     Yend=Xend*slope+b 
-    
+
     
     return Xstart, Ystart, Xend, Yend
 
 # make linear dike swarms of angle and rho distributions 
-def makeLinear2(length, angle, angleSTD, rho, rhoSTD, ndikes=100, CartRange=300000, label=1):
+def makeLinear2(length, angle, angleSTD, rho, rhoSTD, ndikes=100, CartRange=300000, label=None):
     angles=np.random.normal(angle, angleSTD, ndikes)
     rhos=np.random.normal(rho, rhoSTD, ndikes)
 
     b=rhos/np.sin(np.deg2rad(angles))
     slopes=-1/(np.tan(np.deg2rad(angles))+0.000000001)
-    Xstart=np.random.normal(rho, rhoSTD, ndikes)
+    Xstart=rho #np.random.normal(rho, rhoSTD, ndikes)
     
     Ystart=slopes*Xstart+b
     Xend=Xstart-length/np.sqrt(1+slopes**2)
     Yend=slopes*Xend+b
     
-    df=pd.DataFrame({'Xstart':Xstart, 'Xend': Xend, 'Ystart': Ystart, 'Yend':Yend, 'theta':angles, 'rho':rhos})
+    if type(label) is int:
+        labels=np.ones(ndikes)*label
+    else:
+        labels=np.arange(0,ndikes)
+    
+    df=pd.DataFrame({'Xstart':Xstart, 'Xend': Xend, 'Ystart': Ystart, 'Yend':Yend, 'theta':angles, 'rho':rhos, 'Labels':labels})
     
     df=df.drop(df[ abs(df['Ystart']) > CartRange].index)
     labels=[label]*len(df)
@@ -252,9 +257,9 @@ def fromHT(angles, rhos, scale=10000, length=10000, xc=0, yc=0, CartRange=100000
     ndikes=len(angles)
     
     slopes=-1/(np.tan(np.deg2rad(angles))+0.000000001)
-    print(slopes)
+
     b=rhos/np.sin(np.deg2rad(angles))+yc-xc*slopes
-    print(b)
+
     if xrange is None:
         a=np.array([1,-1])
         c=np.random.choice(a, ndikes)
@@ -276,15 +281,14 @@ def fromHT(angles, rhos, scale=10000, length=10000, xc=0, yc=0, CartRange=100000
     else:
         labels=np.linspace(1,ndikes)
     
-    print(Xstart, Xend)
-    print(Ystart, Yend)
-    
-
     l=np.sqrt( (Xstart-Xend)**2 + (Ystart-Yend)**2)
+    
     df=pd.DataFrame({'Xstart':Xstart, 'Xend': Xend, 'Ystart': Ystart, 'Yend':Yend, 
-                     'theta':angles, 'seg_length':l, 'rho':rhos, 
-                     'slope': slopes, 'intercept': b, 'Label': labels})
+                    'seg_length':l, 'slope': slopes, 'intercept': b, 'Label': labels})
     theta1, rho1, xc,yc=HT(df)
+    df['theta']=theta1
+    df['rho']=rho1
+    
     if any(~np.isclose(theta1, angles)):
         print( "ERROR angles not equivilent")
         

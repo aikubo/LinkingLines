@@ -43,6 +43,12 @@ l=[#'dikedata/deccandata/Central_Complete3_',
    # 'dikedata/crb/CJDS_Complete_3',
     'dikedata/spanish peaks/SpanishPeaks_Complete_3_']
 
+l=[#'dikedata/deccandata/Central_Complete3_', 
+   # 'dikedata/deccandata/NarmadaTapi_Complete_3_',
+   # 'dikedata/deccandata/Saurashtra_Complete_3_',
+   # 'dikedata/crb/CJDS_Complete_3',
+    'dikedata/spanish peaks/SpanishPeaks_Complete_3_']
+
 for i,j in zip(d,l): 
     dikeset=pd.read_csv(i)
 

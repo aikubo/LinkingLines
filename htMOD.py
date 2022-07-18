@@ -133,40 +133,6 @@ def rotateData2(data, rotation_angle):
     return dataRotated
 
 
-def transformXstart(dikeset, xc=None, yc=None):
-    """
-    Transforms the Xstart column of a dataframe of line segments.
-    Sets the Start point as the smallest x value of the line segment.
-    
-    Parameters
-    ----------
-    df: pandas.Dataframe
-        dataframe of the line segments
-        must contain ["Xstart", "Ystart", "Xend", "Yend"]
-
-    xc, yc: float, optional
-        x and y location of the center of the HT.
-        If none is given, the center is calculated from the dataframe.
-
-    Returns
-    -------
-    df: pandas.Dataframe
-        dataframe of the line segments with transformed Xstart column
-    """
-
-    if xc is None or  yc is None:
-        xc,yc=HT_center(dikeset)
-    dist1= xc-dikeset['Xstart']
-    dist2= xc-dikeset['Xend']
-    switchXs=(dist1>dist2)
-    
-    dikeset.loc[switchXs, ['Xstart', 'Xend']]=(dikeset.loc[switchXs, ['Xend', 'Xstart']].values)
-    dikeset.loc[switchXs, ['Ystart', 'Yend']]=(dikeset.loc[switchXs, ['Yend', 'Ystart']].values)
-    
-    return dikeset
-
-
-
 def gridSearch(df,dc):
     xc1,yc1=HT_center(df)
     t=0

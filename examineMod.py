@@ -28,6 +28,7 @@ from scipy import stats
 import warnings
 from matplotlib import cm
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
+import os 
 
 def checkoutCluster(dikeset, label):
     
@@ -66,7 +67,7 @@ def checkoutCluster(dikeset, label):
   
     left, bottom, width, height = [0.2, 0.7, 0.2, 0.2]
     
-    if lines['theta'].mean()*lines['rho'].mean() > 0:
+    if np.sign(lines['theta'].mean()) < 0:
         loc=4
         tlocx=.05
         
@@ -82,13 +83,39 @@ def checkoutCluster(dikeset, label):
     ax4.xaxis.tick_top()
     ax4.xaxis.set_label_position('top') 
     
-    if lines['theta'].mean()*lines['rho'].mean() < 0:
+    if lines['theta'].mean()> 0:
         ax4.yaxis.tick_right()
         ax4.yaxis.set_label_position('right') 
         
 
     FixCartesianLabels(ax4)
     FixCartesianLabels(ax[1])
+    
+    " Need to fix the aspect ratios now"
+    
+    figW0, figH0 = ax[0].get_figure().get_size_inches()
+    # Axis size on figure
+    _, _, w0, h0 = ax[0].get_position().bounds
+    # Ratio of display units
+    disp_ratio0 = (figH0 * h0) / (figW0 * w0)
+    
+    figW1, figH1 = ax[1].get_figure().get_size_inches()
+    # Axis size on figure
+    _, _, w1, h1 = ax[1].get_position().bounds
+    # Ratio of display units
+    disp_ratio1 = (figH1 * h1) / (figW1 * w1)
+    
+    if h0 > h1:
+        ratio=h0/h1
+        y_min, y_max = ax[1].get_ylim()
+        deltay=(y_max-y_min)*ratio/2
+        ax[1].set_ylim(y_min-deltay, y_max+deltay)
+        
+    if w0>w1:
+        ratio=w0/w1
+        y_min, y_max = ax[1].get_xlim()
+        deltay=(y_max-y_min)*ratio/2
+        ax[1].set_xlim(y_min-deltay, y_max+deltay)
     
     tlocy=.95
     ax[0].text(tlocx,tlocy-0.10,'Angle Mean: '+str( round(lines['theta'].mean(), 2)), transform=ax[0].transAxes)
@@ -102,69 +129,34 @@ def checkoutCluster(dikeset, label):
     ax[1].text(tlocx,tlocy-0.05,'Width: '+str(round(w,1)), transform=ax[1].transAxes)
     ax[1].text(tlocx,tlocy-0.10,'Aspect: '+str(round(l/w,1)), transform=ax[1].transAxes)
     ax[1].text(tlocx,tlocy-0.15,'Size: '+str(len(lines)), transform=ax[1].transAxes)
+    
+    print('Angle Mean: '+str( round(lines['theta'].mean(), 2)))
+    print('Rho Mean: '+str(round(lines['rho'].mean(),1)))
+    print('Length: '+str(round(l,1)))
+    print('Width: '+str(round(w,1)))
+    
+    
+
 
     return fig,ax
 
 # def overlap(min1, max1, min2, max2):
 #     return max(0, min(max1, max2) - max(min1, min2))
 
-def overlapSegments(lines):
-    """
-    Calculate overlap between lines 
-    
 
-    """
-    Xstart=lines['Xstart'].to_numpy()
-    Ystart=lines['Xstart'].to_numpy()
-    Xend=lines['Xend'].to_numpy()
-    Yend=lines['Yend'].to_numpy()
-    step=lines['seg_length'].min()+1
-    totalL=np.sum( np.sqrt( (Xstart-Xend)**2 + (Ystart-Yend)**2))
-    xs=np.floor(np.concatenate([np.arange(min(x,y), max(x,y), step) for x,y in zip(Xstart,Xend)]))
-    ys=np.floor(np.concatenate([np.arange(min(x,y), max(x,y), step) for x,y in zip(Ystart,Yend)]))
-    u,ycounts=np.unique(ys, return_counts=True)
-    u,xcounts=np.unique(xs, return_counts=True)
+def RotateOverlap(lines):
+    theta=np.mean(lines['theta'].values)
     
-    overlapx=np.sum(xcounts[xcounts>1])*step
-    overlapy=np.sum(ycounts[ycounts>1])*step
+    dfRotated=rotateData2(lines, (90-theta))
+    dfRotated=transformXstart(dfRotated)
     
-    overlap=np.sqrt(overlapx**2 +overlapy**2)
-    #for i in len(Xstart):
-        
     
-    return overlap/totalL
-
-def overlapSegments2(Xstart, Ystart, Xend, Yend, slope,step):
-    """
-    Calculate overlap between lines 
-    
-
-    """
-    
-    xs=[np.arange(min(x,y), max(x,y), step/2) for x,y in zip(Xstart,Xend)]
-    #totalL=int(np.sum( np.sqrt( (Xstart-Xend)**2 + (Ystart-Yend)**2)))
-    
-    arr=np.zeros( (len(xs),)+xs[0].shape)
-    for i,v in enumerate(xs):
-        arr[i]=np.floor(v)
-    u,xcounts=np.unique(arr, return_counts=True)
-    
-    overlapx=np.sum(xcounts[xcounts>1])*step
-    overlapy=slope*overlapx
-    
-    overlap=np.sqrt(overlapx**2 +overlapy**2)
-    #for i in len(Xstart):
-        
-    
-    return overlap
-
-def overlapSegments4(Xstart, Xend, slope,step, b):
-    """
-    Calculate overlap between lines 
-    
-
-    """
+    Xstart=dfRotated['Xstart'].to_numpy()
+    Ystart=dfRotated['Ystart'].to_numpy()
+    Xend=dfRotated['Xend'].to_numpy()
+    Yend=dfRotated['Yend'].to_numpy()
     step=1
+    totalL=np.sum( np.sqrt( (Xstart-Xend)**2 + (Ystart-Yend)**2))
     xs=[np.arange(min(x,y), max(x,y), step) for x,y in zip(np.floor(Xstart),np.ceil(Xend))]
     
     l=np.max([len(xi) for xi in xs])
@@ -173,14 +165,12 @@ def overlapSegments4(Xstart, Xend, slope,step, b):
     arr=np.vstack(xs_sameLength) #better
     u,xcounts=np.unique(arr[~np.isnan(arr)], return_counts=True)
     
-    overlapx=np.sum(xcounts>1)*step
-    overlapy=slope*overlapx
+    overlapx=np.float64(np.sum(xcounts[xcounts>1]-1)*step)
     
-    overlap=np.sqrt(overlapx**2 +overlapy**2)
-        
+
+    overlap=overlapx/(totalL-overlapx+0.00001)
     
     return overlap
-
 
 
 
@@ -220,7 +210,7 @@ def enEchelon(d, avgtheta):
 
 
 
-def examineClusters(clusters, enEchelonCutofff=7, ifEE=False):
+def examineClusters(clusters, enEchelonCutofff=7, ifEE=False, MaxNNSegDist=0.5):
     """ Must have  ['Xstart', 'Ystart', 'Xend', 'Yend','seg_length', 'ID', 'rho', 'theta', 'Labels'] """
     #fig,ax=plt.subplots(1,3)
     clabel=np.unique(clusters['Labels'])
@@ -297,9 +287,9 @@ def examineClusters(clusters, enEchelonCutofff=7, ifEE=False):
         if size>1: 
             
             if segmentL>l:
-                overlap=segmentL-l
+                overlap=(segmentL-l)/segmentL
             else:
-                overlap=overlapSegments4(x[0:size], x[size:size*2], slope,step, b)
+                overlap=RotateOverlap(lines)
         else:
             overlap=0
             
@@ -315,6 +305,11 @@ def examineClusters(clusters, enEchelonCutofff=7, ifEE=False):
             MinDist=np.nan
             MedianDist=np.nan
             
+        if MaxDist/l < 0.5:
+            Trust=True
+        else:
+            Trust=False
+            
         clusters_data=clusters_data.append({ "Label": i, "Xstart": x1, "Ystart":y1, "Xend": x2,
                                             "Yend":y2, "X0": x0, "Y0": y0, "AvgRho":avgrho,
                                             "AvgTheta":avgtheta, "AvgSlope": slope, "AvgIntercept": b ,
@@ -325,9 +320,10 @@ def examineClusters(clusters, enEchelonCutofff=7, ifEE=False):
                                             "Size":size, "R_error":np.sqrt(r), "Linked":clustered,
                                             "SegmentLSum":segmentL, "ClusterHash":hashlines, 
                                             'ClusterCrossesZero': crossZero,
-                                            "EnEchelonAngleDiff":tdiff, "Overlap": overlap/segmentL,
+                                            "EnEchelonAngleDiff":tdiff, "Overlap": overlap,
                                             "EEPvalue":EE_pvalue, "MaxSegNNDist": MaxDist/l,
-                                            "MedianSegNNDist": MedianDist/l, "MinSegNNDist": MinDist/l}, ignore_index=True)
+                                            "MedianSegNNDist": MedianDist/l, "MinSegNNDist": MinDist/l, "TrustFilter": Trust},
+                                            ignore_index=True)
     
     
         # if tdiff > enEchelonCutofff: 
@@ -865,3 +861,30 @@ def OutputRectangles(clusters):
         Ys[i-1,:]=Ye
         
     return Xs, Ys
+
+def SensitivityAnalysis(dikeset, path=None):
+    
+    segL=np.median(dikeset['seg_length'].values)
+    isExist = os.path.exists(path)
+    IC_total=pd.DataFrame
+    for dtheta in [1,2,5]:
+        for drho in [0.25*segL, segL, 2*segL]:
+            df_filename=path+'dtheta_'+str(dtheta)+'drho'+str(drho)+'.csv'
+            lines_filename=path+'LINES_dtheta_'+str(dtheta)+'drho'+str(drho)+'.csv'
+            Z_filename=path+'LinkageMat'+'dtheta_'+str(dtheta)+'drho'+str(drho)
+            IC_filename=path+'Analysis'+'dtheta_'+str(dtheta)+'drho'+str(drho)
+            if not isExist: 
+                    dikeset2, Z=HT_AGG_custom(dikeset, dtheta, drho, linkage='complete')
+                    lines,IC=examineClusters(dikeset)
+                    dikeset2.to_csv(df_filename, index=False)
+                    np.save(Z_filename,Z)
+                    lines.to_csv(lines_filename, index=False)
+                    IC.to_csv(IC_filename, index=False)
+            else:
+                #dikeset2=pd.read_csv(df_filename)
+                #lines=pd.read_csv(lines_filename)
+                IC=pd.read_csv(IC_filename)
+                IC_total=IC_total.append(IC)
+                
+                    
+                    

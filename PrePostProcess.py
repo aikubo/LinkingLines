@@ -19,6 +19,8 @@ from datetime import datetime
 import re
 from scipy import stats
 
+import matplotlib.pyplot as plt 
+
 def midPoint(df):
     """
     Finds the midpoint of a dataframe of line segments.
@@ -371,6 +373,33 @@ def completePreProcess(df):
     
     return df
 
+def transformXstart(dikeset):
+    """
+    Transforms the Xstart column of a dataframe of line segments.
+    Sets the Start point as the smallest x value of the line segment.
+    
+    Parameters
+    ----------
+    df: pandas.Dataframe
+        dataframe of the line segments
+        must contain ["Xstart", "Ystart", "Xend", "Yend"]
+
+    Returns
+    -------
+    df: pandas.Dataframe
+        dataframe of the line segments with transformed Xstart column
+    """
+
+
+    dist1= dikeset['Xstart'].values
+    dist2= dikeset['Xend'].values
+    switchXs=(dist1>dist2)
+    
+    dikeset.loc[switchXs, ['Xstart', 'Xend']]=(dikeset.loc[switchXs, ['Xend', 'Xstart']].values)
+    dikeset.loc[switchXs, ['Ystart', 'Yend']]=(dikeset.loc[switchXs, ['Yend', 'Ystart']].values)
+    
+    return dikeset
+
 def whichForm(lines):
     '''
     Returns the form of the dataframe column names 
@@ -398,4 +427,25 @@ def whichForm(lines):
             
     
     return t,r
+
+def MaskArea(df, bounds):
     
+    """
+    Returns dataframe masked by bounds 
+    Input: 
+        df: pandas.dataframe with columns 'Xstart' and 'YStart'
+        bounds: X and Y bounds in form [x1, y1, x2, y2]
+        x1<x2 and y1<y2
+        
+    Output: 
+        df_masked: returns all values for dataframe within those area bounds
+    """
+    
+    maskX=( df['Xstart']>bounds[0]) & (df['Xstart']<bounds[2])
+    maskY=( df['Ystart']>bounds[1]) & (df['Ystart']<bounds[3])
+    
+    masklatlong= (maskX==1) & (maskY==1)
+
+    df_masked=df.loc[masklatlong]
+    
+    return df_masked

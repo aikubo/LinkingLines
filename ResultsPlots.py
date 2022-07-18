@@ -19,6 +19,7 @@ import os
 import labellines
 from scipy import stats
 import seaborn as sns
+from scipy.stats import lognorm
 
 
 def plotLargeClusters(dikeset,lines,n, path, overide=False):
@@ -40,18 +41,33 @@ def plotLargeClusters(dikeset,lines,n, path, overide=False):
             fig,ax=checkoutCluster(dikeset, i)
             fig.savefig(ImgName, transparent=True)
             plt.close(fig)
-            
-def Histograms(dikeset,lines, path):
+
+
+def Histograms(dikeset,lines, path, maxL=150000):
     mosaic="AB\nCB\nDB"
     fig=plt.figure()
     fig.set_size_inches( 12,6)
     ax = fig.subplot_mosaic(mosaic)
     #identify_axes(ax_dict)
 
-    ax['A']=trueDikeLength(lines, dikeset, 150000, axs=ax['A'])
+    ax['A']=trueDikeLength(lines, dikeset, maxL, axs=ax['A'])
+    # shape, loc, scale=lognorm.fit(lines['R_Length'].values)
+    # x=np.linspace(0,maxL)
+    
+    # aa=ax['A'].twinx()
+    # aa.plot(x,lognorm.pdf(x,shape, loc, scale), 'r-.')
+    # ax['A'].set_ylabel('Counts', color='b')
+    # aa.set_ylabel('Normalized Probability', color='r')
+    
+    # shape, loc, scale=lognorm.fit(dikeset['seg_length'].values)
+    # aa.plot(x,lognorm.pdf(x,shape, loc, scale), 'g-.')
+    
+    # lo = Labeloffset(aa, label='Normalized Probability', axis="y")
+
+    
     ax['C'].hist(lines['R_Width'], bins=np.arange(0,5000,500))
     
-    ax['C'].text(.60,.80,'Dike mean:'+str(round(lines['R_Width'].mean(),0)), transform=ax['C'].transAxes)
+    ax['C'].text(.60,.80,'Dike median:'+str(round(np.median(lines['R_Width'].values),0)), transform=ax['C'].transAxes)
     ax['C'].text( .60, .65, 'Dike STD:'+str(round(lines['R_Width'].std(),0)),transform=ax['C'].transAxes)
     mask=np.greater(lines['Size'].values, 3)
     
@@ -60,7 +76,7 @@ def Histograms(dikeset,lines, path):
     ax['D'].hist(AR, bins=np.arange(0,80,10))
     #sns.histplot(AR, bins=np.arange(0,80,10), ax=ax['D'])
     
-    ax['D'].text(.70,.80,'Dike mean:'+str(round(np.mean(AR),2)), transform=ax['D'].transAxes)
+    ax['D'].text(.70,.80,'Dike median:'+str(round(np.median(AR),2)), transform=ax['D'].transAxes)
     ax['D'].text( .70, 65, 'Dike STD:'+str(round(np.std(AR),2)),transform=ax['D'].transAxes)
     print('Dike STD:'+str(round(np.std(AR),2)))
     ax['B'].scatter(lines[mask]['R_Width'], lines.loc[mask]['R_Length'].values, s=2*lines.loc[mask]['Size'].values**1.5, alpha=0.6, edgecolor='grey')
@@ -147,6 +163,7 @@ def allFigures(path1,path2):
     slope, intercept, r_value, p_value, std_err = stats.linregress(lines['Size'].loc[lines['Size']>2].values, lines['R_Length'].loc[lines['Size']>2].values)
     x=np.linspace(2, lines['Size'].max())
     y=slope*x+intercept 
+    
     g.ax_joint.plot(x,y, 'g-.', alpha=0.6)
     g.ax_joint.annotate(f'$r = {r_value:.3f}, p = {p_value:.3f}$',
                     xy=(0.1, 0.9), xycoords='axes fraction',

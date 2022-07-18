@@ -25,6 +25,7 @@ from fitRectangle import *
 from PrePostProcess import whichForm
 import scipy.cluster.hierarchy as sch
 import labellines
+import matplotlib.gridspec as gridspec
 
 np.random.seed(5)
 
@@ -52,7 +53,41 @@ class FixCartesianLabels():
             # formatter.set_powerlimits((-1,9))
             # i.set_major_formatter(formatter)
 
+class Labeloffset():
+    """ 
+        Moves Offset axis tick label to axis label 
+        based on: https://stackoverflow.com/questions/45760763/how-to-move-the-y-axis-scale-factor-to-the-position-next-to-the-y-axis-label
+    """
+    def __init__(self,  ax, label="", axis="y"):
+        self.axis = {"y":ax.yaxis, "x":ax.xaxis}[axis]
+        self.label=label
+        ax.callbacks.connect(axis+'lim_changed', self.update)
+        ax.figure.canvas.draw()
+        self.update(None)
 
+    def update(self, lim):
+        fmt = self.axis.get_major_formatter()
+        self.axis.offsetText.set_visible(False)
+        self.axis.set_label_text(self.label + " ("+ fmt.get_offset()+")" )
+
+from operator import sub
+def get_aspect(ax):
+    """ Returns plot aspect ratio
+    based on: https://stackoverflow.com/questions/41597177/get-aspect-ratio-of-axes
+    answer by @Mad Physicist
+    
+    """
+    # Total figure size
+    figW, figH = ax.get_figure().get_size_inches()
+    # Axis size on figure
+    _, _, w, h = ax.get_position().bounds
+    # Ratio of display units
+    disp_ratio = (figH * h) / (figW * w)
+    # Ratio of data units
+    # Negative over negative because of the order of subtraction
+    data_ratio = sub(*ax.get_ylim()) / sub(*ax.get_xlim())
+
+    return disp_ratio / data_ratio
 
 def RGBtoHex(vals, rgbtype=1):
   """Converts RGB values in a variety of formats to Hex values.
@@ -100,7 +135,7 @@ def StringColors(values, palette="turbo"):
 def StringCbar(c, fig, ax, values):
     labels=np.unique(values)
     n_colors=len(labels)
-    c_ticks = np.arange(n_colors)* (n_colors / (n_colors + 1)) + (2 / n_colors)
+    c_ticks = np.arange(n_colors) #* (n_colors / (n_colors + 1)) + (2 / n_colors)
     #c_ticks=[hash(x) for x in labels]
     cbar = fig.colorbar(c, ticks=c_ticks, ax=ax)
     cbar.ax.set_yticklabels(labels)
@@ -239,7 +274,7 @@ def pltRec(lines, xc, yc, fig=None, ax=None):
     for i in range(0,len(lines)):
         ax.plot( [xi[i], xi[i+len(lines)]],  [yi[i], yi[i+len(lines)]], 'r-')
     ax.plot(Xmid, Ymid, 'yp')
-    ax.axis('equal')
+    ax.set_aspect('equal')
     
     return fig,ax, length, width
 
@@ -348,7 +383,7 @@ def plotlines(data, col, ax, alpha=1, myProj=None, maskar=None, linewidth=1,
             xc,yc=HT_center(data)
         ax.plot(xc,yc, "*r", markeredgecolor="black")
     FixCartesianLabels(ax)
-    ax.axis('equal')
+    ax.set_aspect('equal')
     #if ColorBy is not None: 
     #   fig.colorbar(label=ColorBy)
 
@@ -381,16 +416,16 @@ def trueDikeLength(lines, dikeset, maxL, Lstep=2000, secondbar=False, axs=None):
     a.set_xlabel('Length (m)')
     plt.tight_layout()
     
-    oldavg=np.mean(dikeset['seg_length'])
+    oldavg=np.median(dikeset['seg_length'])
     oldstd=np.std(dikeset['seg_length'])
     
-    newavg=np.mean(lines['R_Length'])
+    newavg=np.median(lines['R_Length'])
     newstd=np.std(lines['R_Length'])
     
-    a.text(.60,.80,'Dike mean:'+str(round(newavg,0)), transform=a.transAxes)
+    a.text(.60,.80,'Dike median:'+str(round(newavg,0)), transform=a.transAxes)
     a.text( .60, .70, 'Dike STD:'+str(round(newstd,0)),transform=a.transAxes)
     
-    a.text( .60,.50 ,'Segment mean:'+str(round(oldavg,0)),transform=a.transAxes)
+    a.text( .60,.50 ,'Segment median:'+str(round(oldavg,0)),transform=a.transAxes)
     a.text( .60,.40, 'Segment std:'+str(round(oldstd,0)),transform=a.transAxes)
     
     return axs
@@ -548,7 +583,7 @@ def BA_HT(dikeset,lines,rstep=5000):
 
 
 
-def DotsHT(fig,ax,lines, ColorBy="R_length", label=None, cmap=cm.turbo, marker='o', title='Hough Transform', CbarLabels=True):
+def DotsHT(fig,ax,lines, ColorBy="R_length", label=None, cmap=cm.turbo, marker='o', title='Hough Transform', CbarLabels=True, StrOn=True):
     
     #plt.rcParams.update({'font.size': 50, 'font.weight': 'normal'})
     #sns.set_context("talk")
@@ -580,6 +615,8 @@ def DotsHT(fig,ax,lines, ColorBy="R_length", label=None, cmap=cm.turbo, marker='
         
         if type(lines[ColorBy].values[0]) is str:
             cbar=StringCbar(c2, fig, ax, lines[ColorBy].values)
+        if StrOn:
+            cbar=StringCbar(c2, fig, ax, lines[ColorBy].values.astype(str))
             
         else:
             cbar=fig.colorbar(c2, ax=ax)
@@ -598,7 +635,7 @@ def DotsHT(fig,ax,lines, ColorBy="R_length", label=None, cmap=cm.turbo, marker='
     return fig,ax
 
 
-def DotsLines(lines, ColorBy="seg_length",cmap=cm.turbo, fig=None, ax=None, CbarLabels=True):
+def DotsLines(lines, ColorBy="seg_length",cmap=cm.turbo, fig=None, ax=None, CbarLabels=True, StrOn=False):
     t,r=whichForm(lines)
     #plt.rcParams.update({'font.size': 50, 'font.weight': 'normal'})
     #sns.set_context("talk")
@@ -609,7 +646,7 @@ def DotsLines(lines, ColorBy="seg_length",cmap=cm.turbo, fig=None, ax=None, Cbar
    
 
     #ax[1], h2=HThist(lines['AvgRho'], lines['AvgTheta'], rstep, tstep, weights=lines['R_Length'], ax=ax[1],rbins=rbins)
-    DotsHT(fig, ax[1], lines, ColorBy=ColorBy, cmap=cmap,CbarLabels=CbarLabels)
+    DotsHT(fig, ax[1], lines, ColorBy=ColorBy, cmap=cmap,CbarLabels=CbarLabels, StrOn=StrOn)
     #ax[1].set_title('HT')
     
     
@@ -1074,5 +1111,45 @@ def DrawHTRays(df, xc=None, yc=None):
         ax.arrow( xc,yc, x,y, head_width=10, head_length=20, fc='k', ec='k', length_includes_head=True)
         
     ax.plot(xc,yc, 'r*', markersize=5)
-    ax.axis('equal')
+    ax.set_aspect('equal')
     return x1,y1
+
+def dilationPlot(df, binWidth=1700, EWDilation=None, NSDilation=None, **kwargs):
+
+    fig = plt.figure(figsize=(8,8))
+    gs = gridspec.GridSpec(3, 3)
+    ax_main = plt.subplot(gs[1:3, :2])
+    ax_xDist = plt.subplot(gs[0, :2],sharex=ax_main)
+    ax_yDist = plt.subplot(gs[1:3, 2],sharey=ax_main)
+    
+    xs=[ min(df['Xstart'].min(), df['Xend'].min() ), max( df['Xstart'].max(), df['Xend'].max() )]
+    ys=[ min(df['Ystart'].min(), df['Yend'].min() ), max( df['Ystart'].max(), df['Yend'].max() )]
+    
+    if np.ptp(xs) < binWidth or np.ptp(ys) < binWidth:
+        binWidth=np.min( [np.ptp(xs)/10, np.ptp(ys)/10])
+    
+    binx=np.arange(xs[0]-binWidth, xs[1]+binWidth, binWidth)
+    biny=np.arange(ys[0]-binWidth, ys[1]+binWidth, binWidth)
+    
+    if EWDilation is None or NSDilation is None:
+        from dilationCalculation import dilation
+        EWDilation, NSDilation=dilation(df, binWidth=binWidth, **kwargs)
+        
+    plotlines(df, 'k', ax_main)
+   
+    #ax_xDist.plot(binx[:-1], NSDilation[:-1])
+    ax_xDist.fill_between(binx,0, NSDilation)
+        
+        
+    #ax_yDist.plot(EWDilation[:-1], biny[:-1])
+    ax_yDist.fill_between(EWDilation,0,biny )
+    
+    ax_xDist.set(ylabel='NS Dilaton (m)')
+    ax_yDist.set(xlabel='EW Dilaton (m)')
+    ax_xDist.set_ylim([0,np.max(NSDilation)+100])
+    ax_yDist.set_xlim([0,np.max(EWDilation)+100])
+    ax_yDist.set_ylim([ys[0], ys[1]])
+    
+    
+    
+    return EWDilation, NSDilation, fig, [ax_main, ax_xDist, ax_yDist]
