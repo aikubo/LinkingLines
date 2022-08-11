@@ -30,43 +30,43 @@ import labellines
 from ResultsPlots import *
 import seaborn as sns
 
-d=[#'dikedata/deccandata/Central_preprocesed.csv',
-   #'dikedata/deccandata/NarmadaTapi_preprocesed.csv',
-   #'dikedata/deccandata/Saurashtra_preprocesed.csv',
+d=['dikedata/deccandata/Central_preprocesed.csv',
+   'dikedata/deccandata/NarmadaTapi_preprocesed.csv',
+   'dikedata/deccandata/Saurashtra_preprocesed.csv',
    #'dikedata/crb/CJDS_FebStraightened.csv',
    'dikedata/spanish peaks/SpanishPeaks_3857_preprocessed.csv'
    ]
 
-l=[#'dikedata/deccandata/Central_Complete3_', 
-   # 'dikedata/deccandata/NarmadaTapi_Complete_3_',
-   # 'dikedata/deccandata/Saurashtra_Complete_3_',
-   # 'dikedata/crb/CJDS_Complete_3',
-    'dikedata/spanish peaks/SpanishPeaks_Complete_3_']
+l=['dikedata/deccandata/Central_Complete3_', 
+   'dikedata/deccandata/NarmadaTapi_Complete_3_',
+   'dikedata/deccandata/Saurashtra_Complete_3_',
+   #'dikedata/crb/CJDS_Complete_3_',
+   'dikedata/spanish peaks/SpanishPeaks_Complete_3_']
 
-l=[#'dikedata/deccandata/Central_Complete3_', 
-   # 'dikedata/deccandata/NarmadaTapi_Complete_3_',
-   # 'dikedata/deccandata/Saurashtra_Complete_3_',
-   # 'dikedata/crb/CJDS_Complete_3',
-    'dikedata/spanish peaks/SpanishPeaks_Complete_3_']
 
-for i,j in zip(d,l): 
+width=[2,8,8]
+
+for i,j,w in zip(d,l,width): 
     dikeset=pd.read_csv(i)
 
     dikeset=DikesetReProcess(dikeset)
-    dtheta=3 
+    dtheta=2 
     drho=np.floor(dikeset['seg_length'].mean())
     dikeset, Z=HT_AGG_custom(dikeset, dtheta, drho, linkage='complete')
     lines,evaluation=examineClusters(dikeset)
     now = datetime.now() 
     date = now.strftime("%d %b, %Y")
-
+    
     dikeset=dikeset.assign(Date_Changed=date)
     lines=lines.assign(Date_Changed=date)
-    
-    name=j+str(int(drho))+"_.csv"
+    lines=lines.assign(Rho_Threshold=drho)
+    lines=lines.assign(Theta_Threshold=dtheta)
+    name=j+str(int(drho))+".csv"
     npname=j+str(int(drho))+"LINKAGE"
     np.save(npname, Z)
     lines.to_csv(name)
     dikeset.to_csv(i)
     
-    allFigures(i, name)
+    allFigures(i, name, w)
+    
+    

@@ -583,7 +583,7 @@ def BA_HT(dikeset,lines,rstep=5000):
 
 
 
-def DotsHT(fig,ax,lines, ColorBy="R_length", label=None, cmap=cm.turbo, marker='o', title='Hough Transform', CbarLabels=True, StrOn=True):
+def DotsHT(fig,ax,lines, ColorBy="R_Length", label=None, cmap=cm.turbo, marker='o', title='Hough Transform', CbarLabels=True, StrOn=True):
     
     #plt.rcParams.update({'font.size': 50, 'font.weight': 'normal'})
     #sns.set_context("talk")
@@ -596,7 +596,7 @@ def DotsHT(fig,ax,lines, ColorBy="R_length", label=None, cmap=cm.turbo, marker='
         c='grey'
     elif type(lines[ColorBy].values[0]) is str:
         c,cmap=StringColors(lines[ColorBy].values)
-        print("colorby is string")
+        print("colorby value is type string")
         
     else:
         c=lines[ColorBy].values
@@ -604,7 +604,7 @@ def DotsHT(fig,ax,lines, ColorBy="R_length", label=None, cmap=cm.turbo, marker='
         
     
     #ax[1], h2=HThist(lines['AvgRho'], lines['AvgTheta'], rstep, tstep, weights=lines['R_Length'], ax=ax[1],rbins=rbins)
-    c2=ax.scatter(lines[t], lines[r], c=c, cmap=cmap, edgecolor='black', marker=marker, alpha=0.5)
+    c2=ax.scatter(lines[t].values, lines[r].values, c=c, cmap=cmap, edgecolor='black', marker=marker, alpha=0.5)
     #ax.set_title(title)
     
     
@@ -615,8 +615,8 @@ def DotsHT(fig,ax,lines, ColorBy="R_length", label=None, cmap=cm.turbo, marker='
         
         if type(lines[ColorBy].values[0]) is str:
             cbar=StringCbar(c2, fig, ax, lines[ColorBy].values)
-        if StrOn:
-            cbar=StringCbar(c2, fig, ax, lines[ColorBy].values.astype(str))
+            if StrOn and len(np.unique(c)) < 15:
+                cbar=StringCbar(c2, fig, ax, lines[ColorBy].values.astype(str))
             
         else:
             cbar=fig.colorbar(c2, ax=ax)
@@ -660,7 +660,7 @@ def DotsLinesHist(lines, rstep, tstep, cmap1=cm.turbo, cmap2=cm.gray, ColorBy=No
     if ColorBy is None:
         ColorBy=t
     fig,ax=plt.subplots(1,3)    #lines['StdRho'].mean()*2
-    plotlines(lines, 'k', ax[0], ColorBy=ColorBy, cmap=cmap1, center=True)
+    plotlines(lines, 'k', ax[0], ColorBy=ColorBy, cmap=cmap1, center=True, alpha=0.4)
     ax[0].set_title('Cartesian')
     #ax[1], h2=HThist(lines['AvgRho'], lines['AvgTheta'], rstep, tstep, weights=lines['R_Length'], ax=ax[1],rbins=rbins)
     DotsHT(fig, ax[1], lines, ColorBy=ColorBy, cmap=cmap1)
@@ -1122,20 +1122,13 @@ def dilationPlot(df, binWidth=1700, EWDilation=None, NSDilation=None, **kwargs):
     ax_xDist = plt.subplot(gs[0, :2],sharex=ax_main)
     ax_yDist = plt.subplot(gs[1:3, 2],sharey=ax_main)
     
-    xs=[ min(df['Xstart'].min(), df['Xend'].min() ), max( df['Xstart'].max(), df['Xend'].max() )]
-    ys=[ min(df['Ystart'].min(), df['Yend'].min() ), max( df['Ystart'].max(), df['Yend'].max() )]
-    
-    if np.ptp(xs) < binWidth or np.ptp(ys) < binWidth:
-        binWidth=np.min( [np.ptp(xs)/10, np.ptp(ys)/10])
-    
-    binx=np.arange(xs[0]-binWidth, xs[1]+binWidth, binWidth)
-    biny=np.arange(ys[0]-binWidth, ys[1]+binWidth, binWidth)
     
     if EWDilation is None or NSDilation is None:
         from dilationCalculation import dilation
-        EWDilation, NSDilation=dilation(df, binWidth=binWidth, **kwargs)
-        
-    plotlines(df, 'k', ax_main)
+        EWDilation, NSDilation, binx,biny=dilation(df, binWidth=binWidth, **kwargs)
+    ys=[np.min(biny), np.max(biny)]
+    xs=[np.min(binx), np.max(binx)]
+    plotlines(df, 'k', ax_main, alpha=0.6)
    
     #ax_xDist.plot(binx[:-1], NSDilation[:-1])
     ax_xDist.fill_between(binx,0, NSDilation)
@@ -1150,6 +1143,52 @@ def dilationPlot(df, binWidth=1700, EWDilation=None, NSDilation=None, **kwargs):
     ax_yDist.set_xlim([0,np.max(EWDilation)+100])
     ax_yDist.set_ylim([ys[0], ys[1]])
     
+def DoubleDilationPlot(df, lines, **kwargs):
+    fig = plt.figure(figsize=(8,8))
+    gs = gridspec.GridSpec(3, 3)
+    ax_main = plt.subplot(gs[1:3, :2])
+    ax_xDist = plt.subplot(gs[0, :2],sharex=ax_main)
+    ax_yDist = plt.subplot(gs[1:3, 2],sharey=ax_main)
     
     
-    return EWDilation, NSDilation, fig, [ax_main, ax_xDist, ax_yDist]
+    from dilationCalculation import dilation
+    EWDilation1, NSDilation1, binx1,biny1=dilation(df, **kwargs)
+    EWDilation, NSDilation, binx,biny=dilation(lines, **kwargs)
+    
+    ys=[np.min(biny), np.max(biny)]
+
+    plotlines(lines, 'r', ax_main, alpha=0.6)
+    plotlines(df, 'b', ax_main, alpha=0.6)
+   
+    #ax_xDist.plot(binx[:-1], NSDilation[:-1])
+
+    
+    ax_xDist.fill_between(binx,0, NSDilation, alpha=0.6, color='r')
+        
+        
+    #ax_yDist.plot(EWDilation[:-1], biny[:-1])
+    ax_yDist.fill_between(EWDilation,0,biny, alpha=0.6, color='r' )
+    
+    ax_xDist.fill_between(binx1,0, NSDilation1, alpha=0.6, color='b')
+    ax_xDist.tick_params(axis='x',          # changes apply to the x-axis
+                        which='both',      # both major and minor ticks are affected
+                        bottom=False,      # ticks along the bottom edge are off
+                        top=False,         # ticks along the top edge are off
+                        labelbottom=False) # labels along the bottom edge are off)
+    ax_yDist.tick_params(axis='y',
+                         which='both',
+                         left=False,
+                         right=False,
+                         labelleft=False)
+        
+    #ax_yDist.plot(EWDilation[:-1], biny[:-1])
+    ax_yDist.fill_between(EWDilation1,0,biny1, alpha=0.6, color='b' )
+    
+    ax_xDist.set(ylabel='NS Dilaton (m)')
+    ax_yDist.set(xlabel='EW Dilaton (m)')
+
+    ax_yDist.set_ylim([ys[0], ys[1]])
+    
+    
+    
+    return fig, [ax_main, ax_xDist, ax_yDist]

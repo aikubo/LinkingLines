@@ -37,10 +37,10 @@ evals=pd.read_csv('/home/akh/myprojects/Linking-and-Clustering-Dikes/CJDS_sensit
 #     for drho in rhos:
 #         print("Running ", dtheta, drho)
 #         #Run the clustering algorithm
-#         temp, clusters, M=AggHT(dikeset, dtheta, drho)
+#         temp, clusters, M=HT_AGG_custom(dikeset, dtheta, drho, linkage='complete')
         
 #         #Run examinecluster
-#         temp,evaluation,EEdikes=examineClusters(temp, ifEE=True)
+#         temp,evaluation=examineClusters(temp)
 #         evaluation['Theta_Threshold']=dtheta
 #         evaluation['Rho_Threshold']=drho
         

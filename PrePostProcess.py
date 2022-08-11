@@ -125,6 +125,12 @@ def WKTtoArray(df, plot=False):
         temp=df["WKT"].iloc[i]
         temp=re.split(r'[(|)]', temp)
         t1=temp[0]
+        
+        #print("dike #:",i)
+        #print(temp)
+        if 'EMPTY' in temp[0]: 
+            drop.append(i)
+            continue
         temp=re.split(r'[,\s]+', temp[2])
         
         if "Z" in t1:
@@ -306,7 +312,7 @@ def preprocess(df):
         
     return df
 
-def DikesetReProcess(df):
+def DikesetReProcess(df, HTredo=True):
 
     if 'Xstart' not in df.columns:
         df=WKTtoArray(df)
@@ -338,6 +344,13 @@ def DikesetReProcess(df):
         df=MidtoPerpDistance(df, xc, yc)
         df=df.assign(yc=yc)
         df=df.assign(xc=xc)
+    elif HTredo: 
+        theta,rho,xc,yc=HT(df)
+        df['theta']=theta
+        df['rho']=rho
+        df=MidtoPerpDistance(df, xc, yc)
+        df=df.assign(yc=yc)
+        df=df.assign(xc=xc)
 
         
     if 'PerpOffsetDist' not in df.columns: 
@@ -347,8 +360,12 @@ def DikesetReProcess(df):
     d = now.strftime("%d %b, %Y")
 
     df=df.assign(Date_Changed=d)
+    df.drop_duplicates(subset=['HashID'])
+    
     return df 
 
+
+    
 
 def completePreProcess(df):
        
@@ -370,6 +387,8 @@ def completePreProcess(df):
     d = now.strftime("%d %b, %Y")
 
     df['Date Changed']=[d]*len(df)
+    
+    df.drop_duplicates(subset=['HashID'])
     
     return df
 

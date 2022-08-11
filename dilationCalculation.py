@@ -5,22 +5,14 @@ Created on Thu Jul  7 14:45:57 2022
 
 @author: akh
 """
-from synthetic import makeLinear2
+
 from plotmod import DotsLines, whichForm
 import numpy as np 
 from PrePostProcess import transformXstart
 import matplotlib.pyplot as plt
 
-# df=makeLinear2(10000, 0, 0, 5000, 500, ndikes=5)
-# df3=makeLinear2(10000, 90, 0, 5000, 500, ndikes=5)
-# # df2=makeLinear2(10000, 45, 0, 5000, 500, ndikes=5)
 
-
-# DotsLines(df, ColorBy='Labels')
-# fig, ax=DotsLines(df2, ColorBy='Labels')
-# fig, ax=DotsLines(df3, ColorBy='Labels')
-
-def dilation(df, binWidth=1700, averageWidth=1, method='Average'):
+def dilation(df, binWidth=1700, averageWidth=1, method='Expanded'):
     t,r=whichForm(df)
     df=transformXstart(df)
     
@@ -33,9 +25,9 @@ def dilation(df, binWidth=1700, averageWidth=1, method='Average'):
     binx=np.arange(xs[0]-binWidth, xs[1]+binWidth, binWidth)
     biny=np.arange(ys[0]-binWidth, ys[1]+binWidth, binWidth)
     
-    FractionEW=abs(np.sin(np.deg2rad(df[t].values)))
-    # for theta=0, Fraction EW is 0, for theta=90 fractonEW is 1
-    FractionNS=np.cos(np.deg2rad(df[t].values))
+    FractionEW=np.cos(np.deg2rad(df[t].values))
+    # for theta=0, Fraction EW is 1, for theta=90 fractonEW is 0
+    FractionNS=abs(np.sin(np.deg2rad(df[t].values)))
     # its the opposite of above
     
     Xstart=df['Xstart'].values
@@ -72,16 +64,18 @@ def dilation(df, binWidth=1700, averageWidth=1, method='Average'):
         
         #print(np.sum(maskx), "in binx",binx[i], "-", binx[i+1] )
         l=np.where(binx==binx[i])
-        
-        if method == 'Average':
+        #print(np.sum(maskx))
+        if np.isclose(np.sum(maskx), 0.0):
+            NSDilation[l]=0
+        elif method == 'Average':
             NSDilation[l]= np.mean(FractionNS[maskx])*averageWidth*np.sum(maskx)
         elif method== 'Total':
             NSDilation[l]= np.sum(FractionNS[maskx])*averageWidth
         elif method =='Expanded':
              NSDilation[l]= (np.sum(FractionNS[maskx1]) +
-                             np.sum( abs(Xstart[maskx2]-binx[i])/binWidth) +
-                             np.sum( abs(Xend[maskx3]-binx[i])/binWidth))*averageWidth
-            
+                             np.sum( (abs(Xstart[maskx2]-binx[i])/binWidth)*FractionNS[maskx2]) +
+                             np.sum( (abs(Xend[maskx3]-binx[i])/binWidth)*FractionNS[maskx3]))*averageWidth
+
     for j in range(len(biny)-1):
          # Case 1: Line Passes completely thru bin
         masky1= np.logical_and( (Ystart< biny[j]), (Yend>biny[j+1]))
@@ -96,20 +90,24 @@ def dilation(df, binWidth=1700, averageWidth=1, method='Average'):
         
         #print(np.sum(masky), "in biny",biny[j], "-", biny[j+1] )
         l=np.where(biny==biny[j])
-        
-        if method == 'Average':
+        #print(np.sum(masky))
+        if np.isclose(np.sum(masky), 0.0):
+            EWDilation[l]=0
+        elif method == 'Average':
             EWDilation[l]= np.mean(FractionEW[masky])*averageWidth*np.sum(masky)
         elif method== 'Total':
             EWDilation[l]= np.sum(FractionEW[masky])*averageWidth
         elif method =='Expanded':
             EWDilation[l]= (np.sum(FractionEW[masky1]) +
-                            np.sum( abs(Ystart[masky2]-biny[j])/binWidth) +
-                            np.sum( abs(Yend[masky3]-biny[j])/binWidth))*averageWidth
-                    
-    return EWDilation, NSDilation
+                            np.sum( (abs(Ystart[masky2]-biny[j])/binWidth)*FractionEW[masky2]) +
+                            np.sum( (abs(Yend[masky3]-biny[j])/binWidth)*FractionEW[masky3]))*averageWidth
+            
+
+
+    return EWDilation, NSDilation, binx, biny
 
 
 # E: 420231 N:4905680
 # E: 523230 N:5094091
 
-    
+#df=pd.read_csv('dikedata/crb/CJDS_FebStraightened.csv')

@@ -61,7 +61,9 @@ def RotateOverlapTest(lines):
     
     print(overlapx)
     print(totalL)
-    overlap=overlapx/totalL
+    overlap=overlapx/(totalL-overlapx+0.00001)
+    if overlapx > totalL:
+        overlap=overlapx/totalL
     
     return overlap
 

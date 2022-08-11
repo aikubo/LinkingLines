@@ -26,7 +26,7 @@ def plotLargeClusters(dikeset,lines,n, path, overide=False):
     if type(n) is int:
         n=float(n)
     largelines=lines.loc[np.greater(lines['Size'].values, n)]
-    ImgPath=path[:-4]+"Images/"
+    ImgPath=path[:-4]+"Images/LargestClusters"
     
     isExist = os.path.exists(ImgPath)
     
@@ -106,10 +106,10 @@ def HT3(dikeset,lines,path):
     
     fig,ax=plt.subplots(1,3)
     fig.set_size_inches( 15,4)
-    DotsHT(fig, ax[0], dikeset, ColorBy="seg_length", title="Unlinked Segments")
-    DotsHT(fig, ax[1], lines, ColorBy='R_Length', title="Linked Segments")
-    mask=np.greater(lines['Size'].values, 4)
-    DotsHT(fig, ax[2], lines.loc[mask], ColorBy='R_Length', title="5 or more Linked Segments")
+    DotsHT(fig, ax[0], dikeset, ColorBy=None, title="Unlinked Segments")
+    DotsHT(fig, ax[1], lines, ColorBy=None, title="All Linked Segments")
+    mask=lines['TrustFilter']==1
+    DotsHT(fig, ax[2], lines.loc[mask], ColorBy=None, title="Highed Confidence Linked Segments")
     
     ax[0].text(.10,.10,'n='+str(len(dikeset)), transform=ax[0].transAxes)
     ax[1].text(.10,.10,'n='+str(len(lines)), transform=ax[1].transAxes)
@@ -121,10 +121,18 @@ def HT3(dikeset,lines,path):
     plt.close(fig)
     
 def Toplines(lines, dikeset, path):
-    T, fig, ax=TopHTSection(lines, dikeset, 10000, 4)
+    rstep=lines['Rho_Threshold'].values[0]*10
+    T, fig, ax=TopHTSection(lines, dikeset, rstep, 5)
     
     ImgPath=path[:-4]+"Images/"
     ImgName=ImgPath+"TopLines"+".pdf"
+    fig.savefig(ImgName, transparent=True)
+    plt.close(fig)
+    
+    T, fig, ax=TopHTSection(lines, dikeset, rstep, 4, n=3)
+    
+    ImgPath=path[:-4]+"Images/"
+    ImgName=ImgPath+"TopLines_3"+".pdf"
     fig.savefig(ImgName, transparent=True)
     plt.close(fig)
     
@@ -144,24 +152,24 @@ def PairGrid(lines,cols, path,n=2):
     #plt.close(g)
 
 
-def allFigures(path1,path2):
+def allFigures(path1,path2,w, Large=True):
     dikeset=pd.read_csv(path1)
     lines=pd.read_csv(path2)
     cols=['Size', 'Overlap', "MaxSegNNDist", "MinSegNNDist"]
     
-    ImgPath=path2[:-4]+"_Images/"
+    ImgPath=path2[:-4]+"Images/"
     sns.reset_orig()
     isExist = os.path.exists(ImgPath)
     if not isExist:
         os.makedirs(ImgPath)
         print("The new directory", ImgPath, " is created!")
     sns.reset_orig()
+    m=lines['TrustFilter']==1
+    g=sns.jointplot(x=lines['Size'], y=lines['R_Length'], alpha=0.6)
     
-    g=sns.jointplot(x=lines['Size'].loc[lines['Size']>2], y=lines['R_Length'].loc[lines['Size']>2], alpha=0.6)
     
-    
-    slope, intercept, r_value, p_value, std_err = stats.linregress(lines['Size'].loc[lines['Size']>2].values, lines['R_Length'].loc[lines['Size']>2].values)
-    x=np.linspace(2, lines['Size'].max())
+    slope, intercept, r_value, p_value, std_err = stats.linregress(lines['Size'].values, lines['R_Length'].values)
+    x=np.linspace(3, lines['Size'].max())
     y=slope*x+intercept 
     
     g.ax_joint.plot(x,y, 'g-.', alpha=0.6)
@@ -170,25 +178,42 @@ def allFigures(path1,path2):
                     ha='left', va='center',
                     bbox={'boxstyle': 'round', 'fc': 'powderblue', 'ec': 'navy'})
     
-    g2=sns.jointplot(x=lines['Size'].loc[lines['Size']>5], y=lines['R_Length'].loc[lines['Size']>5], alpha=0.6)
+    g2=sns.jointplot(x=lines['Size'].loc[m], y=lines['R_Length'].loc[m], alpha=0.6)
     g.savefig(ImgPath+"SizebyLength2.pdf", transparent=True)
-    g2.savefig(ImgPath+"SizebyLength5.pdf", transparent=True)
+    g2.savefig(ImgPath+"SizebyLengthTrusted.pdf", transparent=True)
+    
+    #dilation 
+    fig,axes=DoubleDilationPlot(dikeset, lines, binWidth=1700, averageWidth=w)
+    ImgName=ImgPath+"DoubleDilation"+".pdf"
+    fig.savefig(ImgName, transparent=True)
+    plt.close(fig)
+    
+    fig,axes=DoubleDilationPlot(dikeset, lines.loc[m], binWidth=1700, averageWidth=w)
+    ImgName=ImgPath+"DoubleDilationTrusted"+".pdf"
+    fig.savefig(ImgName, transparent=True)
+    plt.close(fig)
     
     
     Histograms(dikeset, lines, path2)
-    plotLargeClusters(dikeset, lines, 4, path2, overide=False)
+    
     HT3(dikeset, lines, path2)
-    Toplines(lines, path2)
+    Toplines(lines,dikeset, path2)
     PairGrid(lines, cols, path2)
     sns.reset_orig()
-    
-    fig,ax=DotsLinesHist(lines, 5000, 4)
+    rstep=lines['Rho_Threshold'].values[0]*4
+    fig,ax=DotsLinesHist(lines, rstep, 4)
     fig.set_size_inches(10,5)
     
     plt.tight_layout()
     ImgName=ImgPath+"DotsLinesHist"+".pdf"
     fig.savefig(ImgName, transparent=True)
     plt.close(fig)
+    
+    
+    if Large:
+        plotLargeClusters(dikeset, lines, 4, path2, overide=False)
+#def comparisonPlots():
+    
     
 # l=['dikedata/deccandata/Central_3_2000_LINKED.csv', 
 #    'dikedata/deccandata/NarmadaTapi_3_2000_LINKED.csv',

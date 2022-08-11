@@ -19,7 +19,7 @@ from htMOD import *
 #from examineMod import *
 from sklearn.decomposition import PCA
 from sklearn.metrics.pairwise import pairwise_distances
-from PrePostProcess import whichForm
+from PrePostProcess import whichForm, DikesetReProcess
 from scipy.spatial.distance import pdist, squareform
 import scipy.cluster.hierarchy as sch
 import matplotlib.pyplot as plt
@@ -331,51 +331,6 @@ def HT_AGG_custom(dikeset,dtheta, drho, dimensions=2, linkage='complete', parall
     return dikeset, Z #, rootnode, nodelist
 
 
-def AGGfull(dikeset):
-    theta, rho, xc, yc= AKH_HT(dikeset)
-    dikeset['rho']=rho
-    dikeset['theta']=theta
-    
-    trange=2 
-    rrange=5000 
-    
-    stdT=np.std(theta)
-    stdRho=np.std(rho)
-    d2=trange/stdT
-    
-    clustering=HT_AGG(dikeset,d2)
-    dikeset['Labels']=clustering.labels_
-    lines,IC=examineClusters(dikeset)
-    
-    #generate a kmz
-    colorsSegments=labelcolors(dikeset['Labels'])
-    colorsDikes=labelcolors(lines['Label'])
-    
-    #fig,ax=plotbyAngle(dikeset, lines, 20)
-    
-    ## Length and Width plots
-    f,a=plt.subplots(2)
-    a[0].hist(lines['R_Length'], bins=np.arange(0,100000,5000))
-    a[0].set_xlabel('Dike Cluster Length')
-    
-    a[1].hist(lines['R_Width'],bins=np.arange(0,2000,100))
-    a[1].set_xlabel('Dike Cluster Width')
-    plt.tight_layout()
-    
-    f2,a2=plt.subplots(3)
-    a2[0].scatter(lines['R_Length'], lines['R_Width'])
-    a2[0].set_xlabel('Length')
-    a2[0].set_ylabel('Width')
-    
-    a2[2].scatter(lines['Size'], lines['R_Width'])
-    a2[2].set_xlabel('Size')
-    a2[2].set_ylabel('Width')
-    
-    a2[1].scatter(lines['Size'], lines['R_Length'])
-    a2[1].set_xlabel('Size')
-    a2[1].set_ylabel('Length')
-    plt.tight_layout()
-    return dikeset, lines
 
 def fullTree(model, **kwargs): 
     # Create linkage matrix and then plot the dendrogram
