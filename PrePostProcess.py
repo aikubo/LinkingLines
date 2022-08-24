@@ -321,8 +321,14 @@ def DikesetReProcess(df, HTredo=True):
         
     xc,yc=HT_center(df)
     
-    if 'HashID' not in df.columns: 
-        df=giveHashID(df)
+       
+    df=giveHashID(df)
+    l=len(df)
+    print( l, 'dikes')
+    df=df.drop_duplicates(subset=['HashID'])
+    if l is not len(df):
+        print("Found", l-len(df), "duplicates")
+        
     if 'Xmid' not in df.columns: 
         df=midPoint(df)
         
@@ -360,7 +366,7 @@ def DikesetReProcess(df, HTredo=True):
     d = now.strftime("%d %b, %Y")
 
     df=df.assign(Date_Changed=d)
-    df.drop_duplicates(subset=['HashID'])
+
     
     return df 
 
@@ -387,9 +393,12 @@ def completePreProcess(df):
     d = now.strftime("%d %b, %Y")
 
     df['Date Changed']=[d]*len(df)
-    
-    df.drop_duplicates(subset=['HashID'])
-    
+    l=len(df)
+    print( l, 'dikes')
+    df=df.drop_duplicates(subset=['HashID'])
+    if l is not len(df):
+        print("Found", l-len(df), "duplicates")
+        
     return df
 
 def transformXstart(dikeset):
@@ -468,3 +477,8 @@ def MaskArea(df, bounds):
     df_masked=df.loc[masklatlong]
     
     return df_masked
+
+def FilterLines(lines):
+    mask=lines['TrustFilter']==1
+    return lines[mask]
+

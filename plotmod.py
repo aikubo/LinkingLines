@@ -22,7 +22,7 @@ import seaborn as sns
 import matplotlib.colors as mcolors
 from htMOD import HT_center
 from fitRectangle import *
-from PrePostProcess import whichForm
+from PrePostProcess import whichForm, FilterLines
 import scipy.cluster.hierarchy as sch
 import labellines
 import matplotlib.gridspec as gridspec
@@ -70,6 +70,37 @@ class Labeloffset():
         self.axis.offsetText.set_visible(False)
         self.axis.set_label_text(self.label + " ("+ fmt.get_offset()+")" )
 
+
+def FixAxisAspect(ax1, ax2):
+    
+    " Need to fix the aspect ratios now"
+    
+    figW0, figH0 = ax1.get_figure().get_size_inches()
+    # Axis size on figure
+    _, _, w0, h0 = ax1.get_position().bounds
+    # Ratio of display units
+    disp_ratio0 = (figH0 * h0) / (figW0 * w0)
+    
+    figW1, figH1 = ax2.get_figure().get_size_inches()
+    # Axis size on figure
+    _, _, w1, h1 = ax2.get_position().bounds
+    # Ratio of display units
+    disp_ratio1 = (figH1 * h1) / (figW1 * w1)
+    
+    if h0 > h1:
+        ratio=h0/h1
+        y_min, y_max = ax2.get_ylim()
+        deltay=(y_max-y_min)*ratio/2
+        ax2.set_ylim(y_min-deltay, y_max+deltay)
+        print('reset Y')
+        
+    if w0>w1:
+        ratio=w0/w1
+        y_min, y_max = ax2.get_xlim()
+        deltay=(y_max-y_min)*ratio/2
+        ax2.set_xlim(y_min-deltay, y_max+deltay)
+        print('reset X')
+    
 from operator import sub
 def get_aspect(ax):
     """ Returns plot aspect ratio
@@ -1192,3 +1223,127 @@ def DoubleDilationPlot(df, lines, **kwargs):
     
     
     return fig, [ax_main, ax_xDist, ax_yDist]
+
+def TripleDilationPlot(df, lines, **kwargs):
+    fig = plt.figure(figsize=(8,8))
+    gs = gridspec.GridSpec(3, 3)
+    ax_main = plt.subplot(gs[1:3, :2])
+    ax_xDist = plt.subplot(gs[0, :2],sharex=ax_main)
+    ax_yDist = plt.subplot(gs[1:3, 2],sharey=ax_main)
+    
+    
+    from dilationCalculation import dilation
+    EWDilation1, NSDilation1, binx1,biny1=dilation(df, **kwargs)
+    EWDilation, NSDilation, binx,biny=dilation(lines, **kwargs)
+    
+    m=lines['TrustFilter']==1
+
+    EWDilation2, NSDilation2, binx2,biny2=dilation(lines[m], **kwargs)
+    
+    ys=[np.min(biny), np.max(biny)]
+
+    plotlines(lines[m], 'yellow', ax_main, alpha=0.8)
+    plotlines(lines, 'green', ax_main, alpha=0.6)
+    plotlines(df, 'gray', ax_main, alpha=0.6)
+   
+    #ax_xDist.plot(binx[:-1], NSDilation[:-1])
+
+
+    # plot so that highest values are plotted first and in the "back"
+    EWl=[EWDilation, EWDilation1, EWDilation2]
+    NSl=[NSDilation, NSDilation1, NSDilation2]
+    xl=[binx, binx1, binx2]
+    yl=[biny, biny1, biny2]
+    
+    EWorder=np.argsort([np.sum(i) for i in EWl])
+    colors=['gray', 'green', 'yellow']
+    for i in EWorder:
+        ax_yDist.fill_between(EWl[i],0,yl[i], alpha=0.6, color=colors[i] )
+        
+    NSorder=np.argsort([np.sum(i) for i in NSl])
+
+    for i in NSorder:
+        ax_xDist.fill_between(xl[i],0, NSl[i], alpha=0.6, color=colors[i])
+        
+
+    
+    ax_xDist.set(ylabel='NS Dilaton (m)')
+    ax_yDist.set(xlabel='EW Dilaton (m)')
+        
+    ax_xDist.tick_params(axis='x',          # changes apply to the x-axis
+                        which='both',      # both major and minor ticks are affected
+                        bottom=False,      # ticks along the bottom edge are off
+                        top=False,         # ticks along the top edge are off
+                        labelbottom=False) # labels along the bottom edge are off)
+    ax_yDist.tick_params(axis='y',
+                         which='both',
+                         left=False,
+                         right=False,
+                         labelleft=False)
+    
+    ax_yDist.set_ylim([ys[0], ys[1]])
+    
+    
+    
+    return fig, [ax_main, ax_xDist, ax_yDist]
+
+
+def plotScatterHist(lines, x,y, TrustFilter=True): 
+    
+    sns.set_theme(style="ticks")
+        
+    fig = plt.figure(figsize=(8,8))
+    gs = gridspec.GridSpec(3, 3)
+    ax_main = plt.subplot(gs[1:3, :2])
+    ax_xDist = plt.subplot(gs[0, :2],sharex=ax_main)
+    ax_yDist = plt.subplot(gs[1:3, 2],sharey=ax_main)
+    
+
+    m=lines['TrustFilter']==0
+    if TrustFilter:
+        ax_main.scatter(lines[x].loc[m].values, lines[y].loc[m].values,  color='purple', alpha=0.4, edgecolor='k')
+        #xbins=np.arange(0,1,0.1)
+        #ax_xDist.hist(lines['Overlap'].values, bins=xbins)
+        h1=sns.histplot(lines, x=x, hue='TrustFilter', 
+                     multiple="stack",
+                     palette="light:m_r",
+                     edgecolor=".3",
+                     linewidth=.5,
+                     ax=ax_xDist)
+        #h1.set(xticklabels=[])
+        #h1.set(xlabel=None)
+    
+        
+        #ybins=np.arange(0,90,5)
+        #ax_yDist.hist(lines['EnEchelonAngleDiff'].values, orientation='horizontal', bins=ybins)
+        h2=sns.histplot(lines, y=y, hue='TrustFilter', 
+                     multiple="stack",
+                     palette="light:m_r",
+                     edgecolor=".3",
+                     linewidth=.5,
+                     ax=ax_yDist)
+        
+        lines=FilterLines(lines)
+        #h2.set(yticklabels=[])
+        #h2.set(ylabel=None)
+        
+        
+        ax_main.scatter(lines[x].values, lines[y].values,  color='white', alpha=0.4, edgecolor='k', marker='*')
+        
+    else: 
+        ax_main.scatter(lines[x].values, lines[y].values,  color='grey', alpha=0.4, edgecolor='k')
+        
+        ax_xDist.hist(lines[x].values, color='grey', alpha=0.4)
+        ax_xDist.set_ylabel('Counts')
+        #ax_xDist.set(xticklabels=[])
+        ax_yDist.hist(lines[y].values, orientation='horizontal', color='grey', alpha=0.4)
+        ax_yDist.set_xlabel('Counts')
+        #ax_yDist.set(yticklabels=[])
+        
+    ax_main.set_xlabel(x)
+    ax_main.set_ylabel(y)
+    
+    
+    return fig, [ax_main, ax_xDist, ax_yDist]
+    
+    

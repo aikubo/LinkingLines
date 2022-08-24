@@ -275,7 +275,7 @@ def HT_AGG(dikeset,d):
 
 
 
-def HT_AGG_custom(dikeset,dtheta, drho, dimensions=2, linkage='complete', parallel=False):
+def HT_AGG_custom(dikeset,dtheta, drho, dimensions=2, linkage='complete', parallel=True):
     '''
     Agglomerative clustering with custom metric on Hough transform data
 

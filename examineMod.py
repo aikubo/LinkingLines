@@ -29,7 +29,7 @@ import warnings
 from matplotlib import cm
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 import os 
-import datetime
+from datetime import datetime
 
 def checkoutCluster(dikeset, label):
     
@@ -38,7 +38,7 @@ def checkoutCluster(dikeset, label):
     
     fig, ax=plt.subplots(1,2) 
     fig.set_size_inches( 12,6)
-    fig.suptitle("Label"+str(int(label)))
+    fig.suptitle("Label "+str(int(label)))
     mask=(dikeset['Labels']==label)
     lines=dikeset[mask]
     
@@ -62,7 +62,7 @@ def checkoutCluster(dikeset, label):
     ax2.scatter(lines['theta'], lines['rho'], c='r')
     ax2.plot(lines['theta'].mean(), lines['rho'].mean(), 'g*')
     ax2.scatter(dikeset['theta'], dikeset['rho'], c='grey', alpha=0.1) 
-    ax2.set_ylim([ylim1+8000, ylim2-8000])
+    ax2.set_ylim([ylim1+9500, ylim2-9500])
     ax2.set_xlim([xlim1+1.5, xlim2-1.5])
     
     ax[0].set_xlabel('Theta ($^\circ$)')
@@ -147,7 +147,7 @@ def checkoutCluster(dikeset, label):
     ax[1].text(tlocx,tlocy-0.05,'Width: '+str(round(w,1)), transform=ax[1].transAxes)
     ax[1].text(tlocx,tlocy-0.10,'Aspect: '+str(round(l/w,1)), transform=ax[1].transAxes)
     ax[1].text(tlocx,tlocy-0.15,'Size: '+str(len(lines)), transform=ax[1].transAxes)
-    
+    plt.tight_layout()
     
     print('Angle Mean: '+str( round(lines['theta'].mean(), 2)))
     print('Rho Mean: '+str(round(lines['rho'].mean(),1)))
@@ -164,16 +164,20 @@ def checkoutCluster(dikeset, label):
 
 def CheckoutBy(dikeset, lines, col, maximum=True, minimum=False):
     
-    loc=np.where(lines[col].values==np.max(lines[col].values))
-    label=lines['Label'].loc[loc].values
-    checkoutCluster(dikeset, label)
+    loc=np.nanargmax(lines[col].values)
+    label=lines['Label'].iloc[loc]
+    print("Label", int(label))
+    
+    fig,ax=checkoutCluster(dikeset, label)
     
     if minimum:
         loc=np.where(lines[col].values==np.min(lines[col].values))
         label=lines['Label'].loc[loc]
-        checkoutCluster(dikeset, label)
+        fig,ax=checkoutCluster(dikeset, label)
         
-    
+    return fig,ax
+
+
 def RotateOverlap(lines):
     theta=np.mean(lines['theta'].values)
     
@@ -202,11 +206,11 @@ def RotateOverlap(lines):
     if overlapx > totalL:
         overlap=overlapx/totalL
         
-    return overlap
+    return overlap, np.max(xcounts)
 
 
 
-def enEchelon(d, avgtheta):
+def enEchelonAngleTwist(d, avgtheta):
     warnings.filterwarnings("ignore")
     if len(d) <3: 
         return 0, 1, d["Xstart"], d["Xend"], d["Ystart"],d["Yend"]
@@ -281,16 +285,15 @@ def examineClusterShort(clusters):
         hashlines=hash((lines['HashID'].values.tostring()))
         clusters_data=clusters_data.append({ "Label": i, "Xstart": x1, "Ystart":y1, "Xend": x2,
                                             "Yend":y2, "X0": x0, "Y0": y0, "AvgRho":avgrho,
-                                            "AvgTheta":avgtheta, "Hash": hashlines, "Size":size}, ignore_index=True)
+                                            "AvgTheta":avgtheta, "ClusterHash": hashlines, "Size":size}, ignore_index=True)
     return clusters_data
 
                                             
-def examineClusters(clusters, enEchelonCutofff=7, ifEE=False, MaxNNSegDist=0.5):
+def examineClusters(clusters, enEchelonCutofff=7, ifEE=False, MaxNNSegDist=0.5, skipUnlinked=False):
     """ Must have  ['Xstart', 'Ystart', 'Xend', 'Yend','seg_length', 'ID', 'rho', 'theta', 'Labels'] """
     #fig,ax=plt.subplots(1,3)
     clabel=np.unique(clusters['Labels'])
-    nclusters=len(clabel)-1
-    notclustered=sum([clusters['Labels']==-1][0])
+    
     xc,yc=HT_center(clusters)
     clusters_data=pd.DataFrame()
     ids=np.arange(0, len(clusters),1)
@@ -310,7 +313,8 @@ def examineClusters(clusters, enEchelonCutofff=7, ifEE=False, MaxNNSegDist=0.5):
         cmask[mask]=True
         if (i == -1 or len(lines)<2):
             clustered=False
-            #continue
+            if skipUnlinked:
+                continue
             
         x,y=endpoints2(lines)
 
@@ -347,7 +351,7 @@ def examineClusters(clusters, enEchelonCutofff=7, ifEE=False, MaxNNSegDist=0.5):
         hashlines=hash((lines['HashID'].values.tostring()))
         
         if l-w > 0: 
-            EE=enEchelon(lines, avgtheta)
+            EE=enEchelonAngleTwist(lines, avgtheta)
             tdiff=EE[0]
             EE_pvalue=EE[1]
         else: 
@@ -360,13 +364,10 @@ def examineClusters(clusters, enEchelonCutofff=7, ifEE=False, MaxNNSegDist=0.5):
         b=avgrho/np.sin((np.deg2rad(avgtheta))+0.00000000001)+yc-xc*slope
         
         if size>1: 
-            
-            if segmentL>l:
-                overlap=(segmentL-l)/segmentL
-            else:
-                overlap=RotateOverlap(lines)
+            overlap, nOverlap=RotateOverlap(lines)
         else:
             overlap=0
+            nOverlap=0
             
         if size>3: 
             X=(np.vstack((lines['Xmid'].values, lines['Ymid'].values)).T)
@@ -396,16 +397,23 @@ def examineClusters(clusters, enEchelonCutofff=7, ifEE=False, MaxNNSegDist=0.5):
                                             "SegmentLSum":segmentL, "ClusterHash":hashlines, 
                                             'ClusterCrossesZero': crossZero,
                                             "EnEchelonAngleDiff":tdiff, "Overlap": overlap,
+                                            'nOverlapingSegments':nOverlap, 
                                             "EEPvalue":EE_pvalue, "MaxSegNNDist": MaxDist/l,
                                             "MedianSegNNDist": MedianDist/l, "MinSegNNDist": MinDist/l, "TrustFilter": Trust},
                                             ignore_index=True)
     
     clusters_data.astype({'Linked':'bool'})
+    
+    if skipUnlinked:
+        nclusters= len(clusters_data)
+    else:
+        nclusters=np.sum(clusters_data['Size']>1)
+        
+    notclustered=len(clusters)-nclusters
     now = datetime.now()
     date = now.strftime("%d %b, %Y")
     clusters_data=clusters_data.assign(Date_Changed=date)
-    evaluation=pd.DataFrame({ "Ic": (len(clusters)-notclustered),
-                              "nClusters": nclusters,
+    evaluation=pd.DataFrame({ "nClusters": nclusters,
                               "nDikePackets": np.sum(clusters_data['Overlap']>0.1),
                               "AverageRhoRange": np.average(clusters_data["RhoRange"]),
                               "MaxRhoRange": np.max(clusters_data["RhoRange"]),
@@ -422,28 +430,50 @@ def examineClusters(clusters, enEchelonCutofff=7, ifEE=False, MaxNNSegDist=0.5):
                               "AverageW": np.average(clusters_data["R_Width"]),
                               "MaxW": np.max(clusters_data['R_Width']),
                               "StdW": np.std(clusters_data['R_Width']),
-                              "NEEDikes":len(EEDikes),
+                              "nTrustedDikes":np.sum(clusters_data['TrustFilter']>0),
                               "MaxEEAngleDiff":np.max(clusters_data["EnEchelonAngleDiff"]),
                               "AverageEAngleDiff":np.average(clusters_data["EnEchelonAngleDiff"]),
                               "Date":date},
                               index=[0])
     
 
-    if ifEE:
-        return clusters_data, evaluation, EEDikes
-    else:
-        return clusters_data, evaluation
+    return clusters_data, evaluation
 
+def evaluationOnClusters(clusters_data):
+    now = datetime.now()
+    date = now.strftime("%d %b, %Y")
+    nclusters=np.sum(clusters_data['Size']>1)
+    evaluation=pd.DataFrame({ "nClusters": nclusters,
+                          "nDikePackets": np.sum(clusters_data['Overlap']>0.2),
+                          "nTrustedDikes":np.sum(clusters_data['TrustFilter']>0),
+                          "AverageRhoRange": np.average(clusters_data["RhoRange"]),
+                          "MaxRhoRange": np.max(clusters_data["RhoRange"]),
+                          "StdRhoRange": np.std(clusters_data["RhoRange"]),                              
+                          "AverageThetaRange": np.average(clusters_data["ThetaRange"]),
+                          "MaxThetaRange": np.max(clusters_data["ThetaRange"]), 
+                          "StdThetaRange": np.std(clusters_data["ThetaRange"]),
+                          "AvgClusterSize": np.average(clusters_data["Size"]),
+                          "ClusterSizeStd": np.std(clusters_data["Size"]),
+                          "ClusterMax": clusters_data["Size"].max(), 
+                          "AverageL": np.average(clusters_data["R_Length"]),
+                          "MaxL": np.max(clusters_data['R_Length']),
+                          "StdL": np.std(clusters_data["R_Length"]),
+                          "AverageW": np.average(clusters_data["R_Width"]),
+                          "MaxW": np.max(clusters_data['R_Width']),
+                          "StdW": np.std(clusters_data['R_Width']),
+                          "MaxEEAngleDiff":np.max(clusters_data["EnEchelonAngleDiff"]),
+                          "AverageEAngleDiff":np.average(clusters_data["EnEchelonAngleDiff"]),
+                          "Date":date},
+                          index=[0])
+    return evaluation
+    
 def ClusteredAll(dikeset,lines,cmask):
     notClustered=dikeset.iloc[~cmask]
 
-def FilterLines(lines, size=4, MaxSegNNDist=0.5):
-    mask= (lines['MaxSegNNDist']<0.45)
-    return lines[mask]
 
 def checkAllClusterChange(lines1, lines2):
-    hash1=np.sort(lines1['Hash'])
-    hash2=np.sort(lines2['Hash'])
+    hash1=np.sort(lines1['ClusterHash'])
+    hash2=np.sort(lines2['ClusterHash'])
     hash1.flags.writeable = False
     hash2.flags.writeable = False
     if hash(str(hash1)) == hash(str(hash2)):
@@ -461,9 +491,9 @@ def checkIndividualClusterChange(df1, df2):
     HashList=np.array([l1,l2])
     
     #pick the array with the longest length
-    longest=max(Hashlist, key=lambda col: len(col))[0]
-    shortest=min(Hashlist, key=lambda col: len(col))[0]
-    
+    longest=max(HashList, key=lambda col: len(col))
+    shortest=min(HashList, key=lambda col: len(col))
+
     same=np.in1d( longest,shortest) #outputs length of first input
     s=np.sum(same)
     eqLabels=np.arange(0,len(longest), 1)[same]
@@ -497,11 +527,11 @@ def checkClusterChange2(Segs, Line1, Line2):
     
 
 def RotateAndCluster(dikeset,dtheta, drho,**kwargs):
-    dikesetOrig, ZOrig=HT_AGG_custom(dikeset, dtheta, drho, **kwargs)
+    dikesetOrig, ZOrig=HT_AGG_custom(dikeset, dtheta, drho)
     
     dikeset45=rotateData2(dikeset, 45)
     dikeset45=DikesetReProcess(dikeset45, HTredo=True)
-    dikeset45, Z45=HT_AGG_custom(dikeset45, dtheta, drho, **kwargs)
+    dikeset45, Z45=HT_AGG_custom(dikeset45, dtheta, drho)
     linesOrig=examineClusterShort(dikesetOrig)
     lines45=examineClusterShort(dikeset45)
     
@@ -598,44 +628,7 @@ def TopHTSection(lines, dikeset, rstep, tstep,n=1):
     
     return toplines, fig, ax
 
-def plotlabel(df, linked, label, hashlabel=False, EE=False):
-    fig,ax=plt.subplots()
-    print(label)
-    if hashlabel:
-        l=linked['Label'].loc[linked['Hash']==label].astype(int).values[0]
-        label=l 
-        print(label)
 
-    mask=df['Labels']==label
-    xc,yc=HT_center(df)
-    lines=df[mask]
-    plotlines(lines,"r", ax)
-    
-    # x,y=endpoints2(lines)
-    # w,l=fit_Rec(lines, xc, yc)
-    # r=squaresError(lines,xc,yc)
-    # avgtheta=np.average(lines['theta'])
-
-    # x1, x2, y1, y2=clustered_lines(x,y,avgtheta)
-    linkedlines=linked[linked['Label']==label]
-    plotlines(linkedlines,"k", ax)
-    
-    
-    ax.set_title("Label "+str(label)+ "| theta:"+str(linkedlines['AvgTheta'].values)+" rho:"+str(linkedlines['AvgRho'].values))
-    ax.text( .80, .89, "W:"+str(linkedlines['R_Width'].values),transform=ax.transAxes )
-    ax.text( .80, .84, "L:"+str(linkedlines['R_Length'].values),transform=ax.transAxes  )
-    ax.text( .80, .80, "errors:"+str(linkedlines['R_error'].values),transform=ax.transAxes  )
-    print("errors:"+str(linkedlines['R_error']))
-    
-    if EE: 
-        Xmid=lines['Xmid'].to_numpy()
-        Ymid=lines['Ymid'].to_numpy()
-        tdiff, EXstart, EXend, EYstart, EYend=enEchelon(lines, linkedlines['AvgTheta'].values[0])
-        ax.plot( [EXstart, EXend], [EYstart, EYend], 'g*-')
-        ax.plot(Xmid, Ymid, 'bp', markersize=2)
-        
-        
-    ax.axis('equal')
 
 
     

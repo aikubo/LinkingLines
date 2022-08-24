@@ -14,12 +14,12 @@ from htMOD import MidtoPerpDistance
 from clusterMod import HT_AGG_custom as AggHT
 from examineMod import *
 from plotmod import *
-import datetime
-
+from datetime import datetime
 dikeset=pd.read_csv('/home/akh/myprojects/Linking-and-Clustering-Dikes/dikedata/crb/CJDS_FebStraightened.csv')
 # already straightened dikes and did preprecessing
 
-def RhoSensitivityRun(dikeset, rhos, evalPath, rotate=False, saveTemp=True):
+# '/home/akh/myprojects/Linking-and-Clustering-Dikes/dikedata/crb/CJDS_sensitivity'
+def RhoSensitivityRun(dikeset, rhos, evalPath, rotate=False, saveTemp=True, overideSave=False):
     """
     Run sensitivity analysis based on changing Rho threshold in clustering algo
     Outputs evaluation of clusters
@@ -34,6 +34,8 @@ def RhoSensitivityRun(dikeset, rhos, evalPath, rotate=False, saveTemp=True):
         path to save evaluations.
     rotate : bool, optional
         Use the rotateAndCluster method. The default is False.
+    saveTemp: bool, default True
+    overideSave: bool, default False
 
     Returns
     -------
@@ -48,24 +50,32 @@ def RhoSensitivityRun(dikeset, rhos, evalPath, rotate=False, saveTemp=True):
 
     for drho in rhos:
         print("Running ", dtheta, drho)
-        #Run the clustering algorithm
-        
-        if rotate: 
-            temp=RotateAndCluster(dikeset, dtheta, drho, linkage='complete')
-        else:
-            temp, clusters, M=HT_AGG_custom(dikeset, dtheta, drho, linkage='complete')
-    
-        #Run examinecluster
-        temp,evaluation=examineClusters(temp)
-        evaluation['Theta_Threshold']=dtheta
-        evaluation['Rho_Threshold']=drho
-        evaluation['Linkage']='Complete'
-    
-        evals=evals.append(evaluation, ignore_index=True)
         
         savePath=evalPath+"_Rho"+str(drho)
-        if saveTemp:
-            temp.to_csv(savePath)
+        #Run the clustering algorithm
+        if ~overideSave:
+            isExist = os.path.exists(savePath)
+            if isExist:
+                temp=pd.read_csv(savePath)
+                evaluation=evaluationOnClusters(temp)
+                
+            else:
+                if rotate: 
+                    temp=RotateAndCluster(dikeset, dtheta, drho)
+                else:
+                    temp, M=HT_AGG_custom(dikeset, dtheta, drho, linkage='complete')
+                    
+                if saveTemp:
+                    temp.to_csv(savePath)
+                
+                #Run examinecluster
+                temp,evaluation=examineClusters(temp)
+                evaluation['Theta_Threshold']=dtheta
+                evaluation['Rho_Threshold']=drho
+                evaluation['Linkage']='Complete'
+    
+        evals=evals.append(evaluation, ignore_index=True)
+
     now = datetime.now() 
     date = now.strftime("%d %b, %Y")
     evals=evals.assign(Date_Changed=date)
@@ -73,14 +83,21 @@ def RhoSensitivityRun(dikeset, rhos, evalPath, rotate=False, saveTemp=True):
     
     return evals
 
-def LinkageSensitivityRun(dikeset, evalPath, linkageTypes=['complete', 'single', 'average'], drho=1000, dtheta=2):
+def LinkageSensitivityRun(dikeset, evalPath, linkageTypes=['complete', 'single', 'average'], drho=1000, dtheta=2, saveTemp=True, overideSave=False):
     evals=pd.DataFrame()
 
     for l in linkageTypes:
         print("Running ", l)
+        
+        savePath=evalPath+"_Linkage"+l
+        
+        if ~overideSave:
+            isExist = os.path.exists(savePath)
+            if isExist:
+                continue
         #Run the clustering algorithm
         
-        temp, clusters, M=HT_AGG_custom(dikeset, dtheta, drho, linkage=l)
+        temp, M=HT_AGG_custom(dikeset, dtheta, drho, linkage=l)
     
         #Run examinecluster
         temp,evaluation=examineClusters(temp)
@@ -94,6 +111,7 @@ def LinkageSensitivityRun(dikeset, evalPath, linkageTypes=['complete', 'single',
         savePath=evalPath+"_Linkage"+l
         if saveTemp:
             temp.to_csv(savePath)
+            
     now = datetime.now() 
     date = now.strftime("%d %b, %Y")
     evals=evals.assign(Date_Changed=date)
@@ -101,3 +119,15 @@ def LinkageSensitivityRun(dikeset, evalPath, linkageTypes=['complete', 'single',
     evals.to_csv(evalPath)
     
     return evals
+
+def runAllSensitivity(dikeset, path):
+    evalPath=path+"RhoSensitivity"
+    rhos=[100, 200,400,1000,5000]
+    evals1= RhoSensitivityRun(dikeset, rhos, evalPath)
+    
+    evalPath=path+"LinkageSensitivity"
+    evals2=LinkageSensitivityRun(dikeset, evalPath)
+    
+    evalPath=path+"RhoSensitivityRotated"
+    evals1= RhoSensitivityRun(dikeset, rhos, evalPath, rotate=True)
+    

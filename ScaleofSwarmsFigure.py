@@ -21,12 +21,12 @@ from matplotlib.patches import Rectangle
 
 import seaborn as sns
 
-d=['dikedata/deccandata/All_deccan_3857_preprocessed.csv',
+d=['dikedata/deccandata/AllDeccan.csv',
    'dikedata/crb/CJDS_FebStraightened.csv',
    'dikedata/spanish peaks/SpanishPeaks_3857_preprocessed.csv'
    ]
 
-l=['dikedata/deccandata/AllDeccan_3_2000_LINKED.csv',
+l=['dikedata/deccandata/AllDeccan_LINKED.csv',
    'dikedata/crb/CJDS_Lines_3_500_March11.csv',
    'dikedata/spanish peaks/SpanishPeaks_3857_LINKED_2_2000.csv']
 
@@ -58,29 +58,29 @@ ax2[2].set_xscale('log')
 
 averagewidth=[2,8,8]
 name=['Deccan', 'CJDS', 'Spanish Peaks']
-dfAll=pd.DataFrame()
-EruptedVolume=[50,210000, 1.3e6] #km
+dfAll=pd.DataFrame() 
+EruptedVolume=[ 1.3e6, 210000, 50] #50,210000, 1.3e6] #km
 # CRBG estimate: Kasbohm 2018
 # Deccan estimate: Jay and Widdowson 2008
 # Spanish peaks erupted volume:
     
-TrustOn=True  # only use the clustered dikes that are trusted
-for dikeset,lines, color, xnew, ynew, w, n, ev in zip(d,l,c, moveX, moveY, averagewidth, name, EruptedVolume): 
+TrustOn=False  # only use the clustered dikes that are trusted
+for dikeset,lines, color, xnew, ynew, w, label, ev in zip(d,l,c, moveX, moveY, averagewidth, name, EruptedVolume): 
     
     df=pd.read_csv(dikeset)
-    
+    df=DikesetReProcess(df)
     
 
     xc,yc=HT_center(df)
     df2=moveHTcenter(df)
     df2=moveHTcenter(df2, xc=xnew, yc=ynew)
     df3=pd.read_csv(lines)
-    df3['SwarmID']=n
+    df3['SwarmID']=label
         
     df3['R_Length'] = pd.to_numeric(df3['R_Length'], errors='coerce')
     df3['R_Width'] = pd.to_numeric(df3['R_Width'], errors='coerce')
     df3['Size'] = pd.to_numeric(df3['Size'], errors='coerce')
-    m=df3['TrustFilter']==1
+    #m=df3['TrustFilter']==1
     if TrustOn:
         df3=df3[m]
     
@@ -91,7 +91,7 @@ for dikeset,lines, color, xnew, ynew, w, n, ev in zip(d,l,c, moveX, moveY, avera
     Xedges=np.array([xs[0], xs[0], xs[1], xs[1], xs[0]])
     Yedges=np.array([ys[1], ys[0], ys[0], ys[1], ys[1]])
     ax.plot(Xedges, Yedges, color, linewidth=4)
-    rect=Rectangle( (xs[0], ys[0]), width, height,facecolor=color, alpha=0.3, label=n)
+    rect=Rectangle( (xs[0], ys[0]), width, height,facecolor=color, alpha=0.3, label=label)
     ax.add_patch(rect)
     ax.legend(loc='upper right')
     FixCartesianLabels(ax)
@@ -103,18 +103,19 @@ for dikeset,lines, color, xnew, ynew, w, n, ev in zip(d,l,c, moveX, moveY, avera
     #comparison plots
     
     # segment Length
-    ax2[0].plot(n,  df['seg_length'].mean(), "s", color=color, label=name)
-    ax2[0].plot(n,  df3['R_Length'], "P", color=color, label=name)
+    ax2[0].plot(n,  df['seg_length'].mean(), "s", color=color, label=label)
+    ax2[0].plot(n,  df3['R_Length'].mean(), "P", color=color, label=label)
     
     # width*length of swarm area
-    ax2[1].plot(n,  width*height/1000**2, "*", color=color, label=name)
+    ax2[1].plot(n,  width*height/1000**2, "*", color=color, label=label)
     # linked dike length * width (not packet width) (only 4+segments)
     
     l=df3['R_Length'].mean()
-    ax2[1].plot(n,  l*w/1000**2, "p", color=color, label=name)
+    ax2[1].plot(n,  l*w/1000**2, "p", color=color, label=label)
     
     #erupted volume 
-    ax2[2].plot(n,  ev, "*", color=color, label=name)
+    ax2[2].plot(n,  ev, "*", color=color, label=label)
+    ax2[2].legend()
     plt.tight_layout()
     
     # ax2.plot(n, width*height/1000**2, "*", color=color, label=name)
