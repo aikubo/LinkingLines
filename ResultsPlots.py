@@ -44,7 +44,7 @@ def plotLargeClusters(dikeset,lines,n, path, overide=False):
     if type(n) is int:
         n=float(n)
     largelines=lines.loc[np.greater(lines['Size'].values, n)]
-    ImgPath=path[:-4]+"Images/LargestClusters"
+    ImgPath=path[:-4]+"Images/LargestClusters/"
     
     isExist = os.path.exists(ImgPath)
     
@@ -61,7 +61,9 @@ def plotLargeClusters(dikeset,lines,n, path, overide=False):
             fig.savefig(ImgName, transparent=True)
             plt.close(fig)
             
-    col=['Overlap','MaxSegNNDist', 'nOverlapingSegments', 'MedianSegNNDist','EnEchelonAngleDiff','ThetaRange', 'Size']
+    col=['Overlap','MaxSegNNDist', 'nOverlapingSegments', 'MedianSegNNDist','EnEchelonAngleDiff','ThetaRange', 'Size', 'Aspect', 'R_Length', 'R_Width']
+    lines=lines.assign(Aspect=lines['R_Length'].values/lines['R_Width'].values)
+    
     for i in col:
         
         
@@ -83,7 +85,8 @@ def Histograms(dikeset,lines, path, maxL=150000):
         fig.set_size_inches( 12,6)
         ax = fig.subplot_mosaic(mosaic)
         #identify_axes(ax_dict)
-    
+        rlim=lines['Rho_Threshold'][0]
+        lines=lines.loc[lines['Linked']==1]
         ax['A']=trueDikeLength(lines, dikeset, maxL, axs=ax['A'])
         # shape, loc, scale=lognorm.fit(lines['R_Length'].values)
         # x=np.linspace(0,maxL)
@@ -99,7 +102,7 @@ def Histograms(dikeset,lines, path, maxL=150000):
         # lo = Labeloffset(aa, label='Normalized Probability', axis="y")
     
         
-        ax['C'].hist(lines['R_Width'], bins=np.arange(0,5000,500))
+        ax['C'].hist(lines['R_Width'], bins=np.arange(0,rlim*2,500))
         
         ax['C'].text(.60,.80,'Dike median:'+str(round(np.median(lines['R_Width'].values),0)), transform=ax['C'].transAxes)
         ax['C'].text( .60, .65, 'Dike STD:'+str(round(lines['R_Width'].std(),0)),transform=ax['C'].transAxes)
@@ -123,14 +126,15 @@ def Histograms(dikeset,lines, path, maxL=150000):
         
         ax['B'].set_ylabel("Length (m)")
         ax['B'].set_xlabel("Width (m))")
+        ax['B'].set_xlim((0,2*rlim))
         
         x=np.linspace(0,6000,100)
         for AR in [10,25,50]:
             ax['B'].plot(x, x*AR, 'k-.', alpha=0.7, label=str(AR))
         
         labellines.labelLines(ax['B'].get_lines())
-        ax['B'].set_ylim([-5,300000])
-        ax['B'].set_xlim([-5,6000])
+        ax['B'].set_ylim([-5,maxL])
+
         ImgPath=path[:-4]+"Images/"
         
         fig.savefig(ImgName, transparent=True)
@@ -141,7 +145,7 @@ def HT3(dikeset,lines,path):
     ImgName=ImgPath+"HT3"+".pdf"
     if MakeFigCheck(ImgName):
         fig,ax=plt.subplots(1,3)
-        fig.set_size_inches( 15,4)
+        fig.set_size_inches( 16,6)
         DotsHT(fig, ax[0], dikeset, ColorBy=None, title="Unlinked Segments")
         DotsHT(fig, ax[1], lines, ColorBy=None, title="All Linked Segments")
         mask=lines['TrustFilter']==1
@@ -158,16 +162,10 @@ def HT3(dikeset,lines,path):
     
 def Toplines(lines, dikeset, path):
     ImgPath=path[:-4]+"Images/"
-    ImgName=ImgPath+"TopLines_3"+".pdf"
+    ImgName=ImgPath+"TopLines"+".pdf"
     
     if MakeFigCheck(ImgName):
         rstep=lines['Rho_Threshold'].values[0]*10
-        T, fig, ax=TopHTSection(lines, dikeset, rstep, 5)
-        
-        ImgPath=path[:-4]+"Images/"
-        ImgName=ImgPath+"TopLines"+".pdf"
-        fig.savefig(ImgName, transparent=True)
-        plt.close(fig)
         
         T, fig, ax=TopHTSection(lines, dikeset, rstep, 4, n=3)
         
@@ -177,19 +175,20 @@ def Toplines(lines, dikeset, path):
         plt.close(fig)
     
 def PairGrid(lines,cols, path,n=2):
-    
-    mask=np.greater(lines['Size'].values, n)
-    temp=lines.loc[mask][cols]
     ImgPath=path[:-4]+"Images/"
     ImgName=ImgPath+"PairPlot"+".pdf"
+    if MakeFigCheck(ImgName):
+        mask=np.greater(lines['Size'].values, n)
+        temp=lines.loc[mask][cols]
+        
+        
+        g = sns.PairGrid(temp, diag_sharey=False, hue="Size", corner=True)
+        g.map_diag(sns.histplot,  hue=None, color=".3")
+        g.map_offdiag(sns.scatterplot)
+        g.add_legend()
+        
     
-    g = sns.PairGrid(temp, diag_sharey=False, hue="Size", corner=True)
-    g.map_diag(sns.histplot,  hue=None, color=".3")
-    g.map_offdiag(sns.scatterplot)
-    g.add_legend()
-    
-
-    g.savefig(ImgName, transparent=True)
+        g.savefig(ImgName, transparent=True)
     #plt.close(g)
 
 def SaveFigCheck(fig, ImgPath, overide=False):
@@ -200,7 +199,7 @@ def SaveFigCheck(fig, ImgPath, overide=False):
         now=datetime.now()
         
          
-        tdif=mtime + timedelta(days=2) < now
+        tdif=mtime + timedelta(days=7) < now
     
     elif not os.path.exists(ImgPath):
         tdif=True
@@ -210,13 +209,47 @@ def SaveFigCheck(fig, ImgPath, overide=False):
         print(ImgPath, "saved")
     elif not tdif:
         print(ImgPath, "already was saved < 2 days ago")
+        
+    if overide:
+        fig.savefig(ImgPath, transparent=True, dpi=600)
+        print(ImgPath, "saved by overide")
 
-
+def LocPlots(path, lines, cols):
+    
+    for i in cols:
+        ImgPath=path[:-4]+"Images/"
+        ImgName=ImgPath+"ByLoc"+i+".pdf"
+        if MakeFigCheck(ImgName):
+            if i == "R_Length" or i =="R_Width":
+                
+                fig,ax=plotByAngle(lines, i, log_scale=(False,True))
+            fig,ax=plotByAngle(lines, i)
+            
+            fig.savefig(ImgName, transparent=True, dpi=600)
+    
+def AnglePlots(path, lines, cols):
+    print("Starting Angle Plots")
+    for i in cols:
+        ImgPath=path[:-4]+"Images/"
+        ImgName=ImgPath+"ByAngle"+i+".pdf"
+        print("making image:", ImgName)
+        if MakeFigCheck(ImgName):
+            if i == "R_Length" or i =="R_Width":
+                
+                fig=plotByAngle(lines, i, log_scale=True)
+            fig=plotByAngle(lines, i)
+            fig.savefig(ImgName, transparent=True, dpi=600)
+    
+        
     
     
-def allFigures(path1,path2,w, Large=True):
+def allFigures(path1,path2,w, Large=True, overide=False):
+    
     dikeset=pd.read_csv(path1)
     lines=pd.read_csv(path2)
+    lines['R_Width']=lines['R_Width']+w
+    lines['R_Length']=lines['R_Length']/1000
+    
     cols=['Size', 'Overlap', "MaxSegNNDist", "MinSegNNDist"]
     
     ImgPath=path2[:-4]+"Images/"
@@ -227,9 +260,9 @@ def allFigures(path1,path2,w, Large=True):
         print("The new directory", ImgPath, " is created!")
     sns.reset_orig()
     m=lines['TrustFilter']==1
-    sns.despine()
-    g=sns.jointplot(data=lines, x='Size', y='R_Length', alpha=0.6, hue='TrustFilter',  ylim = (0,lines['R_Length'].max()))
     
+    g=sns.jointplot(data=lines, x='Size', y='R_Length', alpha=0.6, hue='TrustFilter',  ylim = (0,250))
+
     slope, intercept, r_value, p_value, std_err = stats.linregress(lines['Size'].values, lines['R_Length'].values)
     x=np.linspace(3, lines['Size'].max())
     y=slope*x+intercept 
@@ -253,7 +286,8 @@ def allFigures(path1,path2,w, Large=True):
 
 
     #g.savefig(ImgPath+"SizebyLength2.pdf", transparent=True)
-    SaveFigCheck(g, ImgPath+"SizebyLength2.pdf")
+    SaveFigCheck(g, ImgPath+"SizebyLength2.pdf", overide=overide)
+    SaveFigCheck(g, ImgPath+"SizebyLength2.png", overide=overide)
     
     
     #dilation 
@@ -262,16 +296,20 @@ def allFigures(path1,path2,w, Large=True):
         fig,axes=DoubleDilationPlot(dikeset, lines, binWidth=1700, averageWidth=w)
         
         #fig.savefig(ImgName, transparent=True)
-        SaveFigCheck(fig, ImgName)
+        SaveFigCheck(fig, ImgName, overide=overide)
         plt.close(fig)
+        
+
     
     ImgName=ImgPath+"TripleDilationTrusted"+".pdf"
     if MakeFigCheck(ImgName):
         fig,axes=TripleDilationPlot(dikeset, lines, binWidth=1700, averageWidth=w)
         
         #fig.savefig(ImgName, transparent=True)
-        SaveFigCheck(fig, ImgName)
+        SaveFigCheck(fig, ImgName, overide=overide)
         plt.close(fig)
+        
+        
     
     
 
@@ -283,18 +321,27 @@ def allFigures(path1,path2,w, Large=True):
     Toplines(lines,dikeset, path2)
     PairGrid(lines, cols, path2)
     sns.reset_orig()
-    rstep=lines['Rho_Threshold'].values[0]*4
+    rstep=lines['Rho_Threshold'].values[0]*10
     fig,ax=DotsLinesHist(lines, rstep, 4)
-    fig.set_size_inches(10,5)
+    fig.set_size_inches(15,5)
     
     plt.tight_layout()
     ImgName=ImgPath+"DotsLinesHist"+".pdf"
     ##fig.savefig(ImgName, transparent=True)
-    SaveFigCheck(fig, ImgName)
+    SaveFigCheck(fig, ImgName, overide=overide)
     plt.close(fig)
     
-    col1=['Overlap', 'Overlap', 'MaxSegNNDist', 'R_Length', ]
-    col2=['EnEchelonAngleDiff', 'MedianSegNNDist', 'EnEchelonAngleDiff', 'R_Width', ]
+    col1=['Overlap', 'Overlap', 'MaxSegNNDist']
+    col2=['EnEchelonAngleDiff', 'MedianSegNNDist', 'EnEchelonAngleDiff' ]
+    
+    fig,ax=plotScatterHist(lines, "R_Length", "R_Width", log_scale=True)
+    fig.set_size_inches(10,5)
+    
+    plt.tight_layout()
+    ImgName=ImgPath+"ScatterHist"+"LengthWidth"+".pdf"
+    #fig.savefig(ImgName, transparent=True)
+    SaveFigCheck(fig, ImgName, overide=overide)
+    plt.close(fig)
     
     for x,y in zip(col1, col2):
         
@@ -305,7 +352,7 @@ def allFigures(path1,path2,w, Large=True):
             plt.tight_layout()
             ImgName=ImgPath+"ScatterHist"+x+y+".pdf"
             #fig.savefig(ImgName, transparent=True)
-            SaveFigCheck(fig, ImgName)
+            SaveFigCheck(fig, ImgName, overide=overide)
             plt.close(fig)
             
     for x,y in zip(col1, col2):
@@ -316,13 +363,22 @@ def allFigures(path1,path2,w, Large=True):
             plt.tight_layout()
             ImgName=ImgPath+"ScatterHist_TrustFilter"+x+y+".pdf"
             #fig.savefig(ImgName, transparent=True)
-            SaveFigCheck(fig, ImgName)
+            SaveFigCheck(fig, ImgName, overide=overide)
             plt.close(fig)
                 
-        
+    colLoc=['AvgTheta', 'Overlap', 'Size', 'R_Length', 'R_Width', 'nOverlapingSegments', 'MedianSegNNDist']
+    LocPlots(path2,lines,colLoc)
+    
+    colLoc=['Overlap', 'Size', 'R_Length', 'R_Width', 'nOverlapingSegments','MedianSegNNDist']
+    AnglePlots(path2,lines,colLoc)
     
     if Large:
         plotLargeClusters(dikeset, lines, 10, path2, overide=False)
+        
+        
+        
+def reRunTest():
+    allFigures("/home/akh/myprojects/Linking-and-Clustering-Dikes/dikedata/crb/CJDS_FebStraightened.csv", '/home/akh/myprojects/Linking-and-Clustering-Dikes/dikedata/crb/CJDS_Complete_2_433.csv', 8)
 #def comparisonPlots():
     
     

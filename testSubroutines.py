@@ -13,6 +13,10 @@ import pandas as pd
 import numpy as np 
 from htMOD import rotateData2
 from synthetic import makeLinear2
+from fitRadialCenters import * 
+
+from synthetic import fromHT 
+    
 
 
 def SimpleTestFunc(Value, Expected, TestName):
@@ -165,19 +169,19 @@ def AllOverlapTests():
     
     plotlines(df, 'k', ax, ColorBy='label')
     
-    for i in df['label'].unique():
-        lines=df[ df['label']==i]
-        o=overlapSegments(lines)
+    # for i in df['label'].unique():
+    #     lines=df[ df['label']==i]
+    #     o=overlapSegments(lines)
         
-        if ~(np.isclose(o, lines['trueoverlap'].iloc[0])):
+    #     if ~(np.isclose(o, lines['trueoverlap'].iloc[0])):
             
-            print('Test', str(i),' Failed')
-            print("Overlap calcuation error!")
-            print(o, lines['trueoverlap'].iloc[0])
-            print('                    ')
-        else: 
-            print('Test', str(i), 'passed')
-            print('                    ')
+    #         print('Test', str(i),' Failed')
+    #         print("Overlap calcuation error!")
+    #         print(o, lines['trueoverlap'].iloc[0])
+    #         print('                    ')
+    #     else: 
+    #         print('Test', str(i), 'passed')
+    #         print('                    ')
             
     for i in df['label'].unique():
         lines=df[ df['label']==i]
@@ -197,4 +201,22 @@ def AllOverlapTests():
             
             
 
+#test radial fit 
+def TestRadialFit():
 
+    xdata=np.linspace(-90,90,100)
+    ydata0=np.cos(np.deg2rad(xdata))+np.sin(np.deg2rad(xdata))
+    ydata=100*np.cos(np.deg2rad(xdata))-900*np.sin(np.deg2rad(xdata))
+    xc=0
+    yc=0
+    
+    test0=fromHT(xdata,ydata0, test=True)
+    test1=fromHT(xdata,ydata, test=True)
+    
+    
+    for i,C in zip([test0,test1], ['0,0', '100,-900']):
+        Centers=RadialFit(i, plot=True)
+        
+        print( "True Value", C)
+        print("Calulated", Centers['Center'])
+    

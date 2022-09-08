@@ -147,8 +147,10 @@ def testRec(lines, xc, yc):
     
 
 def fit_Rec(lines,xc,yc):
-    
     xi,yi=endpoints2(lines)
+    if len(lines) == 1:
+        return np.nan, lines['seg_length'], 0, xi,yi, lines['Xmid'], lines['Ymid']
+    
     x0=xc
     y0=yc
 

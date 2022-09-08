@@ -253,7 +253,7 @@ def EnEchelonSynthetic(ndikes, angle, RhoStart, RhoSpacing, Overlap=0, CartRange
     
     return df 
 
-def fromHT(angles, rhos, scale=10000, length=10000, xc=0, yc=0, CartRange=100000, label=1, xrange=None):
+def fromHT(angles, rhos, scale=10000, length=10000, xc=0, yc=0, CartRange=100000, label=1, xrange=None, test=False):
     ndikes=len(angles)
     
     slopes=-1/(np.tan(np.deg2rad(angles))+0.000000001)
@@ -285,17 +285,29 @@ def fromHT(angles, rhos, scale=10000, length=10000, xc=0, yc=0, CartRange=100000
     
     df=pd.DataFrame({'Xstart':Xstart, 'Xend': Xend, 'Ystart': Ystart, 'Yend':Yend, 
                     'seg_length':l, 'slope': slopes, 'intercept': b, 'Label': labels})
-    theta1, rho1, xc,yc=HT(df)
-    df['theta']=theta1
-    df['rho']=rho1
-    
-    if any(~np.isclose(theta1, angles)):
-        print( "ERROR angles not equivilent")
-        
-    df=df.drop(df[ abs(df['Ystart'])-yc > CartRange].index)
+    theta1, rho1, xc,yc=HT(df, xc=xc, yc=yc)
+    df=df.assign(rho=rho1, theta=theta1, xc=xc, yc=yc)
 
+
+    if test:
+        if any(~np.isclose(abs(theta1), abs(angles))):
+            print( "ERROR angles not equivilent")
+            
+            print(theta1[~np.isclose(theta1, angles)])
+            print(angles[~np.isclose(theta1, angles)])
+        
+        if any(~np.isclose(rho1, rhos)):
+            print( "ERROR rhos not equivilent")
+            
+            print(rhos[~np.isclose(rho1, rhos)])
+            print(rhos1[~np.isclose(rho1, rhos)])
+            
+    df=df.drop(df[ abs(df['Ystart'])-yc > CartRange].index)
+    df=df.drop(df[ abs(df['Xstart'])-xc > CartRange].index)
     
     return df 
+def mysigmoid(x, c=1, a=1, b=0):
+    return a/(1+np.e**( -c*(x-c)))+b
 
 def fragmentDikes(df):
     m=(df['Ystart'].values-df['Yend'].values)/(df['Xstart'].values-df['Xend'].values)

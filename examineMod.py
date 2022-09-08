@@ -21,7 +21,7 @@ import scipy.cluster.hierarchy as sch
 from scipy.spatial.distance import squareform
 from scipy.cluster.hierarchy import dendrogram
 from scipy.spatial.distance import pdist, squareform
-import statsmodels.api as sm
+
 import matplotlib.ticker as mticker
 import matplotlib.pyplot as plt 
 from scipy import stats
@@ -389,7 +389,7 @@ def examineClusters(clusters, enEchelonCutofff=7, ifEE=False, MaxNNSegDist=0.5, 
         clusters_data=clusters_data.append({ "Label": i, "Xstart": x1, "Ystart":y1, "Xend": x2,
                                             "Yend":y2, "X0": x0, "Y0": y0, "AvgRho":avgrho,
                                             "AvgTheta":avgtheta, "AvgSlope": slope, "AvgIntercept": b ,
-                                            "RhoRange":rrange, 
+                                            "RhoRange":rrange, "Aspect": l/w, 'Xmid': Xmid, 'Ymid': Ymid,
                                             "PerpOffsetDist": lines['PerpOffsetDist'].mean(),
                                             "ThetaRange": trange, "StdRho": stdrho, 
                                             "StdTheta": stdt, "R_Width": w, "R_Length": l, 

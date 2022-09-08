@@ -54,6 +54,7 @@ l=['dikedata/deccandata/Central_Complete_2_',
 width=[8,8,8,8,8,8,8,2]
 allDeccanLinked=pd.DataFrame()
 allCRBLinked=pd.DataFrame()
+changedClustering=False
 for i,j,w in zip(d,l,width): 
     print("Loading...")
     print(i)
@@ -88,19 +89,52 @@ for i,j,w in zip(d,l,width):
         np.save(npname, Z)
         lines.to_csv(name, index=False)
         dikeset.to_csv(i, index=False)
+        changedClustering=True
 
         
     print("Plotting Figures")
-    #allFigures(i, name, w)
+    allFigures(i, name, w)
     
     if 'deccandata' in j:
         allDeccanLinked=allDeccanLinked.append(lines)
     if 'crb' in j: 
         allCRBLinked=allCRBLinked.append(lines)
-        
-allCRBLinked.to_csv('dikedata/crb/AllCRBLinked_'+date2+'.csv', index=False)
-allFigures('dikedata/crb/allCRB_dikes_PreProcessed.csv', 'dikedata/crb/AllCRBLinked_'+date2+'.csv', 8, Large=False)
 
-allDeccanLinked.to_csv('dikedata/deccandata/AllDeccanLinked_'+date2+'.csv', index=False)
+
+if changedClustering:      
+    allCRBLinked=LinesReProcess(allCRBLinked, HTredo=True)
     
-allFigures('/home/akh/myprojects/Linking-and-Clustering-Dikes/dikedata/deccandata/AllDeccan_PreProcessed.csv', 'dikedata/deccandata/AllDeccanLinked_'+date2+'.csv',8, Large=False)
+    allCRBLinked.to_csv('dikedata/crb/AllCRBLinked_'+date2+'.csv', index=False)
+    
+    allFigures('dikedata/crb/allCRB_dikes_PreProcessed.csv', 'dikedata/crb/AllCRBLinked_'+date2+'.csv', 8, Large=False)
+    
+    allDeccanLinked=LinesReProcess(allDeccanLinked, HTredo=True)
+    allDeccanLinked.to_csv('dikedata/deccandata/AllDeccanLinked_'+date2+'.csv', index=False)
+        
+    allFigures('/home/akh/myprojects/Linking-and-Clustering-Dikes/dikedata/deccandata/AllDeccan_PreProcessed.csv', 'dikedata/deccandata/AllDeccanLinked_'+date2+'.csv',8, Large=False)
+    
+    Region=['Deccan', 'Deccan', 'Deccan', 'CRBG', 'CRBG', 'CRBG', 'CRBG', 'SpanishPeaks']
+    ALLDATA=pd.DataFrame()
+    ALL_LINES=pd.DataFrame()
+    
+    for i,j,n,r in zip(d,l,names,Region):
+        df=pd.read_csv(i)
+        dtheta=2 
+        drho=np.floor(df['seg_length'].mean())
+    
+        name=j+str(int(drho))+".csv"
+        lines=pd.read_csv(name)
+        df=df.assign(SwarmID=n)
+        lines=lines.assign(SwarmID=n)
+        df=df.assign(Region=r)
+        lines=lines.assign(Region=r)
+        ALLDATA=ALLDATA.append(df)
+        ALL_LINES=ALL_LINES.append(lines)
+        
+        ALLDATA.to_csv('dikedata/AllDatasets'+date2+'.csv', index=False)
+        ALL_LINES.to_csv('dikedata/AllDatasetsLinked'+date2+'.csv', index=False)
+else:
+    allFigures('dikedata/crb/allCRB_dikes_PreProcessed.csv', 'dikedata/crb/AllCRBLinked_24_08_2022.csv', 8, Large=False)
+    allFigures('/home/akh/myprojects/Linking-and-Clustering-Dikes/dikedata/deccandata/AllDeccan_PreProcessed.csv', 'dikedata/deccandata/AllDeccanLinked_24_08_2022.csv',8, Large=False)
+    
+        

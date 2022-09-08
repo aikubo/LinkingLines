@@ -338,12 +338,10 @@ def DikesetReProcess(df, HTredo=True):
         df['rho']=rho
     if 'xc' not in df.columns:
         theta,rho,xc,yc=HT(df)
-        df['theta']=theta
-        df['rho']=rho
-        df=df.assign(yc=yc)
-        df=df.assign(xc=xc)
+        df=df.assign(theta=theta, xc=xc, rho=rho, yc=yc)
+
         df=MidtoPerpDistance(df, xc, yc)
-    elif xc is not df['xc'].iloc[0]:
+    elif xc is not df['xc'].iloc[0] and HTredo:
         theta,rho,xc,yc=HT(df)
         df['theta']=theta
         df['rho']=rho
@@ -356,6 +354,40 @@ def DikesetReProcess(df, HTredo=True):
         df['rho']=rho
         df=MidtoPerpDistance(df, xc, yc)
         df=df.assign(yc=yc)
+        df=df.assign(xc=xc)
+
+        
+    if 'PerpOffsetDist' not in df.columns: 
+        df=MidtoPerpDistance(df, xc, yc)
+
+    now = datetime.now() 
+    d = now.strftime("%d %b, %Y")
+
+    df=df.assign(Date_Changed=d)
+
+    
+    return df 
+
+def LinesReProcess(df, HTredo=True):
+
+        
+    xc,yc=HT_center(df)
+    
+       
+    df=giveHashID(df)
+    l=len(df)
+    print( l, 'dikes')
+    df=df.drop_duplicates(subset=['HashID'])
+    if l is not len(df):
+        print("Found", l-len(df), "duplicates")
+    if 'Xmid' not in df.columns: 
+        df=midPoint(df)
+    
+    if HTredo: 
+        theta,rho,xc,yc=HT(df)
+
+        df=MidtoPerpDistance(df, xc, yc)
+        df=df.assign(yc=yc, xc=xc, AvgTheta=theta, AvgRho=rho)
         df=df.assign(xc=xc)
 
         
@@ -482,3 +514,8 @@ def FilterLines(lines):
     mask=lines['TrustFilter']==1
     return lines[mask]
 
+def LoadCJDS():
+    lines=pd.read_csv('/home/akh/myprojects/Linking-and-Clustering-Dikes/dikedata/crb/CJDS_Complete_2_433.csv')
+    dikeset=pd.read_csv("/home/akh/myprojects/Linking-and-Clustering-Dikes/dikedata/crb/CJDS_FebStraightened.csv")
+    
+    return dikeset, lines

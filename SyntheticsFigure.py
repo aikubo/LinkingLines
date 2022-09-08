@@ -37,3 +37,39 @@ df3['Label']=df3['Label'].astype(str)
 df3=DikesetReProcess(df3)
 DotsLines(df3, ColorBy='Label', CbarLabels=False, fig=fig, ax=ax[2,:])
 FixAxisAspect(ax[2,1], ax[2,0])
+
+fig2,ax2=plt.subplots(3,2)
+fig.set_size_inches(6,12)
+
+
+angles=np.linspace(-90,90, 50)
+rhos=mysigmoid(angles, 0.06, -1000, 5000)
+df4=fromHT(angles, rhos)
+df4=DikesetReProcess(df4, HTredo=False)
+DotsLines(df4, ColorBy='Label', CbarLabels=False, fig=fig, ax=ax2[0,:])
+FixAxisAspect(ax2[0,1], ax2[0,0])
+
+
+df4=pd.DataFrame()
+
+for c,l in zip([0.06, 0.15], [1,2]):
+    rhos=mysigmoid(angles, c, -1000, 5000)
+    df4=df4.append(fromHT(angles, rhos, label=l))
+    
+
+df4=DikesetReProcess(df4, HTredo=False)
+DotsLines(df4, ColorBy='Label', CbarLabels=False, fig=fig, ax=ax2[1,:])
+FixAxisAspect(ax2[1,1], ax2[1,0])
+
+
+rhos=angles*500
+rhos2=angles*1000
+
+df4=fromHT(angles, rhos, CartRange=50000)
+df4=df4.append(fromHT(angles, rhos2, label=2, CartRange=90000))
+
+df4=DikesetReProcess(df4, HTredo=False)
+DotsLines(df4, ColorBy='Label', CbarLabels=False, fig=fig, ax=ax2[2,:])
+FixAxisAspect(ax2[2,1], ax2[2,0])
+
+

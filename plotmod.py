@@ -26,6 +26,8 @@ from PrePostProcess import whichForm, FilterLines
 import scipy.cluster.hierarchy as sch
 import labellines
 import matplotlib.gridspec as gridspec
+import string
+from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 
 np.random.seed(5)
 
@@ -100,7 +102,64 @@ def FixAxisAspect(ax1, ax2):
         deltay=(y_max-y_min)*ratio/2
         ax2.set_xlim(y_min-deltay, y_max+deltay)
         print('reset X')
+
+def labelSubplots(ax, labels=None, **kwargs):
     
+    """
+    Adds alphabet label to corner of each subplot
+    
+    INPUT: 
+        ax: list, dict, or array 
+        returns error for just one AxesSubplot object
+        label: Default=None 
+        Defaults to "A", "B", "C " etc but 
+        could be any string 
+        
+    output: none 
+    adds label to right top corner of plot
+    
+    """
+    
+    
+    if type(ax) is list:
+        if labels is None: 
+            labels=list(string.ascii_uppercase)[:len(ax)]
+            ax_dict=dict(zip(labels,ax))
+        else: 
+            ax_dict=dict(zip(labels,ax))
+        identify_axes(ax_dict, **kwargs)
+    elif type(ax) is dict:
+        identify_axes(ax, **kwargs)
+    else:
+        ax_list=ax.tolist()
+        if labels is None: 
+            labels=list(string.ascii_uppercase)[:len(ax)]
+            ax_dict=dict(zip(labels,ax))
+        else: 
+            ax_dict=dict(zip(labels,ax))
+        identify_axes(ax_dict, **kwargs)
+    
+    
+
+    
+    
+def identify_axes(ax_dict, fontsize=48, **kwargs):
+    """
+    Helper to identify the Axes in the examples below.
+
+    Draws the label in a large font in the center of the Axes.
+
+    Parameters
+    ----------
+    ax_dict : dict[str, Axes]
+        Mapping between the title / label and the Axes.
+    fontsize : int, optional
+        How big the label should be.
+    """
+    kw = dict(ha="center", va="center", fontsize=fontsize, color="black", **kwargs)
+    for k, ax in ax_dict.items():
+        ax.text(0.9, 0.9, k, transform=ax.transAxes, **kw)
+        
 from operator import sub
 def get_aspect(ax):
     """ Returns plot aspect ratio
@@ -774,22 +833,8 @@ def plotResults(data):
     ax[4].set_xlabel('Rho (km)')
 
 # Helper function used for visualization in the following examples
-def identify_axes(ax_dict, fontsize=48):
-    """
-    Helper to identify the Axes in the examples below.
 
-    Draws the label in a large font in the center of the Axes.
-
-    Parameters
-    ----------
-    ax_dict : dict[str, Axes]
-        Mapping between the title / label and the Axes.
-    fontsize : int, optional
-        How big the label should be.
-    """
-    kw = dict(ha="center", va="center", fontsize=fontsize, color="darkgrey")
-    for k, ax in ax_dict.items():
-        ax.text(0.5, 0.5, k, transform=ax.transAxes, **kw)
+        
         
 def breakXaxis(xlim, numAxes=1):
     """
@@ -1180,7 +1225,9 @@ def DoubleDilationPlot(df, lines, **kwargs):
     ax_main = plt.subplot(gs[1:3, :2])
     ax_xDist = plt.subplot(gs[0, :2],sharex=ax_main)
     ax_yDist = plt.subplot(gs[1:3, 2],sharey=ax_main)
-    
+    pos0 = ax_xDist.get_position()
+    pos1 = ax_main.get_position()
+    ax_xDist.set_position([pos0.x0, pos0.y0, pos1.width, pos0.height])
     
     from dilationCalculation import dilation
     EWDilation1, NSDilation1, binx1,biny1=dilation(df, **kwargs)
@@ -1194,13 +1241,13 @@ def DoubleDilationPlot(df, lines, **kwargs):
     #ax_xDist.plot(binx[:-1], NSDilation[:-1])
 
     
-    ax_xDist.fill_between(binx,0, NSDilation, alpha=0.6, color='r')
+    ax_xDist.fill_between(binx,0, NSDilation, alpha=0.6, color='b')
         
         
     #ax_yDist.plot(EWDilation[:-1], biny[:-1])
     ax_yDist.fill_between(EWDilation,0,biny, alpha=0.6, color='r' )
     
-    ax_xDist.fill_between(binx1,0, NSDilation1, alpha=0.6, color='b')
+    ax_xDist.fill_between(binx1,0, NSDilation1, alpha=0.6, color='r')
     ax_xDist.tick_params(axis='x',          # changes apply to the x-axis
                         which='both',      # both major and minor ticks are affected
                         bottom=False,      # ticks along the bottom edge are off
@@ -1213,7 +1260,7 @@ def DoubleDilationPlot(df, lines, **kwargs):
                          labelleft=False)
         
     #ax_yDist.plot(EWDilation[:-1], biny[:-1])
-    ax_yDist.fill_between(EWDilation1,0,biny1, alpha=0.6, color='b' )
+    ax_yDist.fill_between(EWDilation1,0,biny1, alpha=0.6, color='r' )
     
     ax_xDist.set(ylabel='NS Dilaton (m)')
     ax_yDist.set(xlabel='EW Dilaton (m)')
@@ -1225,16 +1272,30 @@ def DoubleDilationPlot(df, lines, **kwargs):
     return fig, [ax_main, ax_xDist, ax_yDist]
 
 def TripleDilationPlot(df, lines, **kwargs):
-    fig = plt.figure(figsize=(8,8))
-    gs = gridspec.GridSpec(3, 3)
-    ax_main = plt.subplot(gs[1:3, :2])
-    ax_xDist = plt.subplot(gs[0, :2],sharex=ax_main)
-    ax_yDist = plt.subplot(gs[1:3, 2],sharey=ax_main)
+    fig = plt.figure(figsize=(12,8))
+    
+   
+    xlim=[ np.min( [lines['Xstart'].min(), lines['Xend'].min()]), np.max( [lines['Xstart'].max(), lines['Xend'].max()])]
+    ylim=[ np.min( [lines['Ystart'].min(), lines['Yend'].min()]), np.max( [lines['Ystart'].max(), lines['Yend'].max()])]
+    aspect=np.diff(xlim)[0]/np.diff(ylim)[0]
+    #aspect is w/h, xlim is w and ylim is h
+    
+    gskw = dict(width_ratios = [ .75, .25],
+                height_ratios= [ .25,.75])
+    
+    gs = gridspec.GridSpec(2, 2, **gskw)
+    ax_main = plt.subplot(gs[1, 0])
+    plotlines(lines, 'r', ax_main, alpha=0.6)
+    plotlines(df, 'b', ax_main, alpha=0.6)
+    
+    ax_xDist = plt.subplot(gs[0, 0], sharex=ax_main, adjustable='box')
+    ax_yDist = plt.subplot(gs[1, 1], sharey=ax_main, adjustable='box')
+    
     
     
     from dilationCalculation import dilation
-    EWDilation1, NSDilation1, binx1,biny1=dilation(df, **kwargs)
-    EWDilation, NSDilation, binx,biny=dilation(lines, **kwargs)
+    EWDilation, NSDilation, binx,biny=dilation(df, **kwargs)
+    EWDilation1, NSDilation1, binx1,biny1=dilation(lines, **kwargs)
     
     m=lines['TrustFilter']==1
 
@@ -1242,30 +1303,31 @@ def TripleDilationPlot(df, lines, **kwargs):
     
     ys=[np.min(biny), np.max(biny)]
 
-    plotlines(lines[m], 'yellow', ax_main, alpha=0.8)
-    plotlines(lines, 'green', ax_main, alpha=0.6)
-    plotlines(df, 'gray', ax_main, alpha=0.6)
-   
+
     #ax_xDist.plot(binx[:-1], NSDilation[:-1])
 
-
-    # plot so that highest values are plotted first and in the "back"
-    EWl=[EWDilation, EWDilation1, EWDilation2]
-    NSl=[NSDilation, NSDilation1, NSDilation2]
-    xl=[binx, binx1, binx2]
-    yl=[biny, biny1, biny2]
+    ax_xDist.fill_between(binx1,0, NSDilation1, alpha=0.6, color='r')
+    ax_xDist.fill_between(binx,0, NSDilation, alpha=0.6, color='b')
     
-    EWorder=np.argsort([np.sum(i) for i in EWl])
-    colors=['gray', 'green', 'yellow']
-    for i in EWorder:
-        ax_yDist.fill_between(EWl[i],0,yl[i], alpha=0.6, color=colors[i] )
+    ax_yDist.fill_between(EWDilation1,0,biny1, alpha=0.6, color='r', label='All Linked' )
+    ax_yDist.fill_between(EWDilation,0,biny, alpha=0.6, color='b', label='Segments' )
+    
+    
+    
+    ax_yDist.plot(EWDilation2,biny2, color='k', label='Trusted' )
+    
+    ax_xDist.plot(binx2,NSDilation2, color='k' )
+    # EWorder=np.argsort([np.sum(i) for i in EWl])
+    # colors=['gray', 'green', 'yellow']
+    # for i in EWorder:
+    #     ax_yDist.fill_between(EWl[i],0,yl[i], alpha=0.6, color=colors[i] )
         
-    NSorder=np.argsort([np.sum(i) for i in NSl])
+    # NSorder=np.argsort([np.sum(i) for i in NSl])
 
-    for i in NSorder:
-        ax_xDist.fill_between(xl[i],0, NSl[i], alpha=0.6, color=colors[i])
+    # for i in NSorder:
+    #     ax_xDist.fill_between(xl[i],0, NSl[i], alpha=0.6, color=colors[i])
         
-
+    
     
     ax_xDist.set(ylabel='NS Dilaton (m)')
     ax_yDist.set(xlabel='EW Dilaton (m)')
@@ -1283,12 +1345,25 @@ def TripleDilationPlot(df, lines, **kwargs):
     
     ax_yDist.set_ylim([ys[0], ys[1]])
     
+    yMean=np.average(biny2, weights=EWDilation2)
+    xMean=np.average(binx2, weights=NSDilation2)
+    print(yMean, xMean)
+    ax_yDist.axhline(y=yMean, color='navy', linestyle=":", label='Mean')
+    ax_xDist.axvline(x=xMean,color='navy', linestyle=":")
     
     
+    ax_main.axhline(y=yMean, color='navy', linestyle=":")
+    ax_main.axvline(x=xMean,color='navy', linestyle=":")
+    
+    ax_yDist.legend(loc="upper right")
+    plt.tight_layout()
+    
+
+
     return fig, [ax_main, ax_xDist, ax_yDist]
 
 
-def plotScatterHist(lines, x,y, TrustFilter=True): 
+def plotScatterHist(lines, x,y, TrustFilter=True, xlim=None, ylim=None, **kwargs): 
     
     sns.set_theme(style="ticks")
         
@@ -1299,7 +1374,7 @@ def plotScatterHist(lines, x,y, TrustFilter=True):
     ax_yDist = plt.subplot(gs[1:3, 2],sharey=ax_main)
     
 
-    m=lines['TrustFilter']==0
+    m=lines['Linked']==1
     if TrustFilter:
         ax_main.scatter(lines[x].loc[m].values, lines[y].loc[m].values,  color='purple', alpha=0.4, edgecolor='k')
         #xbins=np.arange(0,1,0.1)
@@ -1309,7 +1384,7 @@ def plotScatterHist(lines, x,y, TrustFilter=True):
                      palette="light:m_r",
                      edgecolor=".3",
                      linewidth=.5,
-                     ax=ax_xDist)
+                     ax=ax_xDist, stat='percent', **kwargs)
         #h1.set(xticklabels=[])
         #h1.set(xlabel=None)
     
@@ -1321,7 +1396,7 @@ def plotScatterHist(lines, x,y, TrustFilter=True):
                      palette="light:m_r",
                      edgecolor=".3",
                      linewidth=.5,
-                     ax=ax_yDist)
+                     ax=ax_yDist, stat='percent', **kwargs)
         
         lines=FilterLines(lines)
         #h2.set(yticklabels=[])
@@ -1333,17 +1408,69 @@ def plotScatterHist(lines, x,y, TrustFilter=True):
     else: 
         ax_main.scatter(lines[x].values, lines[y].values,  color='grey', alpha=0.4, edgecolor='k')
         
-        ax_xDist.hist(lines[x].values, color='grey', alpha=0.4)
-        ax_xDist.set_ylabel('Counts')
+        ax_xDist.hist(lines[x].values, color='grey', alpha=0.4, **kwargs)
+        
         #ax_xDist.set(xticklabels=[])
-        ax_yDist.hist(lines[y].values, orientation='horizontal', color='grey', alpha=0.4)
+        ax_yDist.hist(lines[y].values, orientation='horizontal', color='grey', alpha=0.4,  **kwargs)
         ax_yDist.set_xlabel('Counts')
         #ax_yDist.set(yticklabels=[])
-        
+        ax_xDist.set_ylabel('Counts')   
     ax_main.set_xlabel(x)
     ax_main.set_ylabel(y)
+    plt.tight_layout()
     
     
     return fig, [ax_main, ax_xDist, ax_yDist]
     
+
+def plotByLoc(lines, col, **kwargs):
     
+    if "Xmid" not in lines.columns:
+        lines=lines.assign( Xmid=(lines['Xstart']+lines['Xend'])/2, Ymid=(lines['Ystart']+lines['Yend'])/2)
+    fig, ax=plt.subplots(1,2)
+    
+    
+    axins1 = inset_axes(ax[0],
+                    width="5%",  # width = 50% of parent_bbox width
+                    height="25%",  # height : 5%
+                    loc='upper right')
+    
+    axins2 = inset_axes(ax[1],
+                    width="5%",  # width = 50% of parent_bbox width
+                    height="25%",  # height : 5%
+                    loc='upper right')
+
+
+    cmap = sns.cubehelix_palette(start=0, light=1, as_cmap=True)
+    cmap2 = sns.cubehelix_palette(start=2, light=1, as_cmap=True)
+    g1=sns.histplot(data=lines, x='Xmid', y=col, ax=ax[0], cmap=cmap, cbar=True, stat='percent', cbar_ax=axins1, **kwargs)
+    g2=sns.histplot(data=lines, x='Ymid', y=col, ax=ax[1], cmap=cmap2, cbar=True,  stat='percent', cbar_ax=axins2, **kwargs)
+    
+    axins1.yaxis.set_ticks_position("left")
+    axins2.yaxis.set_ticks_position("left")
+    
+    return fig, [ax, axins1, axins2]
+
+def plotByAngle(lines, col, **kwargs):
+    t,r=whichForm(lines)
+
+    cmap = sns.cubehelix_palette(start=0, light=1, as_cmap=True)
+
+    #g1=sns.histplot(data=lines, x=t, y=col, ax=ax, cmap=cmap, cbar=True, cbar_ax=axins1, **kwargs)
+    sns.despine()
+    
+    if (np.ptp(lines[col].values)> 10000) and col is not r:
+        log_scale=(False, True)
+    else: 
+        log_scale=(False, False)        
+    
+    g=sns.JointGrid(data=lines, x=t, y=col )
+    axins1=g.fig.add_axes([.73, .66, .05, .15])
+    g.plot_joint( sns.histplot , cmap=cmap, cbar=True, cbar_ax=axins1,  **kwargs)
+    g.plot_marginals(sns.histplot, color="#03051A", alpha=1, bins=25)
+
+    axins1.yaxis.set_ticks_position("left")
+    axins1.set_ylabel('Counts')
+
+    
+    return g.fig
