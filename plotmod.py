@@ -14,20 +14,23 @@ from matplotlib import cm
 #from skimage.transform import probabilistic_hough_line as ProbHough
 #from sklearn.cluster import DBSCAN
 import matplotlib.pyplot as plt
+import matplotlib as mpl
+from matplotlib.ticker import PercentFormatter
 
 from pyproj import Proj
-from matplotlib import cm
+
 from matplotlib.colors import ListedColormap, LinearSegmentedColormap, Normalize
 import seaborn as sns
 import matplotlib.colors as mcolors
 from htMOD import HT_center
 from fitRectangle import *
-from PrePostProcess import whichForm, FilterLines
+from PrePostProcess import whichForm, FilterLines, getCartLimits
 import scipy.cluster.hierarchy as sch
 import labellines
 import matplotlib.gridspec as gridspec
 import string
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
+from matplotlib.colors import LogNorm
 
 np.random.seed(5)
 
@@ -72,36 +75,63 @@ class Labeloffset():
         self.axis.offsetText.set_visible(False)
         self.axis.set_label_text(self.label + " ("+ fmt.get_offset()+")" )
 
+def get_ax_size_inches(ax):
+    fig=ax.get_figure()
+    bbox = ax.get_window_extent().transformed(fig.dpi_scale_trans.inverted())
+    width, height = bbox.width, bbox.height
+
+    return width, height
 
 def FixAxisAspect(ax1, ax2):
     
     " Need to fix the aspect ratios now"
-    
+
     figW0, figH0 = ax1.get_figure().get_size_inches()
     # Axis size on figure
     _, _, w0, h0 = ax1.get_position().bounds
     # Ratio of display units
     disp_ratio0 = (figH0 * h0) / (figW0 * w0)
     
+    w0i,h0i=get_ax_size_inches(ax1)
+    
     figW1, figH1 = ax2.get_figure().get_size_inches()
     # Axis size on figure
     _, _, w1, h1 = ax2.get_position().bounds
     # Ratio of display units
     disp_ratio1 = (figH1 * h1) / (figW1 * w1)
-    
-    if h0 > h1:
-        ratio=h0/h1
+    w1i,h1i=get_ax_size_inches(ax2)
+   
+    if h0i >  h1i:
+  
         y_min, y_max = ax2.get_ylim()
-        deltay=(y_max-y_min)*ratio/2
+        yperinch=(y_max-y_min)/h1i
+        deltah=h0i-h1i
+        
+        deltay=deltah*yperinch/2
         ax2.set_ylim(y_min-deltay, y_max+deltay)
         print('reset Y')
         
-    if w0>w1:
-        ratio=w0/w1
-        y_min, y_max = ax2.get_xlim()
-        deltay=(y_max-y_min)*ratio/2
-        ax2.set_xlim(y_min-deltay, y_max+deltay)
-        print('reset X')
+    if w0i > w1i:
+        x_min, x_max = ax2.get_xlim()
+        xperinch=(x_max-x_min)/w1i
+        deltaw=w0i-w1i
+        
+        deltax=deltaw*xperinch/2
+        ax2.set_xlim(x_min-deltax, x_max+deltax)
+        print('reset x')
+    # if h0 !=  h1:
+    #     ratio=h0/h1
+    #     y_min, y_max = ax2.get_ylim()
+    #     deltay=(y_max-y_min)*ratio/2
+    #     ax2.set_ylim(y_min-deltay, y_max+deltay)
+    #     print('reset Y')
+        
+    # if w0 != w1:
+    #     ratio=w0/w1
+    #     y_min, y_max = ax2.get_xlim()
+    #     deltay=(y_max-y_min)*ratio/2
+    #     ax2.set_xlim(y_min-deltay, y_max+deltay)
+    #     print('reset X')
 
 def labelSubplots(ax, labels=None, **kwargs):
     
@@ -121,9 +151,9 @@ def labelSubplots(ax, labels=None, **kwargs):
     """
     
     
-    if type(ax) is list:
+    if type(ax) is list or len(ax) > 1:
         if labels is None: 
-            labels=list(string.ascii_uppercase)[:len(ax)]
+            labels=list(string.ascii_lowercase)[:len(ax)]
             ax_dict=dict(zip(labels,ax))
         else: 
             ax_dict=dict(zip(labels,ax))
@@ -133,7 +163,7 @@ def labelSubplots(ax, labels=None, **kwargs):
     else:
         ax_list=ax.tolist()
         if labels is None: 
-            labels=list(string.ascii_uppercase)[:len(ax)]
+            labels=list(string.ascii_lowercase)[:len(ax)]
             ax_dict=dict(zip(labels,ax))
         else: 
             ax_dict=dict(zip(labels,ax))
@@ -143,7 +173,7 @@ def labelSubplots(ax, labels=None, **kwargs):
 
     
     
-def identify_axes(ax_dict, fontsize=48, **kwargs):
+def identify_axes(ax_dict, fontsize=12, **kwargs):
     """
     Helper to identify the Axes in the examples below.
 
@@ -156,9 +186,9 @@ def identify_axes(ax_dict, fontsize=48, **kwargs):
     fontsize : int, optional
         How big the label should be.
     """
-    kw = dict(ha="center", va="center", fontsize=fontsize, color="black", **kwargs)
+    kw = dict(ha="center", va="center", fontsize=fontsize, fontstyle="oblique", color="black", **kwargs)
     for k, ax in ax_dict.items():
-        ax.text(0.9, 0.9, k, transform=ax.transAxes, **kw)
+        ax.text(0.95, 0.05, k, transform=ax.transAxes, **kw)
         
 from operator import sub
 def get_aspect(ax):
@@ -227,9 +257,227 @@ def StringCbar(c, fig, ax, values):
     n_colors=len(labels)
     c_ticks = np.arange(n_colors) #* (n_colors / (n_colors + 1)) + (2 / n_colors)
     #c_ticks=[hash(x) for x in labels]
+    
+    for i in range(len(labels)):
+        if ":" in labels[i]:
+            labels[i]=labels[i].split(":")[1]
+    
     cbar = fig.colorbar(c, ticks=c_ticks, ax=ax)
-    cbar.ax.set_yticklabels(labels)
+    cbar.ax.set_yticklabels(labels, rotation='vertical')
+
     return cbar 
+
+def fontItems(fig, ax):
+    """
+    Generate list of items with fonts to change
+
+    Parameters
+    ----------
+    fig : matplotlib figure object
+        DESCRIPTION.
+    ax : matplotlib axes object or list
+        DESCRIPTION.
+
+    Returns
+    -------
+    fontItems : list
+        list of font items in fig and ax
+
+    """
+    
+    if type(ax) is list:
+        items=[]
+        for i in ax: 
+            items.append([i.title, i.xaxis.label, i.yaxis.label] + i.get_xticklabels() + i.get_yticklabels())
+        fontItems = [item for sublist in items for item in sublist]
+    else:
+        fontItems=[ax.title, ax.xaxis.label, ax.yaxis.label] + ax.get_xticklabels() + ax.get_yticklabels()
+        
+        fontItems.append(fig.get_legend().get_texts())
+    return fontItems
+        
+def jgrSize(fig, ax, finalSize, units="mm"):
+    '''
+    Resize matplotlib figure to JGR appropriate size and set dpi to 600
+
+    Parameters
+    ----------
+    fig : TYPE
+        DESCRIPTION.
+    finalSize : string or float
+        "full", "half", "quarter" or float
+
+    Returns
+    -------
+    fig : TYPE
+        DESCRIPTION.
+
+    '''
+    
+    # Resize first
+    [wo,lo]=fig.get_size_inches()
+    
+    if wo > lo:
+        orientation='landscape'
+    elif wo < lo:
+        orientation='portrait'
+    else:
+        orientation='landscape'
+    
+    if finalSize=='quarter':
+        w=95/25.4 ## cm/(cm/in)
+        l=115/25.4
+    elif finalSize=='half':
+        w=190/2/25.4
+        l=230/2/25.4
+    elif finalSize=='full':
+        w=190/25.4
+        l=230/25.4
+    elif type(finalSize)==float:
+        w=190/25.4*finalSize
+        l=230/25.4*finalSize
+    elif type(finalSize)==list or type(finalSize)==tuple:
+        if units=='mm':
+            w=finalSize[0]/25.4
+            l=finalSize[1]/25.4
+        elif units=='cm':
+            w=finalSize[0]/2.54
+            l=finalSize[1]/2.54
+        elif units=='inches':
+            w=finalSize[0]
+            l=finalSize[1]
+    else:
+        w=190/2/25.4
+        l=230/2/25.4
+        
+    if orientation=='landscape':
+        fig.set_size_inches(l,w, forward=True)
+    if orientation=='portrait':
+        fig.set_size_inches(w,1, forward=True)
+    
+    
+    #change font sizes 
+    items=fontItems(fig, ax)
+    #default size is close to 8.5
+    #there's no way to seperately set the super script and subscripts 
+    #it uses the default TeX settings of superscript = 70% of main font
+    #so to maintain a MINIMUM of 6 pts in the superscripts
+    #fonts must be set to 8.5 
+    DEFAULT_SIZE=6/0.7
+    
+    for i in items:
+        i.set_fontsize(DEFAULT_SIZE)
+    
+    
+    fig.set_dpi(600)
+    
+    
+    return fig
+
+def SetupJGRFig(finalSize, orientation, units='mm'):
+        SMALL_SIZE = 8
+        MEDIUM_SIZE = 8
+        BIGGER_SIZE = 8
+        
+        plt.rc('font', size=SMALL_SIZE)          # controls default text sizes
+        plt.rc('axes', titlesize=SMALL_SIZE)     # fontsize of the axes title
+        plt.rc('axes', labelsize=MEDIUM_SIZE)    # fontsize of the x and y labels
+        plt.rc('xtick', labelsize=SMALL_SIZE)    # fontsize of the tick labels
+        plt.rc('ytick', labelsize=SMALL_SIZE)    # fontsize of the tick labels
+        plt.rc('legend', fontsize=SMALL_SIZE)    # legend fontsize
+        plt.rc('figure', titlesize=MEDIUM_SIZE)  # fontsize of the figure title
+        plt.rcParams['legend.title_fontsize'] = SMALL_SIZE
+        
+        fig=plt.figure()
+        
+       
+        if finalSize=='quarter':
+            w=95/25.4 ## cm/(cm/in)
+            l=115/25.4
+        elif finalSize=='half':
+            if orientation=='landscape':
+                w=190/25.4/2
+                l=230/25.4
+            if orientation=='portrait':
+                w=190/25.4
+                l=230/25.4/2
+                
+        elif finalSize=='full':
+            w=190/25.4
+            l=230/25.4
+        elif type(finalSize)==float:
+            w=190/25.4*finalSize
+            l=230/25.4*finalSize
+        elif type(finalSize)==list or type(finalSize)==tuple:
+            if units=='mm':
+                w=finalSize[0]/25.4
+                l=finalSize[1]/25.4
+            elif units=='cm':
+                w=finalSize[0]/2.54
+                l=finalSize[1]/2.54
+            elif units=='inches':
+                w=finalSize[0]
+                l=finalSize[1]
+        else:
+            w=190/2/25.4
+            l=230/2/25.4
+            
+        if orientation=='landscape':
+            fig.set_size_inches(l,w)
+        if orientation=='portrait':
+            fig.set_size_inches(w,l)
+        
+       
+        #fig.set_dpi(600)
+        
+        return fig
+
+def combinePlots(fig1,fig2, path):
+    """
+    Combine two figures into one and save
+
+    Parameters
+    ----------
+    fig1 : matplotlib figure.Figure
+        lefthand figure
+    fig2 : matplotlib figure.Figure
+        righthand figure
+    path: string
+        path to save combined figure
+
+    Returns
+    -------
+    None.
+
+    """
+    #fig1=jgrSize(fig1, fig1.get_axes(), 'quarter')
+    #fig2=jgrSize(fig2, fig2.get_axes(), 'quarter')
+    
+    
+    backend = mpl.get_backend()
+    mpl.use('agg')
+    
+    dpi = 600
+
+    
+    c1 = fig1.canvas
+    c2 = fig2.canvas
+    
+    c1.draw()
+    c2.draw()
+    
+    a1 = np.array(c1.buffer_rgba())
+    a2 = np.array(c2.buffer_rgba())
+    a = np.hstack((a1,a2))
+    
+    mpl.use(backend)
+    fig,ax = plt.subplots(dpi=dpi)
+    fig.subplots_adjust(0, 0, 1, 1)
+    ax.set_axis_off()
+    ax.matshow(a)
+    fig.savefig(path, dpi=dpi)
+
+
 
 def clustered_lines(xs, ys, theta, length, xmid=None, ymid=None):
     xstart=np.max(xs)
@@ -283,7 +531,19 @@ def clustered_lines2(xs, ys, theta, rho, length, xc, yc):
 
 def clusteredLinesComplete(lines):
     xs,ys=endpoints2(lines)
-    avgtheta=np.mean(lines['theta'].values)
+    
+
+    if abs(np.sum(np.sign(lines['theta'].values))) < size: 
+        crossZero=True
+
+        avgtheta=np.mean(abs(lines['theta'].values))
+        tol=6
+        if np.isclose(avgtheta,0, atol=4):
+            avgtheta=np.mean((lines['theta'].values))
+    else:
+        crossZero=False
+        avgtheta=np.average((lines['theta']))
+   
     rotation_angle=-1*avgtheta #+20
     rotatedLines=rotateData2(lines, rotation_angle)
     #print(avgtheta, rotation_angle)
@@ -315,21 +575,52 @@ def pltRec(lines, xc, yc, fig=None, ax=None):
     """
     plots the rectangle defined by the center, a, and the lines
     """
+    col=lines.columns 
+    
+    post=['Theta', 'AvgTheta', 'theta']
+    posr=['Rho', 'AvgRho', 'rho']
+
+    for p in post: 
+        if p in col:
+            t=p 
+    
+    for p in posr: 
+        if p in col:
+            r=p
+            
+    if 'Average Rho (m)' in col:
+        r='Average Rho (m)'
+        t='Average Theta ($^\circ$)'
+        
+    if t=='AvgTheta' or t=='Average Theta ($^\circ$)':
+        segl='R_Length'
+    else:
+        segl='seg_length'
+        
     if fig is None or ax is None:
         fig,ax=plt.subplots()
     xi,yi=endpoints2(lines)
     x0=xc
     y0=yc
-    
-    ang=-np.mean(np.deg2rad(lines['theta'].values))
-    
-    
-    xp, yp= rotateXYShift(ang, xi,yi, x0,y0)
+    size=len(lines)
+    if abs(np.sum(np.sign(lines[t].values))) < size: 
+        crossZero=True
+        ang=np.mean(abs(lines[t].values))
+        tol=6
+        if np.isclose(ang,0, atol=4):
+            ang=np.mean((lines[t].values))
+    else:
+        crossZero=False
+        
+        ang=np.mean((lines[t].values))
+
+
+
+    xp, yp= rotateXYShift(np.deg2rad(-1*ang), xi,yi, x0,y0)
     #plotlines(lines, 'k.-', a)
     
-    width=np.ptp(xp)
-    length=np.ptp(yp)
-    
+    width=np.ptp(xp.flatten())
+    length=np.ptp(yp.flatten())
     # if width>length :
     #     length=width
     #     width=length
@@ -344,7 +635,7 @@ def pltRec(lines, xc, yc, fig=None, ax=None):
     ys=np.append(yu,yd)
     
     
-    xpi, ypi=unrotate(ang, xp, yp, x0, y0)
+    xpi, ypi=unrotate(np.deg2rad(-1*ang), xp, yp, x0, y0)
 
     Xedges=np.array([xs[0], xs[0], xs[1], xs[1], xs[0]])
     Yedges=np.array([ys[1], ys[0], ys[0], ys[1], ys[1]])
@@ -352,20 +643,20 @@ def pltRec(lines, xc, yc, fig=None, ax=None):
     Xmid=(np.max(xs)+np.min(xs))/2
     Ymid=(np.max(ys)+np.min(ys))/2
 
-    xs,ys=unrotate(ang,Xedges,Yedges,x0,y0)
-    Xmid, Ymid=unrotate(ang, Xmid, Ymid, x0, y0)
+    xs,ys=unrotate(np.deg2rad(-1*ang),Xedges,Yedges,x0,y0)
+    Xmid, Ymid=unrotate(np.deg2rad(-1*ang), Xmid, Ymid, x0, y0)
     
-    ax.plot(xs, ys, 'k-.', alpha=0.7)
+    ax.plot(xs, ys, 'k-.', alpha=0.7, linewidth=1)
 
-    xstart, xend, ystart, yend=clustered_lines(xi, yi, np.mean(lines['theta'].values), length, xmid=Xmid, ymid=Ymid)
+    xstart, xend, ystart, yend=clustered_lines(xi, yi, ang, length, xmid=Xmid, ymid=Ymid)
     
     
-    ax.plot( [xstart, xend], [ystart, yend], 'g.-')
+    ax.plot( [xstart, xend], [ystart, yend], 'g.-', linewidth=1)
     for i in range(0,len(lines)):
-        ax.plot( [xi[i], xi[i+len(lines)]],  [yi[i], yi[i+len(lines)]], 'r-')
+        ax.plot( [xi[i], xi[i+len(lines)]],  [yi[i], yi[i+len(lines)]], 'r-', linewidth=2)
     ax.plot(Xmid, Ymid, 'yp')
     ax.set_aspect('equal')
-    
+
     return fig,ax, length, width
 
 def labelcolors(labels, colormap):
@@ -383,7 +674,7 @@ def labelcolors(labels, colormap):
 
 def plotlines(data, col, ax, alpha=1, myProj=None, maskar=None, linewidth=1, 
               ColorBy=None, center=False, xc=None, yc=None, extend=False, 
-              cmap=cm.turbo, cbarStatus=False):
+              cmap=cm.turbo, cbarStatus=False, SpeedUp=True, equal=True):
 
     #plots the line segments contained in data[maskar]
     # in the color col 
@@ -405,9 +696,20 @@ def plotlines(data, col, ax, alpha=1, myProj=None, maskar=None, linewidth=1,
         temp=data.loc[maskar]
         if not isinstance(col,str):
             col=col[maskar]
+    
     else :
         temp=data
+        
+    if SpeedUp and len(data)>2000:
+        
+        temp=data.sample(frac=0.25)
+        print("Downsampled to", len(temp)," lines from", len(data))
+        
 
+    if len(data) > 15:
+        alpha=0.8
+    elif len(data) > 100:
+        alpha=0.4
         
     if ColorBy is not None: 
         C=data[ColorBy].values
@@ -462,6 +764,8 @@ def plotlines(data, col, ax, alpha=1, myProj=None, maskar=None, linewidth=1,
                 colo=col[i]
             elif isinstance(col, str):
                 colo=col
+            else:
+                colo=col
         else: 
             colo=col[i]
         
@@ -471,9 +775,12 @@ def plotlines(data, col, ax, alpha=1, myProj=None, maskar=None, linewidth=1,
     if center: 
         if xc is None or yc is None:
             xc,yc=HT_center(data)
-        ax.plot(xc,yc, "*r", markeredgecolor="black")
-    FixCartesianLabels(ax)
-    ax.set_aspect('equal')
+        ax.plot(xc,yc, "wp", markeredgecolor="black", markersize=10)
+        
+        if equal:
+            
+            FixCartesianLabels(ax)
+            ax.set_aspect('equal')
     #if ColorBy is not None: 
     #   fig.colorbar(label=ColorBy)
 
@@ -484,15 +791,15 @@ def trueDikeLength(lines, dikeset, maxL, Lstep=2000, secondbar=False, axs=None):
     axs.grid(False)
     
     a=axs
-    bins=np.arange(1,maxL,2000)
-    a.hist(lines['R_Length'], bins=bins, stacked=True,color='tab:blue', label='Linked Segment Length')
+    bins=np.arange(1,maxL,5)
+    a.hist(lines['Dike Cluster Length (km)'], bins=bins, stacked=True,color='tab:blue', label='Linked Segment Length')
     a.set_ylabel('Count of Linked Dikes' ,color='tab:blue')
     a.tick_params(axis='y', labelcolor='tab:blue')
     oldavg=np.mean(dikeset['seg_length'])
     oldstd=np.std(dikeset['seg_length'])
     
-    newavg=np.mean(lines['R_Length'])
-    newstd=np.std(lines['R_Length'])
+    newavg=np.mean(lines['Dike Cluster Length (km)'])
+    newstd=np.std(lines['Dike Cluster Length (km)'])
     if secondbar:
         a2=a.twinx()
         a2.grid(False)
@@ -509,8 +816,8 @@ def trueDikeLength(lines, dikeset, maxL, Lstep=2000, secondbar=False, axs=None):
     oldavg=np.median(dikeset['seg_length'])
     oldstd=np.std(dikeset['seg_length'])
     
-    newavg=np.median(lines['R_Length'])
-    newstd=np.std(lines['R_Length'])
+    newavg=np.median(lines['Dike Cluster Length (km)'])
+    newstd=np.std(lines['Dike Cluster Length (km)'])
     
     a.text(.60,.80,'Dike median:'+str(round(newavg,0)), transform=a.transAxes)
     a.text( .60, .70, 'Dike STD:'+str(round(newstd,0)),transform=a.transAxes)
@@ -520,7 +827,7 @@ def trueDikeLength(lines, dikeset, maxL, Lstep=2000, secondbar=False, axs=None):
     
     return axs
 
-def plotbyAngle(lines, AngleBin, absValue=False):
+def plotbyAngleBin(lines, AngleBin, absValue=False):
     
     #colorsSegments=labelcolors(dikeset['Labels'],cm.turbo)
     #colorsDikes=labelcolors(lines['Label'],cm.turbo)
@@ -528,7 +835,7 @@ def plotbyAngle(lines, AngleBin, absValue=False):
     bins=int(180/AngleBin)
     start=-90 
     if absValue:
-        lines['AvgTheta']=abs( lines['AvgTheta'])
+        lines['Average Theta ($^\circ$)']=abs( lines['Average Theta ($^\circ$)'])
         bins=int(90/AngleBin)
         start=0
     
@@ -543,7 +850,7 @@ def plotbyAngle(lines, AngleBin, absValue=False):
     for i in range(bins): 
         stop=start+AngleBin
         #mask1= (dikeset['theta']>start) & (dikeset['theta']<stop)
-        mask= (lines['AvgTheta']>start) & (lines['AvgTheta']<stop)
+        mask= (lines['Average Theta ($^\circ$)']>start) & (lines['Average Theta ($^\circ$)']<stop)
         
 
         if start >= 0 and bins > 9:
@@ -555,11 +862,11 @@ def plotbyAngle(lines, AngleBin, absValue=False):
             ax1=ax[0][i]
             ax22=ax[1][i]
             
-        ax1.hist(lines[mask]['AvgTheta'], bins=30, color=colors(i))
+        ax1.hist(lines[mask]['Average Theta ($^\circ$)'], bins=30, color=colors(i))
         ax1.set_title(str(start)+"-"+str(stop))
         ax1.set_xlabel('Theta (deg)')
        
-        ax22.hist(lines[mask]['AvgRho'],bins=30, color=colors(i))
+        ax22.hist(lines[mask]['Average Rho (m)'],bins=30, color=colors(i))
         ax22.set_xlabel('Rho (m)')
         #plotlines(lines, 'grey', ax2,alpha=0.2)
         
@@ -574,7 +881,7 @@ def plotbyAngle(lines, AngleBin, absValue=False):
 
     
     
-def HThist(lines, rstep, tstep, weights=None,fig=None, ax=None, rbins=None, tbins=None, cmap=cm.cividis):
+def HThist(lines, rstep, tstep, weights=None,fig=None, ax=None, rbins=None, tbins=None, cmap=cm.Blues, gamma=0.3):
     t,r=whichForm(lines)
     
     
@@ -582,14 +889,14 @@ def HThist(lines, rstep, tstep, weights=None,fig=None, ax=None, rbins=None, tbin
     if fig is None or ax is None: 
         fig,ax=plt.subplots()
     if rbins is None: 
-        rbins=np.arange(min(lines[r]), max(lines[r]), rstep)
+        rbins=np.arange(min(lines[r])/1000, max(lines[r])/1000, rstep)
     if tbins is None:
         tbins=np.arange(-90, 90, tstep)
-    h,xe,ye, c=ax.hist2d(lines[t], lines[r], bins=[tbins, rbins], weights=weights, cmap=cmap, norm=mcolors.PowerNorm(0.8))
+    h,xe,ye, c=ax.hist2d(lines[t], lines[r]/1000, bins=[tbins, rbins], weights=weights, cmap=cmap, norm=mcolors.PowerNorm(gamma))
     fig.colorbar(c, label='Counts', ax=ax)
     ax.set_xlabel('Theta ($^\circ$)')
-    ax.set_ylabel('Rho (m)')
-    ax.set_title("HT histogram")
+    ax.set_ylabel('Rho (km)')
+    #ax.set_title("HT histogram")
     
     
     return fig, ax, [h, xe,ye,c]
@@ -599,7 +906,7 @@ def LinesPlusHT(dikeset,lines):
     plotlines(lines, 'grey', ax[0] )
     plotlines(dikeset, 'k', ax[0],  center=True)
     
-    c1=ax[1].scatter(lines['AvgTheta'], lines['AvgRho'], c=lines['Xstart'], cmap=cm.plasma, edgecolor='black')
+    c1=ax[1].scatter(lines['Average Theta ($^\circ$)'], lines['Average Rho (m)'], c=lines['Xstart'], cmap=cm.plasma, edgecolor='black')
     ax[1].set_title('Hough Space')
     ax[0].set_title('Cartesian Space')
     ax[1].set_xlabel('Theta (degrees)')
@@ -608,12 +915,63 @@ def LinesPlusHT(dikeset,lines):
     cbar.set_label('Segment Length (m)')
     return fig,ax
     
-def roseDiagram(df):
-    ax=plt.subplot(projection='polar')
-    ax.bar(df['AvgTheta'], df['AvgRho'],alpha=0.5)
+# def roseRhoDiagram(df):
+#     ax=plt.subplot(projection='polar')
+#     ax.bar(df['Average Theta ($^\circ$)'], df['Average Rho (m)'],alpha=0.5)
     
+#     return ax
+
+# def roseCountsDiagram(df):
+#     ax=plt.subplot(projection='polar')
+#     counts,angles=np.histogram(df['Average Theta ($^\circ$)'], bins=np.arange(-90,100,10))
+#     area = counts / angles.size
+#     radius = (area / np.pi)**.5
+    
+#     ax.bar(np.deg2rad(angles[:-1]), radius,alpha=0.5)
+    
+#     return ax
+def annotateWLines(ax, angles=None):
+    #doesn't work unless axis are equal
+    if angles is None:
+        angles=[-70, -30, 1, 30, 70]
+    bottom, top= ax.get_ylim()
+    yrange=top-bottom
+    newy=top+yrange*.02
+    
+    length=1 #0.5*yrange
+    slopes=-1/(np.tan(np.deg2rad(angles))+0.000000001)
+    for theta in angles:
+        m=-1/(np.tan(np.deg2rad(theta))+0.000000001)
+
+        x0 = theta
+        y0 = newy
+        dx=length**2/(2*(1+m**2))
+        dy=dx*m
+        x1 = (x0 + dx)
+        y1 = (y0 + dy)
+        x2 = (x0 - dx)
+        y2 = (y0 - dy)
+    
+        x=[ x1, x2]
+        y=[ y1, y2 ]
+        print(x,y)
+        ax.plot(x,y,color='k')
+    
+    
+def AngleHistograms(dikeset,lines, ax=None, fig=None, Trusted=True, Annotate=False):
+    
+    if ax is None:
+        fig,ax=plt.subplots()
+    
+    ax.hist(dikeset['theta'], bins=np.arange(-90,100,10), density=True, facecolor='white', edgecolor='k', label='Segments')
+    ax.hist(lines['AvgTheta'], bins=np.arange(-90,100,10), density=True, color='lightskyblue', alpha=0.5, label='All Clusters')
+    
+    if Trusted:
+        ax.hist(lines[lines['TrustFilter']==1]['AvgTheta'], bins=np.arange(-90,100,10), density=True, color='mediumslateblue', alpha=0.5, label='Trusted Clusters')
+    if Annotate:
+        annotateWLines(ax)
     return ax
-    
+
 def FullAlgoFigure(dikeset,lines, ax, fig): 
     if len(ax) <4: 
         print("Error: axis is not array of size 4")
@@ -623,8 +981,8 @@ def FullAlgoFigure(dikeset,lines, ax, fig):
     plotlines(dikeset, 'k', ax[2],  center=True)
     
     c1=ax[1].scatter(dikeset['theta'], dikeset['rho'], c=dikeset['Ystart'], cmap=cm.plasma, edgecolor='black')
-    c2=ax[3].scatter(lines['AvgTheta'], lines['AvgRho'], c=lines['Ystart'], cmap=cm.plasma, edgecolor='black')
-        #lines['AvgTheta'], lines['AvgRho'], c=lines['Xstart'], cmap=cm.plasma, edgecolor='black')
+    c2=ax[3].scatter(lines['Average Theta ($^\circ$)'], lines['Average Rho (m)'], c=lines['Ystart'], cmap=cm.plasma, edgecolor='black')
+        #lines['Average Theta ($^\circ$)'], lines['Average Rho (m)'], c=lines['Xstart'], cmap=cm.plasma, edgecolor='black')
     ax[0].set_title('Cartesian Space (Raw Data), n='+str(len(dikeset)))
     ax[1].set_title('Hough Space (Raw Data)')
     ax[2].set_title('Cartesian Space (Linked), n='+str(len(lines)))
@@ -655,8 +1013,8 @@ def BA_HT(dikeset,lines,rstep=5000):
     ax[1].set_xlabel('Theta (degrees)') 
     ax[2].set_xlabel('Theta (degrees)')
     ax[0].set_ylabel('Rho (m)')
-    #ax[1], h2=HThist(lines['AvgRho'], lines['AvgTheta'], rstep, tstep, weights=lines['R_Length'], ax=ax[1],rbins=rbins)
-    ax[1], h2=HThist(lines['AvgRho'], lines['AvgTheta'], rstep, tstep, ax=ax[1],rbins=rbins)
+    #ax[1], h2=HThist(lines['Average Rho (m)'], lines['Average Theta ($^\circ$)'], rstep, tstep, weights=lines['Dike Cluster Length (km)'], ax=ax[1],rbins=rbins)
+    ax[1], h2=HThist(lines['Average Rho (m)'], lines['Average Theta ($^\circ$)'], rstep, tstep, ax=ax[1],rbins=rbins)
     ax[1].set_title('Clustered Data')
     fig.colorbar(h1[3], ax=ax[0])
     fig.colorbar(h2[3], ax=ax[1])
@@ -673,51 +1031,70 @@ def BA_HT(dikeset,lines,rstep=5000):
 
 
 
-def DotsHT(fig,ax,lines, ColorBy="R_Length", label=None, cmap=cm.turbo, marker='o', title='Hough Transform', CbarLabels=True, StrOn=True):
+def DotsHT(fig,ax,lines, color=None, ColorBy="Dike Cluster Length (km)", label=None, cmap=cm.turbo, marker='o', 
+           rhoScale=True, Cbar=True, title=None, CbarLabels=True,
+           axlabels=(True,True), StrOn=True, palette=None, alpha=0.4):
     
     #plt.rcParams.update({'font.size': 50, 'font.weight': 'normal'})
     #sns.set_context("talk")
     t,r=whichForm(lines)
     
-    ax.set_xlabel('Theta ($^\circ$)')
-    ax.set_ylabel('Rho (m)')
+    if axlabels[0]:
+        ax.set_xlabel('Theta ($^\circ$)')
     
-    if ColorBy==None:
+    if not rhoScale:
+        if axlabels[1]:
+            ax.set_ylabel('Rho (m)')
+            print("m scale label")
+        rho=lines[r].values
+    elif rhoScale:
+        rho=lines[r].values/1000
+        if axlabels[1]:
+            ax.set_ylabel('Rho (km)')
+            print("km scale label")
+        
+    
+    if ColorBy==None and color==None:
         c='grey'
-    elif type(lines[ColorBy].values[0]) is str:
-        c,cmap=StringColors(lines[ColorBy].values)
-        print("colorby value is type string")
+    if color is not None:
+        c=color
         
-    else:
-        c=lines[ColorBy].values
-        
-        
+    if ColorBy is not None:
+        if type(lines[ColorBy].values[0]) is str:
+            c,cmap=StringColors(lines[ColorBy].values, palette=palette)
+            print("colorby value is type string")
+        else:
+            c=lines[ColorBy].values
     
-    #ax[1], h2=HThist(lines['AvgRho'], lines['AvgTheta'], rstep, tstep, weights=lines['R_Length'], ax=ax[1],rbins=rbins)
-    c2=ax.scatter(lines[t].values, lines[r].values, c=c, cmap=cmap, edgecolor='black', marker=marker, alpha=0.5)
-    #ax.set_title(title)
+            
+    
+    #ax[1], h2=HThist(lines['Average Rho (m)'], lines['Average Theta ($^\circ$)'], rstep, tstep, weights=lines['Dike Cluster Length (km)'], ax=ax[1],rbins=rbins)
+    c2=ax.scatter(lines[t].values, rho, c=c, cmap=cmap, edgecolor='black', marker=marker, alpha=alpha)
+    if title is not None:
+        ax.set_title(title)
     
     
  
     
     
-    if ColorBy is not None: 
+    if ColorBy is not None and Cbar: 
         
         if type(lines[ColorBy].values[0]) is str:
-            cbar=StringCbar(c2, fig, ax, lines[ColorBy].values)
+            
             if StrOn and len(np.unique(c)) < 15:
                 cbar=StringCbar(c2, fig, ax, lines[ColorBy].values.astype(str))
-            
+                cbar.ax.set_xticklabels(cbar.ax.get_xticklabels(), rotation='vertical')
+            else:
+                cbar=fig.colorbar(c2, ax=ax)
         else:
             cbar=fig.colorbar(c2, ax=ax)
         
-    if ColorBy is not None: 
         if label is None: 
             cbar.set_label(ColorBy)
         elif ColorBy is not None: 
             cbar.set_label(label)
             
-    if not CbarLabels:
+    if not CbarLabels and Cbar:
         cbar.ax.set_yticklabels([])
     ax.set_xlim([-90,90])
     plt.tight_layout()
@@ -725,24 +1102,31 @@ def DotsHT(fig,ax,lines, ColorBy="R_Length", label=None, cmap=cm.turbo, marker='
     return fig,ax
 
 
-def DotsLines(lines, ColorBy="seg_length",cmap=cm.turbo, fig=None, ax=None, CbarLabels=True, StrOn=False):
+def DotsLines(lines, ColorBy="seg_length",cmap=cm.turbo, fig=None, ax=None, Cbar=True, CbarLabels=True, StrOn=False, color=None):
     t,r=whichForm(lines)
     #plt.rcParams.update({'font.size': 50, 'font.weight': 'normal'})
     #sns.set_context("talk")
     if fig is None:
-        fig,ax=plt.subplots(1,2)    #lines['StdRho'].mean()*2
-
-    plotlines(lines, 'k', ax[0], ColorBy=ColorBy, cmap=cmap)
+        fig,ax=plt.subplots(1,2)
+        # fig = SetupJGRFig('quarter', 'landscape')
+        # ax1 = fig.add_axes([0.5, 0.1, 0.9, 0.9])
+        # ax2 = fig.add_axes([0.1, 0.1, 0.4, 0.9])
+        # ax=[ax1,ax2]
+    if color is None:
+        c='k'
+    else:
+        c=color
+    plotlines(lines, c, ax[0], ColorBy=ColorBy, cmap=cmap)
    
 
-    #ax[1], h2=HThist(lines['AvgRho'], lines['AvgTheta'], rstep, tstep, weights=lines['R_Length'], ax=ax[1],rbins=rbins)
-    DotsHT(fig, ax[1], lines, ColorBy=ColorBy, cmap=cmap,CbarLabels=CbarLabels, StrOn=StrOn)
+    #ax[1], h2=HThist(lines['Average Rho (m)'], lines['Average Theta ($^\circ$)'], rstep, tstep, weights=lines['Dike Cluster Length (km)'], ax=ax[1],rbins=rbins)
+    DotsHT(fig, ax[1], lines, ColorBy=ColorBy, cmap=cmap,CbarLabels=CbarLabels, StrOn=StrOn, Cbar=Cbar, color=color)
     #ax[1].set_title('HT')
     
     
-
-    plt.tight_layout()
     
+    plt.tight_layout()
+    FixAxisAspect(ax[1], ax[0])
     return fig,ax
 
 def DotsLinesHist(lines, rstep, tstep, cmap1=cm.turbo, cmap2=cm.gray, ColorBy=None):
@@ -752,7 +1136,7 @@ def DotsLinesHist(lines, rstep, tstep, cmap1=cm.turbo, cmap2=cm.gray, ColorBy=No
     fig,ax=plt.subplots(1,3)    #lines['StdRho'].mean()*2
     plotlines(lines, 'k', ax[0], ColorBy=ColorBy, cmap=cmap1, center=True, alpha=0.4)
     ax[0].set_title('Cartesian')
-    #ax[1], h2=HThist(lines['AvgRho'], lines['AvgTheta'], rstep, tstep, weights=lines['R_Length'], ax=ax[1],rbins=rbins)
+    #ax[1], h2=HThist(lines['Average Rho (m)'], lines['Average Theta ($^\circ$)'], rstep, tstep, weights=lines['Dike Cluster Length (km)'], ax=ax[1],rbins=rbins)
     DotsHT(fig, ax[1], lines, ColorBy=ColorBy, cmap=cmap1)
     ax[1].set_title('HT')
     
@@ -812,24 +1196,24 @@ def plotResults(data):
     
     
     #plot lines
-    plotlines(data, 'k', ax[0], alpha=1, ColorBy='AvgTheta')
+    plotlines(data, 'k', ax[0], alpha=1, ColorBy='Average Theta ($^\circ$)')
     
     ax[0].axis('equal')
 
     #plot histogram of length 
-    ax[1].hist(data['R_Length']/1000, bins=np.arange(1, 200, 5))
+    ax[1].hist(data['Dike Cluster Length (km)'], bins=np.arange(1, 200, 5))
     ax[1].set_xlabel('Dike Length (km)')
 
     #plot histogram of width
-    ax[2].hist(data['R_Width'], bins=np.arange(100, 2000, 200))
+    ax[2].hist(data['Dike Cluster Width (m)'], bins=np.arange(100, 2000, 200))
     ax[2].set_xlabel('Width (m)')
 
-    #plot histogram of AvgTheta 
-    ax[3].hist(data['AvgTheta'], bins=np.arange(-90,90, 5))
+    #plot histogram of Average Theta ($^\circ$)
+    ax[3].hist(data['Average Theta ($^\circ$)'], bins=np.arange(-90,90, 5))
     ax[3].set_xlabel('Theta $^\circ$')
 
-    #plot histogram of AvgRho
-    ax[4].hist(data['AvgRho']/1000, bins=np.arange(min(data['AvgRho'])/1000, max(data['AvgRho'])/1000, 20))
+    #plot histogram of Average Rho (m)
+    ax[4].hist(data['Average Rho (m)']/1000, bins=np.arange(min(data['Average Rho (m)'])/1000, max(data['Average Rho (m)'])/1000, 20))
     ax[4].set_xlabel('Rho (km)')
 
 # Helper function used for visualization in the following examples
@@ -1192,7 +1576,7 @@ def DrawHTRays(df, xc=None, yc=None):
 
 def dilationPlot(df, binWidth=1700, EWDilation=None, NSDilation=None, **kwargs):
 
-    fig = plt.figure(figsize=(8,8))
+    fig = SetupJGRFig('quarter', 'portrait')
     gs = gridspec.GridSpec(3, 3)
     ax_main = plt.subplot(gs[1:3, :2])
     ax_xDist = plt.subplot(gs[0, :2],sharex=ax_main)
@@ -1220,7 +1604,7 @@ def dilationPlot(df, binWidth=1700, EWDilation=None, NSDilation=None, **kwargs):
     ax_yDist.set_ylim([ys[0], ys[1]])
     
 def DoubleDilationPlot(df, lines, **kwargs):
-    fig = plt.figure(figsize=(8,8))
+    fig = SetupJGRFig('quarter', 'portrait')
     gs = gridspec.GridSpec(3, 3)
     ax_main = plt.subplot(gs[1:3, :2])
     ax_xDist = plt.subplot(gs[0, :2],sharex=ax_main)
@@ -1271,8 +1655,9 @@ def DoubleDilationPlot(df, lines, **kwargs):
     
     return fig, [ax_main, ax_xDist, ax_yDist]
 
-def TripleDilationPlot(df, lines, **kwargs):
-    fig = plt.figure(figsize=(12,8))
+def TripleDilationPlot(df, lines, shape=['half', 'portrait'], kwargs=None):
+    fig = SetupJGRFig(shape[0], shape[1])
+    
     
    
     xlim=[ np.min( [lines['Xstart'].min(), lines['Xend'].min()]), np.max( [lines['Xstart'].max(), lines['Xend'].max()])]
@@ -1285,8 +1670,8 @@ def TripleDilationPlot(df, lines, **kwargs):
     
     gs = gridspec.GridSpec(2, 2, **gskw)
     ax_main = plt.subplot(gs[1, 0])
-    plotlines(lines, 'r', ax_main, alpha=0.6)
-    plotlines(df, 'b', ax_main, alpha=0.6)
+
+    
     
     ax_xDist = plt.subplot(gs[0, 0], sharex=ax_main, adjustable='box')
     ax_yDist = plt.subplot(gs[1, 1], sharey=ax_main, adjustable='box')
@@ -1309,14 +1694,14 @@ def TripleDilationPlot(df, lines, **kwargs):
     ax_xDist.fill_between(binx1,0, NSDilation1, alpha=0.6, color='r')
     ax_xDist.fill_between(binx,0, NSDilation, alpha=0.6, color='b')
     
-    ax_yDist.fill_between(EWDilation1,0,biny1, alpha=0.6, color='r', label='All Linked' )
-    ax_yDist.fill_between(EWDilation,0,biny, alpha=0.6, color='b', label='Segments' )
+    f1=ax_yDist.fill_between(EWDilation1,0,biny1, alpha=0.6, color='r', label='All Linked' )
+    f2=ax_yDist.fill_between(EWDilation,0,biny, alpha=0.6, color='b', label='Segments' )
     
     
     
-    ax_yDist.plot(EWDilation2,biny2, color='k', label='Trusted' )
+    #ax_yDist.plot(EWDilation2,biny2, color='k', label='Filtered' )
     
-    ax_xDist.plot(binx2,NSDilation2, color='k' )
+    #ax_xDist.plot(binx2,NSDilation2, color='k' )
     # EWorder=np.argsort([np.sum(i) for i in EWl])
     # colors=['gray', 'green', 'yellow']
     # for i in EWorder:
@@ -1344,86 +1729,173 @@ def TripleDilationPlot(df, lines, **kwargs):
                          labelleft=False)
     
     ax_yDist.set_ylim([ys[0], ys[1]])
-    
+    labelSubplots([ax_main, ax_xDist, ax_yDist])
+    plotlines(lines, 'r', ax_main, alpha=0.6)
+    plotlines(df, 'b', ax_main, alpha=0.6)
     yMean=np.average(biny2, weights=EWDilation2)
     xMean=np.average(binx2, weights=NSDilation2)
     print(yMean, xMean)
-    ax_yDist.axhline(y=yMean, color='navy', linestyle=":", label='Mean')
+    m=ax_yDist.axhline(y=yMean, color='navy', linestyle=":", label='Mean')
     ax_xDist.axvline(x=xMean,color='navy', linestyle=":")
     
     
     ax_main.axhline(y=yMean, color='navy', linestyle=":")
     ax_main.axvline(x=xMean,color='navy', linestyle=":")
     
-    ax_yDist.legend(loc="upper right")
-    plt.tight_layout()
-    
 
+    ax_yDist.legend(loc="lower left")
+    print("")
+    print("EW")
+    print("Max segment")
+    print(np.max(EWDilation))
+    print("Max Linked")
+    print(np.max(EWDilation1))
+    print("Max Filtered")
+    print(np.max(EWDilation2))
+    print("XRange (m)")
+    print( xlim[1]-xlim[0])
+    print('max strain')
+    print("segment")
+    print(np.max(EWDilation)/( xlim[1]-xlim[0])*100)
+    print("Linked")
+    print(np.max(EWDilation1)/( xlim[1]-xlim[0])*100)
+    print("Filtered")
+    print(np.max(EWDilation2)/( xlim[1]-xlim[0])*100)
+    print("")
+    print("NS")
+    print("Max segment")
+    print(np.max(NSDilation))
+    print("Max Linked")
+    print(np.max(NSDilation1))
+    print("Max Filtered")
+    print(np.max(NSDilation2))
+    print("YRange (m)")
+    print( ylim[1]-ylim[0])
+    print('max strain')
+    print("segment")
+    print(np.max(NSDilation)/( ylim[1]-ylim[0])*100)
+    print("Linked")
+    print(np.max(NSDilation1)/( ylim[1]-ylim[0])*100)
+    print("Filtered")
+    print(np.max(NSDilation2)/( ylim[1]-ylim[0])*100)
+    print("")
 
     return fig, [ax_main, ax_xDist, ax_yDist]
 
 
-def plotScatterHist(lines, x,y, TrustFilter=True, xlim=None, ylim=None, **kwargs): 
+def plotScatterHist(lines, x,y, hue=None, hue_norm=None, xlim=None, ylim=None, log_scale=(False, False), palette='Spectral', style=None, **kwargs): 
     
     sns.set_theme(style="ticks")
         
-    fig = plt.figure(figsize=(8,8))
-    gs = gridspec.GridSpec(3, 3)
-    ax_main = plt.subplot(gs[1:3, :2])
-    ax_xDist = plt.subplot(gs[0, :2],sharex=ax_main)
-    ax_yDist = plt.subplot(gs[1:3, 2],sharey=ax_main)
-    
+    fig = SetupJGRFig((115,190), 'landscape')
+    gs = gridspec.GridSpec(4, 4)
+    ax_main = plt.subplot(gs[1:4, :3])
+    ax_xDist = plt.subplot(gs[0, :3])#,sharex=ax_main)
+    ax_yDist = plt.subplot(gs[1:4, 3])#,sharey=ax_main)
+        
 
     m=lines['Linked']==1
-    if TrustFilter:
-        ax_main.scatter(lines[x].loc[m].values, lines[y].loc[m].values,  color='purple', alpha=0.4, edgecolor='k')
+    if hue is not None:
+        sns.scatterplot(lines, x=x, y=y, hue=hue, 
+                        palette=palette, 
+                        alpha=0.6, ax=ax_main, 
+                        edgecolor='k', hue_norm=hue_norm, 
+                        style=style)
         #xbins=np.arange(0,1,0.1)
         #ax_xDist.hist(lines['Overlap'].values, bins=xbins)
-        h1=sns.histplot(lines, x=x, hue='TrustFilter', 
-                     multiple="stack",
-                     palette="light:m_r",
-                     edgecolor=".3",
-                     linewidth=.5,
-                     ax=ax_xDist, stat='percent', **kwargs)
-        #h1.set(xticklabels=[])
-        #h1.set(xlabel=None)
+        
+        if len(np.unique(lines[hue])) < 10:
+            h1=sns.histplot(lines, x=x, hue=hue, 
+                         multiple="stack",
+                         palette=palette,
+                         edgecolor=".3",
+                         linewidth=.5,
+                         ax=ax_xDist, stat='percent',
+                         log_scale=(log_scale[0], False),
+                         legend=False, hue_norm=hue_norm)
     
+            h1.set(xticklabels=[])
+            h1.set(xlabel=None)
         
-        #ybins=np.arange(0,90,5)
-        #ax_yDist.hist(lines['EnEchelonAngleDiff'].values, orientation='horizontal', bins=ybins)
-        h2=sns.histplot(lines, y=y, hue='TrustFilter', 
-                     multiple="stack",
-                     palette="light:m_r",
-                     edgecolor=".3",
-                     linewidth=.5,
-                     ax=ax_yDist, stat='percent', **kwargs)
+            
+            #ybins=np.arange(0,90,5)
+            #ax_yDist.hist(lines['EnEchelonAngleDiff'].values, orientation='horizontal', bins=ybins)
+            h2=sns.histplot(lines, y=y, hue=hue, 
+                         multiple="stack",
+                         palette=palette,
+                         edgecolor=".3",
+                         linewidth=.5,
+                         ax=ax_yDist, stat='percent', 
+                         log_scale=(False, log_scale[1]),
+                         legend=False, hue_norm=hue_norm)
+        else:
+            h1=sns.histplot(lines, x=x, 
+                         edgecolor=".3",
+                         linewidth=.5,
+                         ax=ax_xDist, stat='percent',
+                         log_scale=(log_scale[0], False),
+                         legend=False)
+    
+            h1.set(xticklabels=[])
+            h1.set(xlabel=None)
         
+            
+            #ybins=np.arange(0,90,5)
+            #ax_yDist.hist(lines['EnEchelonAngleDiff'].values, orientation='horizontal', bins=ybins)
+            h2=sns.histplot(lines, y=y, 
+                         edgecolor=".3",
+                         linewidth=.5,
+                         ax=ax_yDist, stat='percent', 
+                         log_scale=(False, log_scale[1]),
+                         legend=False)
+    
+            
         lines=FilterLines(lines)
-        #h2.set(yticklabels=[])
-        #h2.set(ylabel=None)
+        h2.set(yticklabels=[])
+        h2.set(ylabel=None)
         
-        
-        ax_main.scatter(lines[x].values, lines[y].values,  color='white', alpha=0.4, edgecolor='k', marker='*')
+        #ax_yDist.set(yticklabels=[], ylabel=None)
+        #ax_xDist.set(xticklabels=[], xlabel=None)
+        #ax_main.scatter(lines[x].values, lines[y].values,  color='white', alpha=0.4, edgecolor='k', marker='*')
         
     else: 
         ax_main.scatter(lines[x].values, lines[y].values,  color='grey', alpha=0.4, edgecolor='k')
         
-        ax_xDist.hist(lines[x].values, color='grey', alpha=0.4, **kwargs)
+        ax_xDist.hist(lines[x].values, color='grey', alpha=0.4, weights=np.ones(len(lines[x].values)) / len(lines[x].values))
+
+        ax_yDist.hist(lines[y].values, orientation='horizontal', color='grey', alpha=0.4, weights=np.ones(len(lines[y].values)) / len(lines[y].values))
         
-        #ax_xDist.set(xticklabels=[])
-        ax_yDist.hist(lines[y].values, orientation='horizontal', color='grey', alpha=0.4,  **kwargs)
-        ax_yDist.set_xlabel('Counts')
+        ax_yDist.set_xlabel('Percent')
+        ax_yDist.xaxis.set_major_formatter(PercentFormatter(1))
         #ax_yDist.set(yticklabels=[])
-        ax_xDist.set_ylabel('Counts')   
+        #ax_xDist.set(xticklabels=[])
+        ax_xDist.set_ylabel('Percent')
+        ax_xDist.yaxis.set_major_formatter(PercentFormatter(1))
+    
+    if log_scale[0]:
+        #change x axis 
+        ax_main.set_xscale('log')
+        ax_xDist.set_xscale('log')
+    if log_scale[1]:
+        #change x axis 
+        ax_main.set_yscale('log')
+        ax_yDist.set_yscale('log')
+            
+    
     ax_main.set_xlabel(x)
     ax_main.set_ylabel(y)
     plt.tight_layout()
     
     
     return fig, [ax_main, ax_xDist, ax_yDist]
-    
 
-def plotByLoc(lines, col, **kwargs):
+def plotRatioLine(ax, x, ratio, line_kw=None):
+    xs=np.linspace(min(x), max(x))
+    ys=ratio*xs
+    l=ax.plot(xs,ys, **line_kw)
+    return ax, l
+
+def plotByLoc(lines, col, log_scale=(False,False)):
     
     if "Xmid" not in lines.columns:
         lines=lines.assign( Xmid=(lines['Xstart']+lines['Xend'])/2, Ymid=(lines['Ystart']+lines['Yend'])/2)
@@ -1443,34 +1915,111 @@ def plotByLoc(lines, col, **kwargs):
 
     cmap = sns.cubehelix_palette(start=0, light=1, as_cmap=True)
     cmap2 = sns.cubehelix_palette(start=2, light=1, as_cmap=True)
-    g1=sns.histplot(data=lines, x='Xmid', y=col, ax=ax[0], cmap=cmap, cbar=True, stat='percent', cbar_ax=axins1, **kwargs)
-    g2=sns.histplot(data=lines, x='Ymid', y=col, ax=ax[1], cmap=cmap2, cbar=True,  stat='percent', cbar_ax=axins2, **kwargs)
+    g1=sns.histplot(data=lines, x='Xmid', y=col, ax=ax[0], cmap=cmap, cbar=True, stat='percent', cbar_ax=axins1, log_scale=log_scale)
+    g2=sns.histplot(data=lines, x='Ymid', y=col, ax=ax[1], cmap=cmap2, cbar=True,  stat='percent', cbar_ax=axins2, log_scale=log_scale)
     
     axins1.yaxis.set_ticks_position("left")
     axins2.yaxis.set_ticks_position("left")
     
     return fig, [ax, axins1, axins2]
 
-def plotByAngle(lines, col, **kwargs):
+def AverageSpatially(df, col, CartBin=None, DefaultValue=0, nLabels=6):
+    
+    if CartBin==None:
+        
+        if "Rho_Threshold" in df.columns: 
+            CartBin=df['Rho_Threshold'].values[0]*10
+        else:
+            CartBin=5000
+    
+    xlim,ylim=getCartLimits(df)
+    
+    xs=np.arange(xlim[0], xlim[1],CartBin)
+    ys=np.arange(ylim[0], ylim[1],CartBin)
+    
+    xx,yy=np.meshgrid(xs,ys)
+    avg=np.empty_like(xx)
+    
+    Xstart=df['Xstart'].values
+    Ystart=df['Ystart'].values
+    Xend=df['Xend'].values
+    Yend=df['Yend'].values
+    
+    y=np.array([Ystart,Yend]).T
+    Ystart=np.min(y, axis=1)
+    Yend=np.max(y, axis=1)+1
+    
+    x=np.array([Xstart,Xend]).T
+    Xstart=np.min(x, axis=1)
+    Xend=np.max(x, axis=1)+1
+    
+    for i in range(len(xx.flatten())):
+            x=xx.ravel()[i]
+            y=yy.ravel()[i]
+            masky=np.logical_and( (Ystart<y), (Yend>y+CartBin) )
+            maskx=np.logical_and( (Xstart<x), (Xend>x+CartBin) )
+            mask=np.logical_and( masky, maskx)
+            val=df[mask][col].mean()
+            if np.sum(mask)==0 or  np.sum(mask)<2 :
+                val=DefaultValue
+            
+            ind=np.unravel_index(i, avg.shape)
+            avg[ind]=val
+    df_avg=pd.DataFrame(avg, index=ys, columns=xs)
+    cmap = sns.cubehelix_palette(start=0, light=1, as_cmap=True)
+    fig, ax=plt.subplots()
+    
+    
+    axins1 = inset_axes(ax,
+                    width="5%",  # width = 50% of parent_bbox width
+                    height="25%",  # height : 5%
+                    loc='upper right')
+    #g=sns.heatmap( df_avg, ax=ax, cbar_ax=axins1, square=True, cmap=cmap, cbar_kws={'label': col})
+    c=ax.pcolormesh(xx,yy, avg, cmap=cmap)
+    cbar=fig.colorbar(c, cax=axins1, label=col)
+    ax.set_ylabel('Y (m)')
+    ax.set_xlabel('X (m)')
+    plotlines(df, 'k', ax, alpha=.01)
+    FixCartesianLabels(ax)
+    ls=ax.get_xticklabels()
+    
+    if len(ls) > nLabels: 
+        n=int(len(ls)/nLabels)
+        #g.set_xticklabels(ls[::n])
+        ax.set_xticks(ax.get_xticks()[::n])
+    
+    ls=ax.get_yticklabels()
+    
+    if len(ls) > nLabels: 
+        n=int(len(ls)/nLabels)
+        ax.set_yticks(ax.get_yticks()[::n])
+    
+    return avg, fig, ax
+
+def plotByAngle(lines, col, log_scale=(False, False)):
     t,r=whichForm(lines)
 
-    cmap = sns.cubehelix_palette(start=0, light=1, as_cmap=True)
-
+    #cmap = sns.cubehelix_palette(start=0, light=1, as_cmap=True)
+    cmap=sns.color_palette("rocket", as_cmap=True)
     #g1=sns.histplot(data=lines, x=t, y=col, ax=ax, cmap=cmap, cbar=True, cbar_ax=axins1, **kwargs)
-    sns.despine()
-    
-    if (np.ptp(lines[col].values)> 10000) and col is not r:
-        log_scale=(False, True)
-    else: 
-        log_scale=(False, False)        
-    
-    g=sns.JointGrid(data=lines, x=t, y=col )
+
+    g=sns.JointGrid(data=lines, x=t, y=col, hue_norm=(lines[col].mean(), lines[col].max()))
     axins1=g.fig.add_axes([.73, .66, .05, .15])
-    g.plot_joint( sns.histplot , cmap=cmap, cbar=True, cbar_ax=axins1,  **kwargs)
-    g.plot_marginals(sns.histplot, color="#03051A", alpha=1, bins=25)
+    g.plot_joint( sns.histplot , cmap=cmap, cbar=True, cbar_ax=axins1, stat='percent',  log_scale=log_scale, hue_norm=(lines[col].min(), lines[col].median()))
+    g.plot_marginals(sns.histplot, color="#03051A", alpha=1, stat='percent',  log_scale=log_scale)
 
     axins1.yaxis.set_ticks_position("left")
-    axins1.set_ylabel('Counts')
+    axins1.set_ylabel('Percent')
 
     
     return g.fig
+
+# def tryPalettes(which, func, data):
+#     if which=='sequential':
+#         palettes=['Set1', 'mako', 'coolwarm', 'rocket', 'vlag', 'icefire', 'afmhot_r' ]
+#     if which=='diverging':
+#         palettes=['coolwarm', 'vlag', ]
+#     for i in palettes:
+#         fig,ax=func(data)
+        
+

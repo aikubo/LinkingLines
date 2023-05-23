@@ -9,12 +9,14 @@ import numpy as np
 import pandas as pd 
 from fitRectangle import *
 from htMOD import HT_center
-from plotmod import HThist, plotlines, DotsHT, clustered_lines, pltRec, FixCartesianLabels
+from plotmod import HThist, plotlines, DotsHT, FixAxisAspect, clustered_lines, pltRec, FixCartesianLabels
 from sklearn.neighbors import NearestNeighbors
 from sklearn.preprocessing import scale
 from PrePostProcess import *
 from htMOD import rotateData2
 from clusterMod import *
+import statsmodels.api as sm
+from matplotlib.colors import ListedColormap, LinearSegmentedColormap
 
 from PrePostProcess import completePreProcess, whichForm, midPoint
 import scipy.cluster.hierarchy as sch
@@ -31,8 +33,22 @@ from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 import os 
 from datetime import datetime
 
+
+from skimage.morphology import reconstruction
+from scipy.ndimage import gaussian_filter
+from skimage import img_as_float
+from skimage.filters import threshold_otsu, threshold_local
+from scipy import ndimage as ndi
+from skimage.segmentation import watershed
+from skimage.feature import peak_local_max
+import matplotlib.path as mpltPath
+from skimage import measure
+
 def checkoutCluster(dikeset, label):
-    
+
+        
+        
+
     xc=dikeset['xc'].iloc[0]
     yc=dikeset['yc'].iloc[0]
     
@@ -41,15 +57,29 @@ def checkoutCluster(dikeset, label):
     fig.suptitle("Label "+str(int(label)))
     mask=(dikeset['Labels']==label)
     lines=dikeset[mask]
+    size=len(lines)
     
+    if abs(np.sum(np.sign(lines['theta'].values))) < size: 
+        crossZero=True
+
+        ang=np.mean(abs(lines['theta'].values))
+        tol=6
+        if np.isclose(ang,0, atol=4):
+            ang=np.mean((lines['theta'].values))
+    else:
+        crossZero=False
+        ang=np.average((lines['theta']))
+        
+        
+    print(ang)
     xlim1=min(lines['theta'])-2
     xlim2=max(lines['theta'])+2
-    ylim1=min(lines['rho'])-10000
-    ylim2=max(lines['rho'])+10000
+    ylim1=(min(lines['rho'])-10000)/1000
+    ylim2=(max(lines['rho'])+10000)/1000
     
-    ax[0].scatter(dikeset['theta'], dikeset['rho'], c='grey', alpha=0.2) 
-    ax[0].scatter(lines['theta'], lines['rho'], c='r')
-    ax[0].plot(lines['theta'].mean(), lines['rho'].mean(), 'g*')
+    ax[0].scatter(dikeset['theta'], dikeset['rho']/1000, c='grey', alpha=0.2) 
+    ax[0].scatter(lines['theta'], lines['rho']/1000, c='r')
+    ax[0].plot(ang, lines['rho'].mean()/1000, 'g*')
     
     ax[0].plot([xlim1, xlim1, xlim2, xlim2, xlim1], [ylim1,ylim2, ylim2, ylim1, ylim1], 'k')
     
@@ -57,21 +87,22 @@ def checkoutCluster(dikeset, label):
         left, bottom, width, height = [0.2, 0.2, 0.2, 0.2]
     else:
         left, bottom, width, height = [0.2, 0.55, 0.2, 0.2]
-    
+        
+
     ax2 = fig.add_axes([left, bottom, width, height])
-    ax2.scatter(lines['theta'], lines['rho'], c='r')
-    ax2.plot(lines['theta'].mean(), lines['rho'].mean(), 'g*')
-    ax2.scatter(dikeset['theta'], dikeset['rho'], c='grey', alpha=0.1) 
-    ax2.set_ylim([ylim1+9500, ylim2-9500])
+    ax2.scatter(lines['theta'], lines['rho']/1000, c='r')
+    ax2.plot(ang, lines['rho'].mean()/1000, 'g*')
+    ax2.scatter(dikeset['theta'], dikeset['rho']/1000, c='grey', alpha=0.1) 
+    ax2.set_ylim([ylim1+9.5, ylim2-9.5])
     ax2.set_xlim([xlim1+1.5, xlim2-1.5])
     
     ax[0].set_xlabel('Theta ($^\circ$)')
-    ax[0].set_ylabel('Rho (m)')
+    ax[0].set_ylabel('Rho (km)')
     
     fig,ax[1], l,w=pltRec(lines, xc,yc, fig=fig, ax=ax[1])
 
     
-    if np.sign(lines['theta'].mean()) < 0:
+    if np.sign(ang) < 0:
             loc=4
             tlocx=.05
             tlocx2=.60
@@ -90,56 +121,56 @@ def checkoutCluster(dikeset, label):
     ax4.xaxis.tick_top()
     ax4.xaxis.set_label_position('top') 
     
-    if lines['theta'].mean()> 0:
+    if ang> 0:
         ax4.yaxis.tick_right()
         ax4.yaxis.set_label_position('right') 
         
 
     FixCartesianLabels(ax4)
     FixCartesianLabels(ax[1])
+    FixAxisAspect(ax[0],ax[1])
+    # " Need to fix the aspect ratios now"
     
-    " Need to fix the aspect ratios now"
+    # figW0, figH0 = ax[0].get_figure().get_size_inches()
+    # # Axis size on figure
+    # _, _, w0, h0 = ax[0].get_position().bounds
+    # # Ratio of display units
+    # disp_ratio0 = (figH0 * h0) / (figW0 * w0)
     
-    figW0, figH0 = ax[0].get_figure().get_size_inches()
-    # Axis size on figure
-    _, _, w0, h0 = ax[0].get_position().bounds
-    # Ratio of display units
-    disp_ratio0 = (figH0 * h0) / (figW0 * w0)
+    # figW1, figH1 = ax[1].get_figure().get_size_inches()
+    # # Axis size on figure
+    # _, _, w1, h1 = ax[1].get_position().bounds
+    # # Ratio of display units
+    # disp_ratio1 = (figH1 * h1) / (figW1 * w1)
     
-    figW1, figH1 = ax[1].get_figure().get_size_inches()
-    # Axis size on figure
-    _, _, w1, h1 = ax[1].get_position().bounds
-    # Ratio of display units
-    disp_ratio1 = (figH1 * h1) / (figW1 * w1)
-    
-    if h0 > h1:
-        ratio=h0/h1
-        y_min, y_max = ax[1].get_ylim()
-        deltay=(y_max-y_min)*ratio/2
-        ax[1].set_ylim(y_min-deltay, y_max+deltay)
-        print('reset Y')
+    # if h0 > h1:
+    #     ratio=h0/h1
+    #     y_min, y_max = ax[1].get_ylim()
+    #     deltay=(y_max-y_min)*ratio/2
+    #     ax[1].set_ylim(y_min-deltay, y_max+deltay)
+    #     print('reset Y')
         
-    if w0>w1:
-        ratio=w0/w1
-        y_min, y_max = ax[1].get_xlim()
-        deltay=(y_max-y_min)*ratio/2
-        ax[1].set_xlim(y_min-deltay, y_max+deltay)
-        print('reset X')
+    # if w0>w1:
+    #     ratio=w0/w1
+    #     y_min, y_max = ax[1].get_xlim()
+    #     deltay=(y_max-y_min)*ratio/2
+    #     ax[1].set_xlim(y_min-deltay, y_max+deltay)
+    #     print('reset X')
     
-    if np.sign(lines['rho'].mean())>0:
+    if np.sign(ang)>0:
         tlocy=0.95
     else:
         tlocy=0.25
         
 
-    t=ax[0].text(tlocx2,tlocy-0.10,'Angle Mean: '+str( round(lines['theta'].mean(), 2)), transform=ax[0].transAxes)
+    t=ax[0].text(tlocx2,tlocy-0.10,'Angle Mean $(^\circ)$: '+str( round(ang, 2)), transform=ax[0].transAxes)
 
-    t=ax[0].text(tlocx2,tlocy-0.05,'Rho Mean: '+str(round(lines['rho'].mean(),1)), transform=ax[0].transAxes)
+    t=ax[0].text(tlocx2,tlocy-0.05,'Rho Mean (km): '+str(round(lines['rho'].mean()/1000,1)), transform=ax[0].transAxes)
 
         
-    t=ax[0].text(tlocx2,tlocy-0.20,'Angle Range: '+str( round(np.ptp(lines['theta']), 2)), transform=ax[0].transAxes)
+    t=ax[0].text(tlocx2,tlocy-0.20,'Angle Range $(^\circ)$: '+str( round(np.ptp(lines['theta']), 2)), transform=ax[0].transAxes)
 
-    t=ax[0].text(tlocx2,tlocy-0.15,'Rho Range: '+str(round(np.ptp(lines['rho']),1)), transform=ax[0].transAxes)
+    t=ax[0].text(tlocx2,tlocy-0.15,'Rho Range (km): '+str(round(np.ptp(lines['rho'])/1000,1)), transform=ax[0].transAxes)
 
 
     tlocy=.95
@@ -147,9 +178,9 @@ def checkoutCluster(dikeset, label):
     ax[1].text(tlocx,tlocy-0.05,'Width: '+str(round(w,1)), transform=ax[1].transAxes)
     ax[1].text(tlocx,tlocy-0.10,'Aspect: '+str(round(l/w,1)), transform=ax[1].transAxes)
     ax[1].text(tlocx,tlocy-0.15,'Size: '+str(len(lines)), transform=ax[1].transAxes)
-    plt.tight_layout()
+    #plt.tight_layout()
     
-    print('Angle Mean: '+str( round(lines['theta'].mean(), 2)))
+    print('Angle Mean: '+str( round(ang, 2)))
     print('Rho Mean: '+str(round(lines['rho'].mean(),1)))
     print('Length: '+str(round(l,1)))
     print('Width: '+str(round(w,1)))
@@ -159,20 +190,109 @@ def checkoutCluster(dikeset, label):
 
     return fig,ax
 
+def checkoutClusterCart(dikeset,label,fig, ax):
+
+    xc=dikeset['xc'].iloc[0]
+    yc=dikeset['yc'].iloc[0]
+    
+    mask=(dikeset['Labels']==label)
+    lines=dikeset[mask]
+    size=len(lines)
+    
+    if abs(np.sum(np.sign(lines['theta'].values))) < size: 
+        crossZero=True
+
+        ang=np.mean(abs(lines['theta'].values))
+        tol=6
+        if np.isclose(ang,0, atol=4):
+            ang=np.mean((lines['theta'].values))
+    else:
+        crossZero=False
+        ang=np.average((lines['theta']))
+        
+        
+    print(ang)
+    xlim1=min(lines['theta'])-2
+    xlim2=max(lines['theta'])+2
+    ylim1=(min(lines['rho'])-10000)/1000
+    ylim2=(max(lines['rho'])+10000)/1000
+    
+    if np.mean(lines['rho'].values) > 0 :
+        left, bottom, width, height = [0.2, 0.2, 0.2, 0.2]
+        loc='lower left'
+    else:
+        left, bottom, width, height = [0.2, 0.55, 0.2, 0.2]
+        loc='upper right'
+
+
+    fig,ax, l,w=pltRec(lines, xc,yc, fig=fig, ax=ax)
+
+    
+    if np.sign(ang) < 0:
+            loc=4
+            tlocx=.05
+            tlocx2=.60
+            
+    else: 
+            
+            loc=3
+            tlocx=.60
+            tlocx2=.05
+        
+    
+    # ax4 =inset_axes(ax,
+    #                 width="20%",  # width = 20% of parent_bbox width
+    #                 height="20%",  # height : 20%
+    #                 loc=loc)
+
+    # plotlines(dikeset, 'grey', ax4, alpha=0.1)
+    # plotlines(lines, 'r', ax4)
+    # ax4.xaxis.tick_top()
+    # ax4.xaxis.set_label_position('top') 
+    
+    #if ang> 0:
+       # ax4.yaxis.tick_right()
+       # ax4.yaxis.set_label_position('right') 
+        
+
+    #FixCartesianLabels(ax4)
+    FixCartesianLabels(ax)
+
+    
+    if np.sign(ang)>0:
+        tlocy=0.95
+    else:
+        tlocy=0.25
+        
+
+    t=ax.text(tlocx2,tlocy,'Angle Mean $(^\circ)$: '+str( round(ang, 2)), transform=ax.transAxes)
+    ax.text(tlocx2,tlocy-0.05,'Length (km): '+str(round(l/1000,1)), transform=ax.transAxes)
+    ax.text(tlocx2,tlocy-0.10,'Width (m): '+str(round(w,1)), transform=ax.transAxes)
+    ax.text(tlocx2,tlocy-0.15,'Size: '+str(len(lines)), transform=ax.transAxes)
+    #plt.tight_layout()
+    
+    print('Angle Mean: '+str( round(ang, 2)))
+    print('Rho Mean: '+str(round(lines['rho'].mean(),1)))
+    print('Length: '+str(round(l,1)))
+    print('Width: '+str(round(w,1)))
+    return ax
+
 # def overlap(min1, max1, min2, max2):
 #     return max(0, min(max1, max2) - max(min1, min2))
 
 def CheckoutBy(dikeset, lines, col, maximum=True, minimum=False):
     
-    loc=np.nanargmax(lines[col].values)
-    label=lines['Label'].iloc[loc]
-    print("Label", int(label))
-    
-    fig,ax=checkoutCluster(dikeset, label)
-    
+    if maximum:
+        loc=np.nanargmax(lines[col].values)
+        label=lines['Label'].iloc[loc]
+        print("Label", int(label), "maximum", col)
+        
+        fig,ax=checkoutCluster(dikeset, label)
+        
     if minimum:
-        loc=np.where(lines[col].values==np.min(lines[col].values))
-        label=lines['Label'].loc[loc]
+        loc=np.nanargmin(lines[col].values)
+        label=lines['Label'].iloc[loc]
+        print("Label", int(label), "minimum", col)
         fig,ax=checkoutCluster(dikeset, label)
         
     return fig,ax
@@ -276,7 +396,16 @@ def examineClusterShort(clusters):
         y0=(max(y)-min(y))/2
         size=np.sum(mask)
         avgrho=np.average(lines['rho'])
-        avgtheta=np.average((lines['theta']))
+        
+        if abs(np.sum(np.sign(lines['theta'].values))) < size: 
+            crossZero=True
+    
+            avgtheta=np.mean(abs(lines['theta'].values))
+            if np.isclose(avgtheta,0, atol=6):
+                avgtheta=np.mean((lines['theta'].values))
+        else:
+            crossZero=False
+            avgtheta=np.average((lines['theta']))
         w,l,r,Xe, Ye, Xmid, Ymid=fit_Rec(lines, xc, yc)
 
         x1, x2, y1, y2=clustered_lines(x,y,avgtheta, l, xmid=Xmid, ymid=Ymid)
@@ -289,12 +418,14 @@ def examineClusterShort(clusters):
     return clusters_data
 
                                             
-def examineClusters(clusters, enEchelonCutofff=7, ifEE=False, MaxNNSegDist=0.5, skipUnlinked=False):
+def examineClusters(clusters, enEchelonCutofff=7, ifEE=False, MaxNNSegDist=0.5, skipUnlinked=True, xc=None, yc=None):
     """ Must have  ['Xstart', 'Ystart', 'Xend', 'Yend','seg_length', 'ID', 'rho', 'theta', 'Labels'] """
     #fig,ax=plt.subplots(1,3)
     clabel=np.unique(clusters['Labels'])
-    
-    xc,yc=HT_center(clusters)
+    if xc is None:
+        xc,yc=HT_center(clusters)
+        
+        
     clusters_data=pd.DataFrame()
     ids=np.arange(0, len(clusters),1)
     if "HashID" not in clusters.columns:
@@ -306,6 +437,9 @@ def examineClusters(clusters, enEchelonCutofff=7, ifEE=False, MaxNNSegDist=0.5, 
     EEDikes=pd.DataFrame()
     
     cmask=np.full(len(clusters),False)
+    perpoffsetMean=clusters['PerpOffsetDist'].mean()
+    perpoffsetCutoff=clusters['PerpOffsetDist'].mean()+clusters['PerpOffsetDist'].std()
+    pofdCutoff=perpoffsetCutoff/perpoffsetMean
     for i in np.unique(clusters['Labels']): 
         clustered=True
         mask=clusters['Labels']==i
@@ -315,22 +449,31 @@ def examineClusters(clusters, enEchelonCutofff=7, ifEE=False, MaxNNSegDist=0.5, 
             clustered=False
             if skipUnlinked:
                 continue
-            
+        
         x,y=endpoints2(lines)
-
+        avgrho=np.average(lines['rho'])
         x0=(max(x)-min(x))/2
         y0=(max(y)-min(y))/2
         size=np.sum(mask)
-        rrange=max(lines['rho'])-min(lines['rho'])
-        trange=(max(lines['theta'])-min(lines['theta']))%180
-        avgrho=np.average(lines['rho'])
-        avgtheta=np.average((lines['theta']))
         
-        # check if it includes different signed angles
+
         if abs(np.sum(np.sign(lines['theta'].values))) < size: 
             crossZero=True
+    
+            avgtheta=np.mean(abs(lines['theta'].values))
+            tol=6
+            if np.isclose(avgtheta,0, atol=4):
+                avgtheta=np.mean((lines['theta'].values))
         else:
             crossZero=False
+            avgtheta=np.average((lines['theta']))
+
+        rrange=max(lines['rho'])-min(lines['rho'])
+        trange=CyclicAngleDist([lines['theta'].min()], [lines['theta'].max()])
+
+        
+        # check if it includes different signed angles
+
             
         
         stdrho=np.std(lines['rho'])
@@ -349,8 +492,8 @@ def examineClusters(clusters, enEchelonCutofff=7, ifEE=False, MaxNNSegDist=0.5, 
 
         
         hashlines=hash((lines['HashID'].values.tostring()))
-        
-        if l-w > 0: 
+
+        if (l-w > 0): 
             EE=enEchelonAngleTwist(lines, avgtheta)
             tdiff=EE[0]
             EE_pvalue=EE[1]
@@ -360,7 +503,7 @@ def examineClusters(clusters, enEchelonCutofff=7, ifEE=False, MaxNNSegDist=0.5, 
         slope=-1/(np.tan(avgtheta)+0.00000000001)
         step=lines['seg_length'].min()+1
         
-
+        npofd=lines['PerpOffsetDist'].mean()/perpoffsetMean
         b=avgrho/np.sin((np.deg2rad(avgtheta))+0.00000000001)+yc-xc*slope
         
         if size>1: 
@@ -381,7 +524,7 @@ def examineClusters(clusters, enEchelonCutofff=7, ifEE=False, MaxNNSegDist=0.5, 
             MinDist=np.nan
             MedianDist=np.nan
             
-        if MaxDist/l < 0.5:
+        if MaxDist/l < 0.5 and npofd>1:
             Trust=True
         else:
             Trust=False
@@ -391,6 +534,8 @@ def examineClusters(clusters, enEchelonCutofff=7, ifEE=False, MaxNNSegDist=0.5, 
                                             "AvgTheta":avgtheta, "AvgSlope": slope, "AvgIntercept": b ,
                                             "RhoRange":rrange, "Aspect": l/w, 'Xmid': Xmid, 'Ymid': Ymid,
                                             "PerpOffsetDist": lines['PerpOffsetDist'].mean(),
+                                            "PerpOffsetDistRange": lines['PerpOffsetDist'].max()-lines['PerpOffsetDist'].min(),
+                                            "NormPerpOffsetDist":npofd,
                                             "ThetaRange": trange, "StdRho": stdrho, 
                                             "StdTheta": stdt, "R_Width": w, "R_Length": l, 
                                             "Size":size, "R_error":np.sqrt(r), "Linked":clustered,
@@ -403,7 +548,7 @@ def examineClusters(clusters, enEchelonCutofff=7, ifEE=False, MaxNNSegDist=0.5, 
                                             ignore_index=True)
     
     clusters_data.astype({'Linked':'bool'})
-    
+   
     if skipUnlinked:
         nclusters= len(clusters_data)
     else:
@@ -412,7 +557,7 @@ def examineClusters(clusters, enEchelonCutofff=7, ifEE=False, MaxNNSegDist=0.5, 
     notclustered=len(clusters)-nclusters
     now = datetime.now()
     date = now.strftime("%d %b, %Y")
-    clusters_data=clusters_data.assign(Date_Changed=date)
+    clusters_data=clusters_data.assign(Date_Changed=date, xc=xc, yc=yc)
     evaluation=pd.DataFrame({ "nClusters": nclusters,
                               "nDikePackets": np.sum(clusters_data['Overlap']>0.1),
                               "AverageRhoRange": np.average(clusters_data["RhoRange"]),
@@ -581,54 +726,218 @@ def errorAnalysis(lines, dikeset, plot=False):
         
 def TopHTSection(lines, dikeset, rstep, tstep,n=1):
     fig,ax=plt.subplots(1,2)
-    
+    fig.set_size_inches((190/25.4, 60/25.4))
     fig,ax[0],img=HThist(dikeset, rstep, tstep, ax=ax[0], fig=fig)
     h=img[0]
     
     xedges=img[1]
     yedges=img[2]
-    
-    
-    [i,j]=np.unravel_index(h.argmax(), h.shape)
-    
-    
-    xe=[xedges[i],xedges[i+1]]
-    ye=[yedges[j],yedges[j+1]]
-    print(h.max(), "clustered lines at", xe, "degrees", ye, "rho (m)" )
-    #     masklat= (dikeset['latitude'] > lat1) & (dikeset['latitude'] < lat2)
-    # masklong=(dikeset['longitude'] > lon1) & (dikeset['longitude'] < lon2)
-    # masklatlong= (masklat==1) & (masklong==1)
-    
-    maskTheta=(lines['AvgTheta'] > xe[0]) & (lines['AvgTheta'] < xe[1])
-    maskRho=(lines['AvgRho'] > ye[0]) & (lines['AvgRho'] < ye[1])
-    mask=(maskTheta ==True) & (maskRho==True)
-    ax[0].plot( [xe[0], xe[0], xe[1], xe[1], xe[0]], [ye[0], ye[1], ye[1], ye[0], ye[0]],'r')
-    print(np.sum(lines['Size'].loc[mask]), "should equal", h.max())
-    print(np.sum(lines['Size'].loc[mask])==h.max())
-    toplines=lines[mask]
-    plotlines(lines, 'k', ax[1], alpha=0.1)
-    plotlines(toplines, 'r', ax[1])
-    print(toplines['Size'].sum(), "dike segements")
-    
-    if n >1: 
-        nextop=h.max()-1
-        im,jm=np.where(h==nextop)
+    xc,yc=HT_center(dikeset)
+
+    plotlines(lines, 'k', ax[1])
+    toplines=pd.DataFrame()
+    top=np.sort(h, axis=None)[-n:]
+    reds = cm.get_cmap('Reds', n*2)
+    level=n
+    ylevel=.85
+    for t in top:
+        im,jm=np.where(h==t)
         for i,j in zip(im,jm):
             xe=[xedges[i],xedges[i+1]]
             ye=[yedges[j],yedges[j+1]]
-           
+            c=reds(2*level)
             maskTheta=(lines['AvgTheta'] > xe[0]) & (lines['AvgTheta'] < xe[1])
-            maskRho=(lines['AvgRho'] > ye[0]) & (lines['AvgRho'] < ye[1])
+            maskRho=(lines['AvgRho']/1000 > ye[0]) & (lines['AvgRho']/1000 < ye[1])
             mask=(maskTheta ==True) & (maskRho==True)
             toplines2=lines[mask]
-            plotlines(toplines, 'r', ax[1])
-            ax[0].plot( [xe[0], xe[0], xe[1], xe[1], xe[0]], [ye[0], ye[1], ye[1], ye[0], ye[0]],'r')
-            toplines=toplines.append(toplines2)
+            toplines2=toplines2.assign(Level=level)
+            ax[0].plot( [xe[0], xe[0], xe[1], xe[1], xe[0]], [ye[0], ye[1], ye[1], ye[0], ye[0]],color=c)
+            toplines=pd.concat((toplines,toplines2), ignore_index=True)
+            nlines=len(toplines2)
+            ann=r'\theta :'+str(np.ceil(np.mean(xe)))+ r' \rho :'+str(np.ceil(np.mean(ye)))+ " n="+str(int(t))+"/"+str(nlines)
+            #ax[0].text(0.1,ylevel, ann, color=c,transform=ax[0].transAxes)
+            w,l,r,Xe, Ye, Xmid, Ymid=fit_Rec(toplines2, xc, yc)
+            #plotlines(toplines2, c, ax[1], SpeedUp=False)
+            level=level-1
+            ylevel=ylevel-0.05
+            
+            print('Level', level)
+            print('Counts', t, "Counts %:", t/len(dikeset)*100)
+            print("Theta Range", xe[0], "-", xe[1])
+            print("Rho Range", ye[0], "-", ye[1])
+            print('Width of Linear Swarm:', w)
+            print('Length of Linear Swarm:', l)
+            print("Std Theta:", toplines2['AvgTheta'].std())
+            
+    print("Top 3 cells")
+    w,l,r,Xe, Ye, Xmid, Ymid=fit_Rec(toplines, xc, yc)
+    print('Width of Linear Swarm:', w)
+    print('Length of Linear Swarm:', l)
+    print("Range Theta:", np.ptp(toplines['AvgTheta'].values))
+    print("Range Rho:", np.ptp(toplines['AvgRho'].values))
+    
+    pltRec(toplines, xc, yc)
+            
+    plotlines(toplines, 'k', ax[1], SpeedUp=False, ColorBy='Level', cmap=reds, alpha=0.4)
+    # off axis linear swarm 
+    medianTheta=dikeset['theta'].median()
+    offAxisBy=50
+    t1=medianTheta+offAxisBy
+    t2=medianTheta+2*offAxisBy
+    
+    if abs(t1)>90:
+        t1=t1%90*np.sign(t1)*-1
+    if abs(t2)>90:
+        t2=t2%90*np.sign(t2)*-1
+        
+    if t1>t2:
+        xloc=np.where( np.logical_or((xedges[:-1]>t1),(xedges[:-1]<t2)))
+    else:
+        xloc=np.where( np.logical_and((xedges[:-1]>t1),(xedges[:-1]<t2)))
+    print(medianTheta)
+
+    print(t1, t2)
+
+    offAxisMax=np.max(h[xloc,:], axis=None)
+    im,jm=np.where(h==offAxisMax)
+    print(offAxisMax)
+    i,j=im[0], jm[0]
+    xe=[xedges[i],xedges[i+1]]
+    ye=[yedges[j],yedges[j+1]]
+    c='g'
+    maskTheta=(lines['AvgTheta'] > xe[0]) & (lines['AvgTheta'] < xe[1])
+    maskRho=(lines['AvgRho']/1000 > ye[0]) & (lines['AvgRho']/1000 < ye[1])
+    mask=(maskTheta ==True) & (maskRho==True)
+    toplines2=lines[mask]
+    toplines2=toplines2.assign(Level=-1)
+    ax[0].plot( [xe[0], xe[0], xe[1], xe[1], xe[0]], [ye[0], ye[1], ye[1], ye[0], ye[0]],color=c)
+    toplines=pd.concat((toplines,toplines2), ignore_index=True)
+    plotlines(toplines2, 'g', ax[1], SpeedUp=False)
+    ann=r"theta :"+str(np.ceil(np.mean(xe)))+ r"rho:"+str(np.ceil(np.mean(ye)))+ " n="+str(int(t))+"/"+str(nlines)
+   # ax[0].text(0.1,ylevel, ann, color=c,transform=ax[0].transAxes)
+    t=offAxisMax
+    print('Level', -1)
+    print('Counts', t, "Counts %:", t/len(dikeset)*100)
+    print("Theta Range", xe[0], "-", xe[1])
+    print("Rho Range", ye[0], "-", ye[1])
+    print('Width of Linear Swarm:', w)
+    print('Length of Linear Swarm:', l)
+    print("Std Theta:", toplines2['AvgTheta'].std())
+            
+            
+    plt.tight_layout()
+    
+    return toplines, fig, ax, reds
+
+# def TopHTSectionLocalDetect(lines, dikeset, rstep, tstep,n=1):
+#     fig,ax=plt.subplots(1,2)
+#     gamma=0.2
+#     fig,ax[0],img=HThist(dikeset, rstep, tstep, ax=ax[0], fig=fig, gamma=gamma)
+#     h=img[0]
+#     x,y=h.shape
+#     xedges=img[1]
+#     yedges=img[2]
+    
+#     #normalize H
+#     hnorm=(h/np.max(h))**gamma
+    
+#     [i,j]=np.unravel_index(h.argmax(), h.shape)
+#     """ 
+#     after https://scikit-image.org/docs/stable/auto_examples/color_exposure/plot_regional_maxima.html#sphx-glr-auto-examples-color-exposure-plot-regional-maxima-py
+#     and 
+#     https://scikit-image.org/docs/stable/auto_examples/applications/plot_thresholding.html#:~:text=Thresholding%20is%20used%20to%20create,Histogram%2Dbased.
+    
+#     """
+#     image=img_as_float(hnorm)
+#     image=gaussian_filter(image,1) # filter image
+    
+#     seed=np.copy(image)
+#     seed[1:-1, 1:-1] = image.min()
+#     mask = image
+    
+#     dilated = reconstruction(seed, mask, method='dilation') #dilate
+#     #blocksize=101
+    
+#     #if thresholdType =='otsu':
+#     thresh=threshold_otsu(image-dilated) #otsu (automatic threshold)
+#     #else: 
+#     #    thresh=threshold_local(image-dilated, blocksize)
+#     indicesx, indicesy=np.meshgrid( np.arange(0,h.shape[1]), np.arange(0,h.shape[0]))
+#     spots=image-dilated> thresh
+#     # Now we want the spot with the highest peak
+#     distance = ndi.distance_transform_edt(spots)
+#     coords = peak_local_max(distance, footprint=np.ones((3, 3)), labels=spots)
+#     mask = np.zeros(distance.shape, dtype=bool)
+#     mask[tuple(coords.T)] = True
+#     markers, _ = ndi.label(spots)
+#     labels = watershed(-distance, markers, mask=spots)
+    
+
+#     ind = np.unravel_index(np.argmax(h, axis=None), h.shape)
+#     toplabel=labels[ind]
+    
+#     topmask=(labels==toplabel)
+#     x,y=np.meshgrid(yedges[1:], xedges[1:])
+#     xs=x[topmask]
+#     ys=y[topmask]
+    
+#     # after 
+#     # https://scikit-image.org/docs/dev/auto_examples/edges/plot_contours.html#sphx-glr-download-auto-examples-edges-plot-contours-py
+#     contours=measure.find_contours(labels, 0.5)
+    
+#     if len(contours) is not len(np.unique(labels)):
+#         print("Error:not enough contours found")
+        
+#     interpx= lambda x: np.interp(x, range(len(xedges)), xedges)
+#     interpy= lambda x: np.interp(x, range(len(yedges)), yedges)
+    
+        
+#     for contour in contours:
+#         ncontour=np.array([[ interpx(x), interpy(y)] for x,y in zip(contour[:,0], contour[:,1])])
+#         ax[0].plot(ncontour[:,0], ncontour[:,1], 'r')
+#         path=mpltPath.Path(contour)
+
+        
+        
+    
+    
+    # xe=[xedges[i],xedges[i+1]]
+    # ye=[yedges[j],yedges[j+1]]
+    # print(h.max(), "clustered lines at", xe, "degrees", ye, "rho (m)" )
+    # #     masklat= (dikeset['latitude'] > lat1) & (dikeset['latitude'] < lat2)
+    # # masklong=(dikeset['longitude'] > lon1) & (dikeset['longitude'] < lon2)
+    # # masklatlong= (masklat==1) & (masklong==1)
+    
+    # maskTheta=(lines['AvgTheta'] > xe[0]) & (lines['AvgTheta'] < xe[1])
+    # maskRho=(lines['AvgRho'] > ye[0]) & (lines['AvgRho'] < ye[1])
+    # mask=(maskTheta ==True) & (maskRho==True)
+    # ax[0].plot( [xe[0], xe[0], xe[1], xe[1], xe[0]], [ye[0], ye[1], ye[1], ye[0], ye[0]],'r')
+    # print(np.sum(lines['Size'].loc[mask]), "should equal", h.max())
+    # print(np.sum(lines['Size'].loc[mask])==h.max())
+    # toplines=lines[mask]
+    # plotlines(lines, 'k', ax[1], alpha=0.1)
+    # plotlines(toplines, 'r', ax[1])
+    # print(toplines['Size'].sum(), "dike segements")
+    
+    # if n >1: 
+        
+    #     nextop=np.sort(h, axis=None)[len(h.flatten())-1-n]
+    #     im,jm=np.where(h==nextop)
+    #     for i,j in zip(im,jm):
+    #         xe=[xedges[i],xedges[i+1]]
+    #         ye=[yedges[j],yedges[j+1]]
+           
+    #         maskTheta=(lines['AvgTheta'] > xe[0]) & (lines['AvgTheta'] < xe[1])
+    #         maskRho=(lines['AvgRho'] > ye[0]) & (lines['AvgRho'] < ye[1])
+    #         mask=(maskTheta ==True) & (maskRho==True)
+    #         toplines2=lines[mask]
+    #         plotlines(toplines, 'r', ax[1])
+    #         ax[0].plot( [xe[0], xe[0], xe[1], xe[1], xe[0]], [ye[0], ye[1], ye[1], ye[0], ye[0]],'r')
+    #         toplines=toplines.append(toplines2)
+        
     plt.tight_layout()
     
     return toplines, fig, ax
-
-
 
 
     
@@ -859,29 +1168,5 @@ def OutputRectangles(clusters):
         
     return Xs, Ys
 
-def SensitivityAnalysis(dikeset, path=None):
-    
-    segL=np.median(dikeset['seg_length'].values)
-    isExist = os.path.exists(path)
-    IC_total=pd.DataFrame
-    for dtheta in [1,2,5]:
-        for drho in [0.25*segL, segL, 2*segL]:
-            df_filename=path+'dtheta_'+str(dtheta)+'drho'+str(drho)+'.csv'
-            lines_filename=path+'LINES_dtheta_'+str(dtheta)+'drho'+str(drho)+'.csv'
-            Z_filename=path+'LinkageMat'+'dtheta_'+str(dtheta)+'drho'+str(drho)
-            IC_filename=path+'Analysis'+'dtheta_'+str(dtheta)+'drho'+str(drho)
-            if not isExist: 
-                    dikeset2, Z=HT_AGG_custom(dikeset, dtheta, drho, linkage='complete')
-                    lines,IC=examineClusters(dikeset)
-                    dikeset2.to_csv(df_filename, index=False)
-                    np.save(Z_filename,Z)
-                    lines.to_csv(lines_filename, index=False)
-                    IC.to_csv(IC_filename, index=False)
-            else:
-                #dikeset2=pd.read_csv(df_filename)
-                #lines=pd.read_csv(lines_filename)
-                IC=pd.read_csv(IC_filename)
-                IC_total=IC_total.append(IC)
-                
                     
                     

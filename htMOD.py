@@ -27,9 +27,11 @@ def AKH_HT(data, xc=None, yc=None):
 
     Returns
     -------
-    HT: pandas.Dataframe
-        dataframe of the Hough Transform
+    theta: HT angle in degrees
+    rho: HT rho in same unit as 'Xstart'
+    
     """
+    
     
   
     if xc is None or yc is None:
@@ -148,7 +150,22 @@ def gridSearch(df,dc):
             t=t+1
             
 
+def mxb(data, xc=None, yc=None):
+    if xc is None:
+        xc,yc=HT_center(data)
+    
+    o_x1 = data['Xstart'].values - xc
+    o_x2 = data['Xend'].values - xc
+    o_y1 = data['Ystart'].values - yc
+    o_y2 = data['Yend'].values - yc
 
+    A = o_y1.astype(float) - o_y2.astype(float) + 0.0000000000000001;
+    B = o_x1.astype(float) - o_x2.astype(float)+ 0.000000000000000001;
+    
+    m=A/B
+    b1=-1*m*o_x1+o_y1
+
+    return m,b1
 
 def MidtoPerpDistance(df, xc, yc):
     """

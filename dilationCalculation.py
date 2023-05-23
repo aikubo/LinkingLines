@@ -12,7 +12,7 @@ from PrePostProcess import transformXstart
 import matplotlib.pyplot as plt
 
 
-def dilation(df, binWidth=1700, averageWidth=1, method='Expanded'):
+def dilation(df, binWidth=1, averageWidth=1, method='Expanded'):
     t,r=whichForm(df)
     df=transformXstart(df)
     
@@ -38,6 +38,11 @@ def dilation(df, binWidth=1700, averageWidth=1, method='Expanded'):
     y=np.array([Ystart,Yend]).T
     Ystart=np.min(y, axis=1)
     Yend=np.max(y, axis=1)+1
+    
+        
+    x=np.array([Xstart,Xend]).T
+    Xstart=np.min(x, axis=1)
+    Xend=np.max(x, axis=1)+1
     # for now sort Yend and Ystart, can't keep it but for now it's okay
     
     

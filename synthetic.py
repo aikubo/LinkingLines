@@ -11,12 +11,12 @@ from sklearn.preprocessing import scale
 import numpy as np 
 from clusterMod import *
 import matplotlib.pyplot as plt
-from plotmod import plotlines, labelcolors, plotbyAngle, BA_HT, HThist
+from plotmod import plotlines, labelcolors, BA_HT, HThist, DotsLines, labelSubplots
 from examineMod import examineClusters
 import seaborn as sns
 from jitteringHTcenter import moveHTcenter, rotateHT
 from matplotlib import cm
-
+from fitRadialCenters import *
 
 def makeRadialSwarm(radius, doubled=True, anglestart=-90, anglestop=90, ndikes=50, center=[0,0]):
     
@@ -71,6 +71,38 @@ def makeRadialSwarmdf(radius, doubled=True, anglestart=-90, anglestop=90, ndikes
     df=df.drop(df[ abs(df['Xend']) > CartRange].index)
     labels=[label]*len(df)
     df['Label']=labels
+    return df
+
+
+def makeCircumfrentialSwarmdf(radius, lenf=1, anglestart=-90, anglestop=90, ndikes=50, center=[0,0], label=1, CartRange=100000):
+    
+    #center=np.array([0,0])
+    angles=np.linspace(anglestart, anglestop, ndikes)
+    length=(radius/ndikes)*lenf
+    #m=-1/np.tan(np.deg2rad(angles))
+    t=np.tile(np.deg2rad(angles),2)
+    radius=np.concatenate([np.ones(ndikes)*-radius,np.ones(ndikes)*radius])
+    x0=radius*np.cos(t)+center[0]
+    y0=radius*np.sin(t)+center[1]
+    
+    a = np.cos(t)
+    b = np.sin(t)
+    
+    x1 = (x0 + length/2 * (-b))
+    y1 = (y0 + length/2 * (a))
+    x2 = (x0 - length/2 * (-b))
+    y2 = (y0 - length/2 * (a))
+
+    df=pd.DataFrame({'Xstart':x1, 'Xend': x2, 'Ystart':y1, 'Yend':y2})
+
+
+    df=df.drop(df[ abs(df['Ystart']) > CartRange].index)
+    df=df.drop(df[ abs(df['Yend']) > CartRange].index)
+    df=df.drop(df[ abs(df['Xstart']) > CartRange].index)
+    df=df.drop(df[ abs(df['Xend']) > CartRange].index)
+    labels=[label]*len(df)
+    df['Label']=labels
+    
     return df
 
 def addSwarms(dflist):
@@ -253,7 +285,7 @@ def EnEchelonSynthetic(ndikes, angle, RhoStart, RhoSpacing, Overlap=0, CartRange
     
     return df 
 
-def fromHT(angles, rhos, scale=10000, length=10000, xc=0, yc=0, CartRange=100000, label=1, xrange=None, test=False):
+def fromHT(angles, rhos, scale=10000, length=10000, xc=0, yc=0, CartRange=100000, label=None, xrange=None, test=False):
     ndikes=len(angles)
     
     slopes=-1/(np.tan(np.deg2rad(angles))+0.000000001)
@@ -279,7 +311,7 @@ def fromHT(angles, rhos, scale=10000, length=10000, xc=0, yc=0, CartRange=100000
     if type(label) is int:
         labels=np.ones(ndikes)*label
     else:
-        labels=np.linspace(1,ndikes)
+        labels=np.arange(0,ndikes)
     
     l=np.sqrt( (Xstart-Xend)**2 + (Ystart-Yend)**2)
     
@@ -335,7 +367,73 @@ def fragmentDikes(df):
                                                }), ignore_index=True)
     return dfFrag
 
+def RadialIdentification():
+    
+    # how far from the HT origin is a Radial Swarm Identifiable
+    SMALL_SIZE = 8
+    MEDIUM_SIZE = 8
+    BIGGER_SIZE = 12
+    
+    plt.rc('font', size=SMALL_SIZE)          # controls default text sizes
+    plt.rc('axes', titlesize=SMALL_SIZE)     # fontsize of the axes title
+    plt.rc('axes', labelsize=MEDIUM_SIZE)    # fontsize of the x and y labels
+    plt.rc('xtick', labelsize=SMALL_SIZE)    # fontsize of the tick labels
+    plt.rc('ytick', labelsize=SMALL_SIZE)    # fontsize of the tick labels
+    plt.rc('legend', fontsize=SMALL_SIZE)    # legend fontsize
+    plt.rc('figure', titlesize=MEDIUM_SIZE)  # fontsize of the figure title
+    plt.rcParams['legend.title_fontsize'] = SMALL_SIZE
+    
+    angles=np.random.randint(0,180, 100)-90
+    #angles[abs(angles)>90]=angles[abs(angles)>90]%90*np.sign(angles[abs(angles)>90])
+    rhos=np.random.normal(0,1000, 100)
+    df=fromHT(angles, rhos)
+    fig, ax=plt.subplots(2,1)
+    w=95/25.4 ## cm/(cm/in)
+    l=115/25.4
+    fig.set_size_inches(l,w)
+    
+    dist=np.array([0,1,2.5,10,30,50,100,200,300,1000])*1000
+    r1=[]
+    r10=[]
+    r1000=[]
+    
+    for d in dist:
+        d=d/np.sqrt(2)
+        df=fromHT(angles, rhos, xc=d, yc=d, scale=100000, CartRange=10000000)
+        
+        Center=RadialFit(df, xc=0, yc=0)
 
+        r1.append(Center['RSq'])
+    
+        
+        df=fromHT(angles, rhos*10, xc=d, yc=d, scale=100000, CartRange=10000000)
+        Center=RadialFit(df, xc=0, yc=0)
+
+        r10.append(Center['RSq'])
+        
+        df=fromHT(angles, rhos*100, xc=d, yc=d, scale=100000, CartRange=10000000)
+        Center=RadialFit(df, xc=0, yc=0)
+        r1000.append(Center['RSq'])
+
+
+    ax[0].plot(dist/1000, r1, 'r^-', label="$\mu$=1 km")
+    ax[0].plot(dist/1000, r10, 'bp-', label="$\mu$=10 km")
+    ax[0].plot(dist/1000, r1000, 'g*-', label="$\mu$=100 km")
+    ax[0].set_xlabel('Distance from Origin (km)')
+    
+    ax[1].plot(dist/np.std(rhos), r1, 'r^-', label="$\mu$=1 km")
+    ax[1].plot(dist/np.std(rhos*10), r10, 'bp-', label="$\mu$=10 km")
+    ax[1].plot(dist/np.std(rhos*100), r1000, 'g*-', label="$\mu$=100 km")
+    ax[0].legend()
+    ax[1].set_xlabel('Distance from Origin / $\mu$')
+    ax[1].set_xlim(0,15)
+    
+    for a in ax: 
+        a.set_ylabel('$R_{sq}$')
+    labelSubplots(ax)
+    plt.tight_layout()
+    
+    fig.savefig('Publication Figures/RadialIdeniticationHTOrigin.pdf', dpi=600)
 # CRB 500-300km
 # min(lines['Ystart'])-max(lines['Ystart'])
 # Out[7]: -530604.0

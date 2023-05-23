@@ -7,11 +7,11 @@ Created on Wed Feb 10 13:30:34 2021
 """
 
 import numpy as np 
-
 import matplotlib.pyplot as plt
 
 
 def rotateXYShift(ang,x,y,h,k):
+    
     xp= (x-h)*np.cos(ang)-(y-k)*np.sin(ang)
     yp= (x-h)*np.sin(ang)+(y-k)*np.cos(ang)
     return xp, yp
@@ -147,21 +147,56 @@ def testRec(lines, xc, yc):
     
 
 def fit_Rec(lines,xc,yc):
+
+    col=lines.columns 
+    
+    post=['Theta', 'AvgTheta', 'theta']
+    posr=['Rho', 'AvgRho', 'rho']
+
+    for p in post: 
+        if p in col:
+            t=p 
+    
+    for p in posr: 
+        if p in col:
+            r=p
+            
+    if 'Average Rho (m)' in col:
+        r='Average Rho (m)'
+        t='Average Theta ($^\circ$)'
+        
+    if t=='AvgTheta' or t=='Average Theta ($^\circ$)':
+        segl='R_Length'
+    else:
+        segl='seg_length'
+
     xi,yi=endpoints2(lines)
     if len(lines) == 1:
-        return np.nan, lines['seg_length'], 0, xi,yi, lines['Xmid'], lines['Ymid']
+        return 0, lines[segl], 0, xi,yi, lines['Xmid'], lines['Ymid']
     
     x0=xc
     y0=yc
 
-    ang=-np.mean(np.deg2rad(lines['theta'].values))
+    size=len(lines)
     
+    if abs(np.sum(np.sign(lines[t].values))) < size: 
+        crossZero=True
+        ang=np.mean(abs(lines[t].values))
+        tol=6
+        if np.isclose(ang,0, atol=4):
+            ang=np.mean((lines[t].values))
+    else:
+        crossZero=False
+        
+        ang=np.mean((lines[t].values))
+
+
     
-    xp, yp= rotateXYShift(ang, xi,yi, x0,y0)
+    xp, yp= rotateXYShift(np.deg2rad(-1*ang), xi,yi, x0,y0)
     #plotlines(lines, 'k.-', a)
     
-    width=np.ptp(xp)
-    length=np.ptp(yp)
+    width=np.ptp(xp.flatten())
+    length=np.ptp(yp.flatten())
     
     # if width>length :
     #     length=width
@@ -177,23 +212,23 @@ def fit_Rec(lines,xc,yc):
     ys=np.append(yu,yd)
     
     
-    xpi, ypi=unrotate(ang, xp, yp, x0, y0)
+    xpi, ypi=unrotate(np.deg2rad(-1*ang), xp, yp, x0, y0)
 
     Xedges=np.array([xs[0], xs[0], xs[1], xs[1], xs[0]])
     Yedges=np.array([ys[1], ys[0], ys[0], ys[1], ys[1]])
     # a.plot(Xedges, Yedges, 'r.-')
     Xmid=(np.max(xs)+np.min(xs))/2
-    
     Ymid=(np.max(ys)+np.min(ys))/2
-
-    Xmid, Ymid=unrotate(ang, Xmid, Ymid, x0, y0)
-    xs,ys=unrotate(ang,Xedges,Yedges,x0,y0)
+    
+    xs,ys=unrotate(np.deg2rad(-1*ang),Xedges,Yedges,x0,y0)
+    Xmid, Ymid=unrotate(np.deg2rad(-1*ang), Xmid, Ymid, x0, y0)
+    
 
    
     #xstart, xend, ystart, yend=clustered_lines(xi, yi, np.mean(lines['theta'].values), length)
     
 
-    r=np.sum((yc-yp)**2)/lines['seg_length'].sum() #len(lines)
+    r=np.sum((yc-yp)**2)/lines[segl].sum() #len(lines)
     
     
     return width, length, r, xs, ys, Xmid, Ymid
