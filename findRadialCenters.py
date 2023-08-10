@@ -157,26 +157,7 @@ def sweepCenters(df, gridM, threshold, xc, yc, ThetaRangeWeight=0, plot=False, r
         
     return err, dikes, thetaRange, thetaSTD, xs, ys
 
-# def checkOneCenter(df, threshold, xc, yc, xr, yr):
-#     fig, ax=plt.subplots(1,2)
 
-#     theta=df['AvgTheta']
-
-#     err=np.empty_like(theta)
-    
-
-#     rhoRadial=(xs[i]-xc)*np.cos(np.deg2rad(theta))+(ys[j]-yc)*np.sin(np.deg2rad(theta))
-#     thresholdArray=threshold*(np.cos(np.deg2rad(theta)) + np.sin(np.deg2rad(theta)))
-#     err= (df['AvgRho']-rhoRadial) #**2< threshold
-    
-#     plotlines(df, 'k', ax[0], center=True)
-#     ax[0].plot(xr, yr, "y*")
-#     ax[1].scatter(df['AvgTheta'], df['AvgRho'], c=err)
-#     #c=ax[1].pcolor(xr, yr, err, cmap=cm.Reds, shading='auto')
-#     #cbar=fig.colorbar(c, ax=ax[1])
-    
-    
-#     return err, xs, ys
 
 
 def detectLocalPeaks(err,dikes,df,gridM, plot=False,  maxArea=2827433388):
@@ -272,7 +253,7 @@ def detectLocalPeaks(err,dikes,df,gridM, plot=False,  maxArea=2827433388):
                                     figsize=(8, 2.5),
                                     sharex=True,
                                     sharey=True)
-        ax0.imshow(image - dilated, cmap='gray')
+        ax0.imshow(image - dilated, cmap='gray', origin="lower")
         ax0.set_title('image - dilated')
         ax0.axis('off')
         plt.gca().invert_yaxis()
@@ -280,12 +261,12 @@ def detectLocalPeaks(err,dikes,df,gridM, plot=False,  maxArea=2827433388):
         #fig, ax = try_all_threshold(image-dilated, figsize=(10, 8), verbose=False)
 
         ax1.set_title('threshold- otsu')
-        ax1.imshow(spots,cmap=plt.cm.gray)
+        ax1.imshow(spots,cmap=plt.cm.gray, origin="lower")
         plt.gca().invert_yaxis()
 
-        ax2.imshow(spots, cmap=plt.cm.gray)
+        ax2.imshow(spots, cmap=plt.cm.gray, origin="lower")
         ax2.set_title('Overlapping objects')
-        ax3.imshow(labels, cmap=plt.cm.nipy_spectral)
+        ax3.imshow(labels, cmap=plt.cm.nipy_spectral, origin="lower")
         ax3.set_title('Separated objects')
         
         fig.tight_layout()
@@ -306,108 +287,7 @@ def detectLocalPeaks(err,dikes,df,gridM, plot=False,  maxArea=2827433388):
     
 
     
-    return df,labels,totalcounts,centerData, 
+    return df,labels,totalcounts,centerData
 
 
     
-    
-    
-    # """ Find local peaks in data (err) 
-    # This method employs the imagepers library by Stefan Huber Salzburg Univesity 
-    # of Applied Science 
-    # https://www.sthu.org/code/codesnippets/imagepers.html
-    
-    
-    # Parameters 
-    # ----------
-    
-    # err : numpy 2d array
-    #     height data for height filtration 
-    # pesistance :  float, default=20 
-    #     persistance threshold 
-    # plot : logical, default=True 
-    #     turns on or off plots of persistance diagram and the loci
-        
-    
-    # Returns 
-    # -------
-    # xlist : list 
-    #     list of x indices in err where local peaks occur
-        
-    # ylist : list 
-    #     list of y indices in err where local peaks occur
-        
-    # """
-    # g0=imagepers.persistence(err)
-    # xlist=[]
-    # ylist=[]
-    # # print(g0)
-    # if plot:
-    #     fig = plt.figure()
-    #     ax = fig.add_subplot(111)
-    #     ax.set_title("Peristence diagram")
-    #     ax.plot([0,100], [0,100], '-', c='grey')
-    # for i, homclass in enumerate(g0):
-    #     p_birth, bl, pers, p_death = homclass
-    #     if pers <= 1.0:
-    #         continue
-        
-    #     if plot:
-    #         x, y = bl, bl-pers
-    #         ax.plot([x], [y], '.', c='b')
-    #         ax.text(x, y+2, str(i+1), color='b')
-            
-    # if plot:
-    #     ax.set_xlabel("Birth level")
-    #     ax.set_ylabel("Death level")
-    #     fig,ax=plt.subplots(1,2)
-    #     ax[0].set_title("Loci of births")
-    
-    
-    # for i, homclass in enumerate(g0):
-    #     p_birth, bl, pers, p_death = homclass
-    #     if pers <= persistance:
-    #         continue
-    #     y, x = p_birth
-    #     xlist.append(x)
-    #     ylist.append(y)
-    #     print("local peak at", x,y)
-    #     if plot:
-    #         ax[0].plot(xs[x], ys[y], '.', c='b')
-    #         ax[0].text(xs[x], ys[y]+5000, str(i+1), color='b')
-            
-            
-        
-    # if plot: 
-    #     ax[0].pcolor(xs, ys, err, cmap=cm.Reds, shading='auto')
-    #     ax[1].set_xlim((0,err.shape[1]))
-    #     ax[1].set_ylim((0,err.shape[0]))
-    #     plt.gca().invert_yaxis()
-        
-
-    # return xlist, ylist
-
-
-
-# def drawCircles(err, xlist,ylist, xs, ys, rStart=2 ):
-#     xr,yr=np.meshgrid( xs, ys)
-    
-    
-#     def costFunction(err, R, x,y, xs): 
-#         ss=np.sum(err[x-R:x+R,y-R:y+R])
-#         area= np.pi*(xs[0]-xs[R])**2
-        
-#         return area/ss
-#         # (np.pi*R**2)/sumpoints
-        
-#     for x,y in zip(xlist,ylist):
-#         xval=xs[x]
-#         yval=ys[y]
-        
-#         tol=
-#         alpha=0.5
-#         for r in range(min(x-err.shape[0], y-err.shape[1]))
-#         #while costFuction(err, R, x,y, xs) > tol
-#         Rnew=Rnew-alpha*
-        
-        

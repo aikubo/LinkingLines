@@ -100,6 +100,7 @@ def writeToQGISLong(df,name, myProj=None):
     
     return df
 
+
 def WKTtoArray(df, plot=False):
 
     '''
@@ -312,14 +313,52 @@ def preprocess(df):
         
     return df
 
-def DikesetReProcess(df, HTredo=True):
+def transformXstart(dikeset, HTredo=True):
+    """
+    Transforms the Xstart column of a dataframe of line segments.
+    Sets the Start point as the smallest x value of the line segment.
+    
+    Parameters
+    ----------
+    df: pandas.Dataframe
+        dataframe of the line segments
+        must contain ["Xstart", "Ystart", "Xend", "Yend"]
+
+    Returns
+    -------
+    df: pandas.Dataframe
+        dataframe of the line segments with transformed Xstart column
+    """
+
+
+    dist1= dikeset['Xstart'].values
+    dist2= dikeset['Xend'].values
+    switchXs=(dist1>dist2)
+    
+    dikeset.loc[switchXs, ['Xstart', 'Xend']]=(dikeset.loc[switchXs, ['Xend', 'Xstart']].values)
+    dikeset.loc[switchXs, ['Ystart', 'Yend']]=(dikeset.loc[switchXs, ['Yend', 'Ystart']].values)
+    
+    
+    # if HTredo:
+    #     t,r=whichForm(dikeset)
+    #     theta,rho,xc,yc=HT(dikeset)
+    #     dikeset['theta']=theta
+    #     dikeset['rho']=rho
+    #     dikeset['yc']=yc
+    #     dikeset['xc']=xc
+    
+    return dikeset
+
+def DikesetReProcess(df, HTredo=True, xc=None, yc=None):
 
     if 'Xstart' not in df.columns:
         df=WKTtoArray(df)
     if 'seg_length' not in df.columns:        
         df=segLength(df)
-        
-    xc,yc=HT_center(df)
+    df=transformXstart(df)
+    
+    if xc is None or yc is None:
+        xc,yc=HT_center(df)
     
        
     df=giveHashID(df)
@@ -333,23 +372,23 @@ def DikesetReProcess(df, HTredo=True):
         df=midPoint(df)
         
     if 'theta' not in df.columns or 'rho' not in df.columns:
-        theta,rho,xc,yc=HT(df)
+        theta,rho,xc,yc=HT(df, xc=xc, yc=yc)
         df['theta']=theta
         df['rho']=rho
     if 'xc' not in df.columns:
-        theta,rho,xc,yc=HT(df)
+        theta,rho,xc,yc=HT(df, xc=xc, yc=yc)
         df=df.assign(theta=theta, xc=xc, rho=rho, yc=yc)
 
         df=MidtoPerpDistance(df, xc, yc)
     elif xc is not df['xc'].iloc[0] and HTredo:
-        theta,rho,xc,yc=HT(df)
+        theta,rho,xc,yc=HT(df, xc=xc, yc=yc)
         df['theta']=theta
         df['rho']=rho
         df=MidtoPerpDistance(df, xc, yc)
         df=df.assign(yc=yc)
         df=df.assign(xc=xc)
     elif HTredo: 
-        theta,rho,xc,yc=HT(df)
+        theta,rho,xc,yc=HT(df, xc=xc, yc=yc)
         df['theta']=theta
         df['rho']=rho
         df=MidtoPerpDistance(df, xc, yc)
@@ -372,7 +411,7 @@ def LinesReProcess(df, HTredo=True):
 
         
     xc,yc=HT_center(df)
-    
+    df=transformXstart(df)
        
     df=giveHashID(df)
     l=len(df)
@@ -402,13 +441,13 @@ def LinesReProcess(df, HTredo=True):
     
     return df 
 
-
     
 
 def completePreProcess(df):
-       
-    df=WKTtoArray(df)
-
+    
+    if "WKT" in df.columns:
+        df=WKTtoArray(df)
+    df=transformXstart(df)
     df=segLength(df)
 
     df=giveHashID(df)
@@ -433,32 +472,7 @@ def completePreProcess(df):
         
     return df
 
-def transformXstart(dikeset):
-    """
-    Transforms the Xstart column of a dataframe of line segments.
-    Sets the Start point as the smallest x value of the line segment.
-    
-    Parameters
-    ----------
-    df: pandas.Dataframe
-        dataframe of the line segments
-        must contain ["Xstart", "Ystart", "Xend", "Yend"]
 
-    Returns
-    -------
-    df: pandas.Dataframe
-        dataframe of the line segments with transformed Xstart column
-    """
-
-
-    dist1= dikeset['Xstart'].values
-    dist2= dikeset['Xend'].values
-    switchXs=(dist1>dist2)
-    
-    dikeset.loc[switchXs, ['Xstart', 'Xend']]=(dikeset.loc[switchXs, ['Xend', 'Xstart']].values)
-    dikeset.loc[switchXs, ['Ystart', 'Yend']]=(dikeset.loc[switchXs, ['Yend', 'Ystart']].values)
-    
-    return dikeset
 
 def whichForm(lines):
     '''
@@ -485,7 +499,10 @@ def whichForm(lines):
         if p in col:
             r=p
             
-    
+    if 'Average Rho (m)' in col:
+        r='Average Rho (m)'
+        t='Average Theta ($^\circ$)'
+        
     return t,r
 
 def MaskArea(df, bounds):
@@ -515,7 +532,25 @@ def FilterLines(lines):
     return lines[mask]
 
 def LoadCJDS():
-    lines=pd.read_csv('/home/akh/myprojects/Linking-and-Clustering-Dikes/dikedata/crb/CJDS_Complete_2_433.csv')
+    lines=pd.read_csv('/home/akh/myprojects/Linking-and-Clustering-Dikes/dikedata/crb/AllCRBLinked_euc_18_10_2022.csv')
     dikeset=pd.read_csv("/home/akh/myprojects/Linking-and-Clustering-Dikes/dikedata/crb/CJDS_FebStraightened.csv")
     
     return dikeset, lines
+
+def LoadCentral():
+    lines=pd.read_csv('/home/akh/myprojects/Linking-and-Clustering-Dikes/dikedata/deccandata/Central_Complete_euc_2_3436.csv')
+    dikeset=pd.read_csv("/home/akh/myprojects/Linking-and-Clustering-Dikes/dikedata/deccandata/Central_preprocesed.csv")
+    
+    return dikeset, lines
+def LoadNT():
+
+    lines=pd.read_csv('/home/akh/myprojects/Linking-and-Clustering-Dikes/dikedata/deccandata/NarmadaTapi_Complete_euc_2_1730.csv')
+    dikeset=pd.read_csv("/home/akh/myprojects/Linking-and-Clustering-Dikes/dikedata/deccandata/NarmadaTapi_preprocesed.csv")
+    
+    return dikeset, lines
+
+def getCartLimits(lines):
+    xlim=[ np.min( [lines['Xstart'].min(), lines['Xend'].min()]), np.max( [lines['Xstart'].max(), lines['Xend'].max()])]
+    ylim=[ np.min( [lines['Ystart'].min(), lines['Yend'].min()]), np.max( [lines['Ystart'].max(), lines['Yend'].max()])]
+    return xlim, ylim
+

@@ -10,7 +10,7 @@ from scipy.optimize import curve_fit
 import numpy as np 
 import pandas as pd
 from plotmod import plotlines, DotsLines
-from PrePostProcess import whichForm
+from PrePostProcess import whichForm, writeToQGIS
 from htMOD import HT_center
 from clusterMod import CyclicAngleDist
 import numpy as np
@@ -21,6 +21,11 @@ from scipy.spatial.distance import pdist, squareform
 def CenterFunc(theta,xr,yr, xc, yc):
     rhoRadial=(xr-xc)*np.cos(np.deg2rad(theta))+(yr-yc)*np.sin(np.deg2rad(theta))
     return rhoRadial
+
+def CenterFuncDf(centers, xc, yc):
+    rhoRadial=(xr-xc)*np.cos(np.deg2rad(theta))+(yr-yc)*np.sin(np.deg2rad(theta))
+    return rhoRadial
+
 
 def RadialFitLabels(lines, labels, xc,yc, plot=False):
     theta=lines['AvgTheta'].values
@@ -50,7 +55,7 @@ def RadialFitLabels(lines, labels, xc,yc, plot=False):
         plt.legend()
     return Centers
     
-def RadialFit(lines,plot=False, ColorBy=None, weight='LayerNumber', ThetaRange=[-90,90]):
+def RadialFit(lines,plot=False, ColorBy=None, weight='LayerNumber', ThetaRange=[-90,90], xc=None, yc=None):
     t,r=whichForm(lines)
     theta=lines[t].values
     rho=lines[r].values
@@ -66,11 +71,13 @@ def RadialFit(lines,plot=False, ColorBy=None, weight='LayerNumber', ThetaRange=[
             
     Centers=pd.DataFrame()
     
-    if 'xc' in lines.columns:
+    if 'xc' in lines.columns and xc is None:
         xc=lines['xc'].values[0]
         yc=lines['yc'].values[0]
-    else: 
+    elif xc is None: 
         xc,yc=HT_center(lines)
+        
+        
     popt, pcov=curve_fit( lambda angle, xr,yr: CenterFunc(angle, xr, yr, xc, yc), theta,rho )
     perr = np.sqrt(np.diag(pcov))
     
@@ -85,7 +92,7 @@ def RadialFit(lines,plot=False, ColorBy=None, weight='LayerNumber', ThetaRange=[
                  label='fit: xr=%5.3f, yr=%5.3f' % tuple(popt), linewidth=3)
         ax[0].plot( popt[0], popt[1], '*g', markersize=10)
         
-    plt.legend()
+        plt.legend()
     return Centers
 
 def RadialAzimuthal(lines, Center):
@@ -121,14 +128,16 @@ def RipleyRadial(rAngle, plot=False):
      """
     tRange=CyclicAngle360( np.max(rAngle), np.min(rAngle))
     theta=rAngle[:,None]
-    steps=np.arange(0,tRange,5)
+    steps=np.arange(0,360,10)
     
     n=len(rAngle)
-    l=n/tRange
+    l=n/360
     
-    d=pdist(theta, metric=CyclicAngle360)
-    counts,_=np.histogram(d, bins=steps)
-    K=l*counts/n
+    d=squareform(pdist(theta, metric=CyclicAngle360))
+    
+    counts=[np.histogram(i, bins=steps)[0] for i in d]
+    K=l*np.cumsum(counts, axis=1)/n
+    L=np.sqrt(np.sum(np.cumsum(counts, axis=1), axis=1)/(np.pi*n*(n-1)))
     
     K_Pure=np.ones(len(K))*l/n
     
@@ -141,8 +150,23 @@ def RipleyRadial(rAngle, plot=False):
         return K, K_se, fg, ax
     else:
         return K, K_se
-   
-def NearCenters(lines, Center, tol=10000):
+    
+def ExpandingR(lines,Center):
+    t,r=whichForm(lines)
+    tols=np.array([0.0001, 0.005, 0.01, 0.1, 0.2, 0.5, 0.75, 1])*np.ptp(lines[r].values)
+    ntol=np.empty(len(tols))
+    
+    xdata=lines[t].values
+    xc=lines['xc'].values[0]
+    yc=lines['yc'].values[0]
+    
+    rhoPerfect=CenterFunc(xdata, Center['Center'][0][0], Center['Center'][0][1], xc, yc)
+    
+    ntol=[np.sum(abs(lines[r].values-rhoPerfect)<tol)/len(lines) for tol in tols]
+
+    return ntol
+    
+def NearCenters(lines, Center, tol=10000, printOn=False):
     t,r=whichForm(lines)
     
     xdata=lines[t].values
@@ -151,28 +175,65 @@ def NearCenters(lines, Center, tol=10000):
     rhoPerfect=CenterFunc(xdata, Center['Center'][0][0], Center['Center'][0][1], xc, yc)
     
     close=abs(lines[r].values-rhoPerfect)<tol
+    ntol=ExpandingR(lines,Center)
     Close=lines[close]
-    
-    print("For Center", Center['Center'][0][0], Center['Center'][0][1])
     rAngle=RadialAzimuthal(Close, Center)
     maxt=np.max(rAngle)
     mint=np.min(rAngle)
-    print( "Max angle Range is ", CyclicAngle360(maxt, mint))
-    
-    print( "Angle Spacing is ")
     spacing=AngleSpacing(rAngle)
-    print("Mean: Median: Min: Max:")
-    print(spacing)
+    #K,K_se=RipleyRadial(rAngle)
     
-    K,K_se=RipleyRadial(rAngle)
+    if printOn:
+        print("For Center", Center['Center'][0][0], Center['Center'][0][1])
     
-    print("Deviation from perfect radial angle spread")
-    print("K_se:", K_se)
-    print("Perfect K_se would be 0")
+        print( "Max angle Range is ", CyclicAngle360(maxt, mint))
+        
+        print( "Angle Spacing is ")
+        
+        print("Mean: Median: Min: Max:")
+        print(spacing)
+        
+    
+        print("Deviation from perfect radial angle spread")
+        #print("K_se:", K_se)
+        print("Perfect K_se would be 0")
+        
+    CenterDist1= np.sqrt( (Center['Center'][0][0] - Close['Xstart'].values)**2 +  (Center['Center'][0][1] - Close['Ystart'].values)**2)
+    CenterDist2= np.sqrt( (Center['Center'][0][0] - Close['Xend'].values)**2 +  (Center['Center'][0][1] - Close['Yend'].values)**2)
+    
+    MinDist=np.min(np.vstack((CenterDist1, CenterDist2)), axis=0)
+        
+    Close=Close.assign(CenterDistStart=CenterDist1, CenterDistEnd=CenterDist2, CenterDist=MinDist, CenterX=Center['Center'][0][0], CenterY=Center['Center'][0][1], RadialAngles=rAngle)
+
+    if "T" in t:
+        clusters=len(Close)
+        dikes=Close['Size'].sum()
+        filt=Close['TrustFilter'].sum()
+        
+        Center=Center.assign( Spacing=[spacing], ExpandingR=[ntol], AngleRange=CyclicAngle360(maxt, mint), ClustersN=clusters, DikesN=dikes,FilteredN=filt)
+    else:
+        n=len(Close)
+        Center=Center.assign( Spacing=[spacing], ExpandingR=[ntol], AngleRange=CyclicAngle360(maxt, mint), nDikes=n)
+        
+        
+    
+    
+    return Close, Center
 
     
-    return Close
-     
+    
+def writeCenterWKT(df,name):
+    
+    front="POINT ("
+    linestring=[]
+    for i in range(len(df)):
+        line=front+str( (df['Center'].iloc[i])[0])+" "+str((df['Center'].iloc[i])[1])+")"
+        linestring.append(line)
+    
+    df['Pointstring']=linestring 
+    df['Pointstring']=df['Pointstring'].astype(str)
+    df.to_csv(name)
+    
      # for i in theta:
      #     temp=np.abs(theta-i)
      #     for s in steps: 

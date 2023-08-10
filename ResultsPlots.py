@@ -37,6 +37,10 @@ def MakeFigCheck(ImgPath, overide=False):
     
     elif not os.path.exists(ImgPath):
         tdif=True
+        
+    if overide:
+        tdif=True
+        
     return tdif
     
 
@@ -61,8 +65,8 @@ def plotLargeClusters(dikeset,lines,n, path, overide=False):
             fig.savefig(ImgName, transparent=True)
             plt.close(fig)
             
-    col=['Overlap','MaxSegNNDist', 'nOverlapingSegments', 'MedianSegNNDist','EnEchelonAngleDiff','ThetaRange', 'Size', 'Aspect', 'R_Length', 'R_Width']
-    lines=lines.assign(Aspect=lines['R_Length'].values/lines['R_Width'].values)
+    col=['Overlap','MaxSegNNDist', 'nOverlapingSegments', 'MedianSegNNDist','RhoRange','ThetaRange', 'Size', 'Aspect', 'Dike Cluster Length (km)', 'Dike Cluster Width (m)']
+    lines=lines.assign(Aspect=lines['Dike Cluster Length (km)'].values*1000/lines['Dike Cluster Width (m)'].values)
     
     for i in col:
         
@@ -73,6 +77,19 @@ def plotLargeClusters(dikeset,lines,n, path, overide=False):
             fig,ax=CheckoutBy(dikeset, lines, i)
             fig.savefig(ImgName, transparent=True)
             plt.close(fig)
+            
+    col=['ThetaRange', 'Aspect', 'Dike Cluster Length (km)', 'Dike Cluster Width (m)']
+ 
+    for i in col:
+
+        ImgName=ImgPath+"Smallest_"+i+".pdf"
+
+        if MakeFigCheck(ImgName):
+            fig,ax=CheckoutBy(dikeset, lines, i, maximum=False, minimum=True)
+            fig.savefig(ImgName, transparent=True)
+            plt.close(fig)
+            
+    
         
 
 
@@ -88,7 +105,7 @@ def Histograms(dikeset,lines, path, maxL=150000):
         rlim=lines['Rho_Threshold'][0]
         lines=lines.loc[lines['Linked']==1]
         ax['A']=trueDikeLength(lines, dikeset, maxL, axs=ax['A'])
-        # shape, loc, scale=lognorm.fit(lines['R_Length'].values)
+        # shape, loc, scale=lognorm.fit(lines['Dike Cluster Length (km)'].values)
         # x=np.linspace(0,maxL)
         
         # aa=ax['A'].twinx()
@@ -102,13 +119,13 @@ def Histograms(dikeset,lines, path, maxL=150000):
         # lo = Labeloffset(aa, label='Normalized Probability', axis="y")
     
         
-        ax['C'].hist(lines['R_Width'], bins=np.arange(0,rlim*2,500))
+        ax['C'].hist(lines['Dike Cluster Width (m)'], bins=np.arange(0,rlim*2,500))
         
-        ax['C'].text(.60,.80,'Dike median:'+str(round(np.median(lines['R_Width'].values),0)), transform=ax['C'].transAxes)
-        ax['C'].text( .60, .65, 'Dike STD:'+str(round(lines['R_Width'].std(),0)),transform=ax['C'].transAxes)
+        ax['C'].text(.60,.80,'Dike median:'+str(round(np.median(lines['Dike Cluster Width (m)'].values),0)), transform=ax['C'].transAxes)
+        ax['C'].text( .60, .65, 'Dike STD:'+str(round(lines['Dike Cluster Width (m)'].std(),0)),transform=ax['C'].transAxes)
         mask=np.greater(lines['Size'].values, 3)
         
-        AR=lines.loc[mask]['R_Length'].values/(lines['R_Width'].loc[mask].values+1)
+        AR=lines.loc[mask]['Dike Cluster Length (km)'].values/(lines['Dike Cluster Width (m)'].loc[mask].values+1)
         
         ax['D'].hist(AR, bins=np.arange(0,80,10))
         #sns.histplot(AR, bins=np.arange(0,80,10), ax=ax['D'])
@@ -116,7 +133,7 @@ def Histograms(dikeset,lines, path, maxL=150000):
         ax['D'].text(.70,.80,'Dike median:'+str(round(np.median(AR),2)), transform=ax['D'].transAxes)
         ax['D'].text( .70, 65, 'Dike STD:'+str(round(np.std(AR),2)),transform=ax['D'].transAxes)
         print('Dike STD:'+str(round(np.std(AR),2)))
-        ax['B'].scatter(lines[mask]['R_Width'], lines.loc[mask]['R_Length'].values, s=2*lines.loc[mask]['Size'].values**1.5, alpha=0.6, edgecolor='grey')
+        ax['B'].scatter(lines[mask]['Dike Cluster Width (m)'], lines.loc[mask]['Dike Cluster Length (km)'].values, s=2*lines.loc[mask]['Size'].values**1.5, alpha=0.6, edgecolor='grey')
         
         ax['C'].set_ylabel("Counts")
         ax['C'].set_xlabel("Packet Width (m)")
@@ -140,11 +157,11 @@ def Histograms(dikeset,lines, path, maxL=150000):
         fig.savefig(ImgName, transparent=True)
         plt.close(fig)
 
-def HT3(dikeset,lines,path):
+def HT3(dikeset,lines,path, overide=False):
     ImgPath=path[:-4]+"Images/"
     ImgName=ImgPath+"HT3"+".pdf"
-    if MakeFigCheck(ImgName):
-        fig,ax=plt.subplots(1,3)
+    if MakeFigCheck(ImgName,  overide=overide):
+        fig,ax=plt.subplots(1,3, sharey=True)
         fig.set_size_inches( 16,6)
         DotsHT(fig, ax[0], dikeset, ColorBy=None, title="Unlinked Segments")
         DotsHT(fig, ax[1], lines, ColorBy=None, title="All Linked Segments")
@@ -207,38 +224,45 @@ def SaveFigCheck(fig, ImgPath, overide=False):
     if tdif:
         fig.savefig(ImgPath, transparent=True, dpi=600)
         print(ImgPath, "saved")
+
+        
     elif not tdif:
         print(ImgPath, "already was saved < 2 days ago")
+
         
     if overide:
         fig.savefig(ImgPath, transparent=True, dpi=600)
         print(ImgPath, "saved by overide")
+    plt.close(fig)
 
-def LocPlots(path, lines, cols):
+def LocPlots(path, lines, cols, overide=False):
     
     for i in cols:
         ImgPath=path[:-4]+"Images/"
         ImgName=ImgPath+"ByLoc"+i+".pdf"
-        if MakeFigCheck(ImgName):
-            if i == "R_Length" or i =="R_Width":
+        if MakeFigCheck(ImgName,  overide=overide):
+            if i == "Dike Cluster Length (km)" or i =="Dike Cluster Width (m)":
                 
-                fig,ax=plotByAngle(lines, i, log_scale=(False,True))
-            fig,ax=plotByAngle(lines, i)
+                fig,ax=plotByLoc(lines, i, log_scale=(False,True))
+            fig,ax=plotByLoc(lines, i)
             
             fig.savefig(ImgName, transparent=True, dpi=600)
     
-def AnglePlots(path, lines, cols):
+def AnglePlots(path, lines, cols, overide=False):
     print("Starting Angle Plots")
     for i in cols:
         ImgPath=path[:-4]+"Images/"
         ImgName=ImgPath+"ByAngle"+i+".pdf"
-        print("making image:", ImgName)
-        if MakeFigCheck(ImgName):
-            if i == "R_Length" or i =="R_Width":
+
+        if MakeFigCheck(ImgName, overide=overide):
+            print("making image:", ImgName)
+            if i == "Dike Cluster Length (km)" or i =="Dike Cluster Width (m)":
                 
-                fig=plotByAngle(lines, i, log_scale=True)
-            fig=plotByAngle(lines, i)
+                fig=plotByAngle(lines, i, log_scale=(False, True))
+            else:
+                fig=plotByAngle(lines, i)
             fig.savefig(ImgName, transparent=True, dpi=600)
+            
     
         
     
@@ -247,8 +271,17 @@ def allFigures(path1,path2,w, Large=True, overide=False):
     
     dikeset=pd.read_csv(path1)
     lines=pd.read_csv(path2)
-    lines['R_Width']=lines['R_Width']+w
-    lines['R_Length']=lines['R_Length']/1000
+    
+    if 'Dike Cluster Width (m)' not in lines.columns:
+        lines['Dike Cluster Width (m)']=lines['R_Width'].values+w
+        lines['Dike Cluster Length (km)']=lines['R_Length'].values/1000
+        lines['Average Rho (m)']=lines['AvgRho'].values
+        lines['Average Theta ($^\circ$)']=lines['AvgTheta'].values
+        
+        lines.to_csv(path2, index=False)
+        
+    
+
     
     cols=['Size', 'Overlap', "MaxSegNNDist", "MinSegNNDist"]
     
@@ -261,38 +294,38 @@ def allFigures(path1,path2,w, Large=True, overide=False):
     sns.reset_orig()
     m=lines['TrustFilter']==1
     
-    g=sns.jointplot(data=lines, x='Size', y='R_Length', alpha=0.6, hue='TrustFilter',  ylim = (0,250))
+    g=sns.jointplot(data=lines, x='Size', y='Dike Cluster Length (km)', alpha=0.6, hue='TrustFilter')
 
-    slope, intercept, r_value, p_value, std_err = stats.linregress(lines['Size'].values, lines['R_Length'].values)
+    slope, intercept, r_value, p_value, std_err = stats.linregress(lines['Size'].values, lines['Dike Cluster Length (km)'].values)
     x=np.linspace(3, lines['Size'].max())
     y=slope*x+intercept 
     
     g.ax_joint.plot(x,y, 'b-.', alpha=0.8)
-    g.ax_joint.annotate(f'$r = {r_value:.3f}, p = {p_value:.3f}$',
+    g.ax_joint.annotate(f'$m = {slope:.1f}, R^2 = {r_value:.2f}$',
                     xy=(0.1, 0.9), xycoords='axes fraction',
                     ha='left', va='center',
                     bbox={'boxstyle': 'round', 'fc': 'powderblue', 'ec': 'navy'})
    
     
-    slope, intercept, r_value, p_value, std_err = stats.linregress(lines['Size'].loc[m].values, lines['R_Length'].loc[m].values)
+    slope, intercept, r_value, p_value, std_err = stats.linregress(lines['Size'].loc[m].values, lines['Dike Cluster Length (km)'].loc[m].values)
     x=np.linspace(4, lines['Size'].max())
     y=slope*x+intercept 
     
     g.ax_joint.plot(x,y,  '-.',color='orange', alpha=0.9)
-    g.ax_joint.annotate(f'$r = {r_value:.3f}, p = {p_value:.3f}$',
+    g.ax_joint.annotate(f'$m = {slope:.1f}, R^2 = {r_value:.2f}$',
                     xy=(0.1, 0.8), xycoords='axes fraction',
                     ha='left', va='center',
                     bbox={'boxstyle': 'round', 'fc': 'peachpuff', 'ec': 'coral'})
 
 
     #g.savefig(ImgPath+"SizebyLength2.pdf", transparent=True)
-    SaveFigCheck(g, ImgPath+"SizebyLength2.pdf", overide=overide)
-    SaveFigCheck(g, ImgPath+"SizebyLength2.png", overide=overide)
+    SaveFigCheck(g.fig, ImgPath+"SizebyLength2.pdf", overide=overide)
+    #SaveFigCheck(g, ImgPath+"SizebyLength2.png", overide=overide)
     
     
     #dilation 
     ImgName=ImgPath+"DoubleDilation"+".pdf"
-    if MakeFigCheck(ImgName):
+    if MakeFigCheck(ImgName, overide=overide):
         fig,axes=DoubleDilationPlot(dikeset, lines, binWidth=1700, averageWidth=w)
         
         #fig.savefig(ImgName, transparent=True)
@@ -302,7 +335,7 @@ def allFigures(path1,path2,w, Large=True, overide=False):
 
     
     ImgName=ImgPath+"TripleDilationTrusted"+".pdf"
-    if MakeFigCheck(ImgName):
+    if MakeFigCheck(ImgName, overide=overide):
         fig,axes=TripleDilationPlot(dikeset, lines, binWidth=1700, averageWidth=w)
         
         #fig.savefig(ImgName, transparent=True)
@@ -316,7 +349,7 @@ def allFigures(path1,path2,w, Large=True, overide=False):
     Histograms(dikeset, lines, path2)
     
 
-    HT3(dikeset, lines, path2)
+    HT3(dikeset, lines, path2, overide=overide)
         
     Toplines(lines,dikeset, path2)
     PairGrid(lines, cols, path2)
@@ -334,7 +367,7 @@ def allFigures(path1,path2,w, Large=True, overide=False):
     col1=['Overlap', 'Overlap', 'MaxSegNNDist']
     col2=['EnEchelonAngleDiff', 'MedianSegNNDist', 'EnEchelonAngleDiff' ]
     
-    fig,ax=plotScatterHist(lines, "R_Length", "R_Width", log_scale=True)
+    fig,ax=plotScatterHist(lines, "Dike Cluster Length (km)", "Dike Cluster Width (m)", log_scale=(True, True), bins=10)
     fig.set_size_inches(10,5)
     
     plt.tight_layout()
@@ -366,19 +399,25 @@ def allFigures(path1,path2,w, Large=True, overide=False):
             SaveFigCheck(fig, ImgName, overide=overide)
             plt.close(fig)
                 
-    colLoc=['AvgTheta', 'Overlap', 'Size', 'R_Length', 'R_Width', 'nOverlapingSegments', 'MedianSegNNDist']
-    LocPlots(path2,lines,colLoc)
+    colLoc=['Average Theta ($^\circ$)', 'Overlap', 'Size', 'Dike Cluster Length (km)', 'Dike Cluster Width (m)', 'nOverlapingSegments', 'MedianSegNNDist']
+    LocPlots(path2,lines,colLoc, overide=overide)
     
-    colLoc=['Overlap', 'Size', 'R_Length', 'R_Width', 'nOverlapingSegments','MedianSegNNDist']
-    AnglePlots(path2,lines,colLoc)
+    colLoc=['Overlap', 'Size', 'Dike Cluster Length (km)', 'Dike Cluster Width (m)', 'nOverlapingSegments','MedianSegNNDist']
+    AnglePlots(path2,lines,colLoc, overide=overide)
     
+    fig,ax=plotbyAngleBin(lines, 30, absValue=True)
+    ImgName=ImgPath+"AngleBin"+x+y+".pdf"
+    #fig.savefig(ImgName, transparent=True)
+    SaveFigCheck(fig, ImgName, overide=overide)
+    plt.close(fig)
+
     if Large:
-        plotLargeClusters(dikeset, lines, 10, path2, overide=False)
+        plotLargeClusters(dikeset, lines, 10, path2, overide=True)
         
-        
+    plt.close('all')
         
 def reRunTest():
-    allFigures("/home/akh/myprojects/Linking-and-Clustering-Dikes/dikedata/crb/CJDS_FebStraightened.csv", '/home/akh/myprojects/Linking-and-Clustering-Dikes/dikedata/crb/CJDS_Complete_2_433.csv', 8)
+    allFigures("/home/akh/myprojects/Linking-and-Clustering-Dikes/dikedata/crb/CJDS_FebStraightened.csv", '/home/akh/myprojects/Linking-and-Clustering-Dikes/dikedata/crb/CJDS_Complete_2_433.csv', 8, Large=False, overide=True)
 #def comparisonPlots():
     
     

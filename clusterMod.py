@@ -123,7 +123,19 @@ def CyclicAngleDist(u,v):
 
 def RhoDist(u,v):
     return abs(u[1]-v[1])
-    
+
+
+def TwistToroidalDist(u,v):
+    dtheta = min(( (u[0]+90/2)-(v[0]+90/2)) % 180/2, ( (v[0]+90/2)-(u[0]+90/2)) % 180/2)
+    drho= (np.sign(u[0])+int(u[0]==0))*u[1]-(np.sign(v[0])+int(v[0]==0))*v[1] #u[1]/(np.sin(np.deg2rad(u[0]))+0.000000001)- v[1]/(np.sin(np.deg2rad(v[0]))+0.000000001)
+    return np.sqrt( (drho)**2+ (dtheta)**2)
+
+def TwistToroidalDistScaled(u,v):
+    dtheta = min(( (u[0]+90)-(v[0]+90)) % 180, ( (v[0]+90)-(u[0]+90)) % 180)
+    drho= (np.sign(u[0])+int(u[0]==0))*u[1]-(np.sign(v[0])+int(v[0]==0))*v[1] #u[1]/(np.sin(np.deg2rad(u[0]))+0.000000001)- v[1]/(np.sin(np.deg2rad(v[0]))+0.000000001)
+    return np.sqrt( (drho)**2+ (dtheta/2)**2)
+
+
 def plotDendro(dist1, labels, title):
 
     #https://stackoverflow.com/questions/2982929/plotting-results-of-hierarchical-clustering-ontop-of-a-matrix-of-data-in-python    
@@ -273,14 +285,16 @@ def HT_AGG(dikeset,d):
     
     return clusters
 
+def EuclideanScaled(u,v, dtheta,drho):
+    return np.sqrt( ((u[0]-v[0])/dtheta)**2 + ((u[1]-v[1])/drho)**2 )
 
-
-def HT_AGG_custom(dikeset,dtheta, drho, dimensions=2, linkage='complete', parallel=True):
+def HT_AGG_custom(dikeset,dtheta, drho, dimensions=2, linkage='complete', parallel=True, rotate=False, metric='Euclidean'):
     '''
     Agglomerative clustering with custom metric on Hough transform data
 
     Input:
         dikeset: dataframe with Hough transform data
+        rotate:
         metric: metric to use for clustering
         dimensions (optional): number of dimensions to use for clustering
         linkage (optional) : 
@@ -290,22 +304,32 @@ def HT_AGG_custom(dikeset,dtheta, drho, dimensions=2, linkage='complete', parall
 
     '''
     t,r=whichForm(dikeset)
+    angle=np.median(abs(dikeset[t]))-20
+    
+    if rotate:
+        print("rotating dataset by", angle)
+        dikeset=rotateData2(dikeset,angle)
 
     #scale m unit values
     dikeset['ScaledRho']=dikeset[r].values - dikeset[r].mean()
     
     # create X vector with theta and rho and midist
     if dimensions == 2:
-        X=(np.vstack((dikeset[t], dikeset['rho'])).T)
+        X=(np.vstack((dikeset[t], dikeset[r])).T)
     elif dimensions == 3:
         dikeset['ScaledPerpOffsetDist']=dikeset['PerpOffsetDist'].values-dikeset['PerpOffsetDist'].mean()
         X=(np.vstack((dikeset[t], dikeset['ScaledRho'], dikeset['ScaledPerpOffsetDist'])).T)
 
     threshold=1
-    
+    print('Metric:', metric)
  
-    #if metric == CyclicEuclideanScaled: 
-    metric= lambda u, v: CyclicEuclideanScaled(u,v, dtheta,drho)
+    if metric == 'CyclicEuclideanScaled': 
+        metric= lambda u, v: CyclicEuclideanScaled(u,v, dtheta,drho)
+    if metric == 'Twist':
+        X=X/[1, drho]
+        metric= TwistToroidalDistScaled
+    if metric== 'Euclidean':
+        X=X/[dtheta, drho]
         
     # Create a new AGG instance with the specified metric and dimensions
     
@@ -322,10 +346,21 @@ def HT_AGG_custom(dikeset,dtheta, drho, dimensions=2, linkage='complete', parall
            
     M= pdist(X, metric)
     
-    Z=sch.complete(M)
+    if linkage=='complete':
+        Z=sch.complete(M)
+    elif linkage=='average':
+        Z= sch.average(M)
+    elif linkage=='single':
+        Z=sch.single(M)
+        
+        
     labels=sch.fcluster(Z, t=threshold, criterion='distance')
     #rootnode, nodelist=sch.to_tree(Z)
     dikeset['Labels']=labels
+    
+    #unrotate
+    if rotate:
+        dikeset=rotateData2(dikeset,-1*angle)
    
     
     return dikeset, Z #, rootnode, nodelist
