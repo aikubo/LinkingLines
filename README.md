@@ -1,73 +1,74 @@
-# Linking and Clustering Dikes 
-## Purpose of this Code
-The purpose of this group and respository is to explore the mesoscale structure of dikeswarms associated with Large Igneous Provences. 
-[![DOI](https://zenodo.org/badge/272334230.svg)](https://zenodo.org/badge/latestdoi/272334230)
+
+Linking and Clustering Dikes
+===========================================================
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
+Link to your zenodo DOI as follows: [![DOI](https://zenodo.org/badge/272334230.svg)](https://zenodo.org/badge/latestdoi/272334230)
 
 
-## How to Use this Github 
+About
+-----
+
+`Describe your software in one paragraph. Explain its application, what it can
+do and who should use it. `
+
+Linking and clustering Dike segments uses the Hough Transform and Agglomerative clustering to link together line segments spread over Cartesian space in slope and intercept space. 
 
 
-Sign into your git hub account/ create account. 
+Installation instructions
+-------------------------
 
-###Clone git hub respository
-In your command line interface.
+`Either refer to the`[INSTALL](INSTALL) `file or link to another place where you keep installation instructions.`
 
- `$ git clone https://github.com/aikubo/Linking-and-Clustering-Dikes.git`
- 
-### Before your first commit 
-Update your config file so it is associated with your github account 
-
-```
-git config user.name <name>
-git config user.email <email>
-```
-
-### First time you commit 
-In the git directory 
-
-```
-# add files 
-git add <files>
-# put in a message about what the files do and changes you've made
-git commit -m "message for commit"`
-
-git remote add origin git@github.com:aikubo/Linking-and-Clustering-Dikes.git
-
-git push origin master
-```
-### Work flow 
-Always remember to pull changes when you start working 
+This software uses the conda system to manage python packages. You must have conda, mamba or another env manager efore you can run these files. 
+Download the github repo. Then make the python environment. 
 
 ```
-git pull
-# do your coding 
-git add <files>
-git commit -m "message"
-git push 
-
-git pull
-# Should say Already up to date.
+mamba create dikes_linking --file dikes_linking.yaml
 ```
 
-### Starting a New Branch 
-Let's say you want to change some aspect of the code to try it out. Rather than do this on the `master` copy. Try it on a new branch. A branch allows you to edit your own version of the code and then later merge the change back into the the main branch. 
+Running and extending Linking and Clustering Dikes
+---------------------------------------
 
-```
-# Create new branch
-git checkout -b <name of new branch>
-# push branch to remote
-git push origin
+`Refer to where the user can find instructions on how to run and modify the software. We also recommend adding a quick-start guide here.`
 
-```
-Go to a new branch using 
-```
-git checkout <branch name>
+You can start to use this code using the demostration file "DemoFile_DikeLinking.py". 
 
-```
-It is best practices to always work on your own branch. 
+New projects should begin by placing a copy of this repository into your project repository and modifying the contents of each file as appropriate.
 
 
-### Merge that branch back in 
-Now you've made a new branch and edited some code and are happy with the changes. You can now try to add it back into the main branch. 
-See [tutorial.](https://yangsu.github.io/pull-request-tutorial/#:~:text=From%20Github's%20Using%20Pull%20Requests,follow%2Dup%20commits%20if%20necessary.)
+Citing SOFTWARE_TEMPLATE
+------------------------
 
+`Include information about how to cite SOFTWARE_TEMPLATE. Consider adding citations to both publications and the software itself. For examples, see:` [https://geodynamics.org](https://geodynamics.org/cig/abc).
+
+`We also recommend adding a codemeta file (`[codemeta.json](codemeta.json)`). Generate this file to make your code citable:`[https://codemeta.github.io/codemeta-generator/]( https://codemeta.github.io/codemeta-generator/ ).
+
+Linking and Clustering Dikes is free to use and does not require citation or acknowledgement.
+
+Contributing to our software
+----------------------
+`Describe how to contribute to the project. Consider pointing to a CONTRIBUTING.MD FILE.`
+
+Linking and Clustering Dikes is a community project that lives by the participation of its
+members — i.e., including you! It is our goal to build an inclusive and
+participatory community so we are happy that you are interested in
+participating! We have collected a set of guidelines and advice on how to get
+involved in the community and keep them in the
+[CONTRIBUTING.md](CONTRIBUTING.md) file in the repository.
+
+Feedback and support
+----------------------
+`Explain how a user should provide feedback, report bugs, and get help.`
+
+For support, please make a comment on the repository or email me at akubo@uoregon.edu
+
+To contribute to this project, see [CONTRIBUTING.md](CONTRIBUTING.md).
+
+License
+-------
+This work is licensed under the MIT License, see LICENSE for details.
+`States the license type and links to the full LICENSE file.`
+
+This SOFTWARE_TEMPLATE is published under the [MIT license](LICENSE).
