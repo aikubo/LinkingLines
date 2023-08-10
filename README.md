@@ -1,7 +1,12 @@
-# Linking and Clustering Dikes Working Group 
-## Purpose of this Group 
+# Linking and Clustering Dikes 
+## Purpose of this Code
 The purpose of this group and respository is to explore the mesoscale structure of dikeswarms associated with Large Igneous Provences. 
+[![DOI](https://zenodo.org/badge/272334230.svg)](https://zenodo.org/badge/latestdoi/272334230)
+
+
 ## How to Use this Github 
+
+
 Sign into your git hub account/ create account. 
 
 ###Clone git hub respository
