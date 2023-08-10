@@ -26,7 +26,16 @@ mamba create dikes_linking --file dikes_linking.yaml
 Running and extending Linking and Clustering Dikes
 ---------------------------------------
 
-You can start to use this code using the demostration file "DemoFile_DikeLinking.py". 
+You can start to use this code using the demostration file "DemoFile_DikeLinking.py". We recommend using a tool such as Spyder or VSCode to interact with this software, Spyder was installed with the command to create the environment. 
+
+The demo file shows the entire algorithm from start to finish. 
+
+  1. Preprocess dike segments map from CSV file
+  2. Apply the Hough Transform
+  3. Cluster based on Hough Transform results. You can add your own clustering parameters here such as distance and linkage.
+  4. Evaluate clusters and create clustered lines
+  5. Find and plot radial centers
+  6. Save labeled lines to a CSV with WKT 
 
 New projects should begin by placing a copy of this repository into your project repository and modifying the contents of each file as appropriate.
 
