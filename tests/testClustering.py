@@ -5,6 +5,104 @@
 
 # @author: akh
 # """
+
+def testValidity(lines, dtheta, drho):
+    
+    if any(lines['ThetaRange'] > dtheta):
+        print("Failed Theta Validity Check 1")
+    else: 
+        print("Passed Theta Validity Check 1")
+        
+    if any(lines['RhoRange'] > drho):
+        print("Failed Theta Validity Check 1")
+    else: 
+        print("Passed Theta Validity Check 1")
+
+def Run3Times(dikeset, dtheta, drho, plot=False, **kwargs):
+    xc1,yc1=HT_center(dikeset)
+    # run the first time 
+    dikeset, Z1=HT_AGG_custom(dikeset, dtheta, drho, **kwargs)
+    lines1, IC1=examineClusters(dikeset)
+    
+    # rotate 45 deg 
+    dikeset2=rotateData2(dikeset, 45)
+    theta2, rho2, xc2, yc2=AKH_HT(dikeset2)
+    dikeset2['theta']=theta2
+    dikeset2['rho']=rho2
+    dikeset2, Z2=HT_AGG_custom(dikeset2, dtheta, drho, **kwargs)
+    dikeset2=rotateData2(dikeset2,-45)
+    lines2, IC2=examineClusters(dikeset2)
+    
+    #move to lower left
+    dx=np.min([dikeset['Xstart'].min(), dikeset['Xend'].min()])
+    dy=np.min([dikeset['Ystart'].min(), dikeset['Yend'].min()])
+    theta3, rho3, xc3, yc3=AKH_HT(dikeset, xc=dx,yc=dy)
+    dikeset3=dikeset.copy()
+    dikeset3['theta']=theta3
+    dikeset3['rho']=rho3
+    
+    dikeset3, Z3=HT_AGG_custom(dikeset3, dtheta, drho, **kwargs)
+    
+    lines3, IC3=examineClusters(dikeset3)
+    
+    #check the changes 
+    eq12, diff12=checkClusterChange(lines1, lines2)
+    eq13, diff13=checkClusterChange(lines1, lines3)
+    eq32, diff32=checkClusterChange(lines3, lines2)
+    
+    Flines1=FilterLines(lines1)
+    Flines2=FilterLines(lines2)
+    Flines3=FilterLines(lines3)
+    
+    print("Comparing the filtered lines")
+    eq12, diff12=checkClusterChange(Flines1, Flines2)
+    eq13, diff13=checkClusterChange(Flines1, Flines3)
+    eq32, diff32=checkClusterChange(Flines3, Flines2)
+    
+    if plot: 
+        
+        fig,ax=plt.subplots(1,2)
+        plotlines(lines1, 'k', ax[0])
+        plotlines(lines2, 'b', ax[0])
+        plotlines(lines3, 'r', ax[0])
+        
+        ax[1].scatter(dikeset['theta'], dikeset['rho'], c=dikeset['Labels'].values, alpha=0.6, cmap=cm.Greys, marker='p')
+        ax[1].scatter(dikeset2['theta'], dikeset2['rho'], c=dikeset2['Labels'].values, alpha=0.6, cmap=cm.Blues, marker='*')
+        ax[1].scatter(dikeset3['theta'], dikeset3['rho'], c=dikeset3['Labels'].values, alpha=0.6, cmap=cm.Reds, marker='^')
+        
+        fig,ax=plt.subplots(3,2)
+        
+        plotlines(lines1.iloc[diff12], 'k', ax[0,0])
+        plotlines(lines2.iloc[diff12], 'b', ax[0,1])
+        
+        plotlines(lines1.iloc[diff13], 'k', ax[1,0])
+        plotlines(lines3.iloc[diff13], 'r', ax[1,1])
+        
+        plotlines(lines2.iloc[diff32[diff32<len(lines2)]], 'b', ax[2,0])
+        plotlines(lines3.iloc[diff32], 'r', ax[2,1])
+        
+        
+        
+    return lines1, lines2, lines3
+
+def RotateAndCluster(dikeset,dtheta, drho,**kwargs):
+    dikesetOrig, ZOrig=HT_AGG_custom(dikeset, dtheta, drho)
+    
+    dikeset45=rotateData(dikeset, 45)
+    dikeset45=DikesetReProcess(dikeset45, HTredo=True)
+    dikeset45, Z45=HT_AGG_custom(dikeset45, dtheta, drho)
+    linesOrig=examineClusterShort(dikesetOrig)
+    lines45=examineClusterShort(dikeset45)
+    
+    changedect=checkAllClusterChange(linesOrig, lines45)
+    if changedect:
+        return dikesetOrig
+    if ~changedect:
+        eqLabels, diffLabels=checkIndividualClusterChange(linesOrig, lines45)
+        dikesetFinal=dikesetOrig.iloc[eqLabels[:len(dikesetOrig)]]
+
+        return dikesetFinal
+    
 # from scipy.cluster import hierarchy
 # from scipy.spatial.distance import squareform
 # import pandas as pd
