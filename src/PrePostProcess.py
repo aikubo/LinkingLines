@@ -5,11 +5,25 @@ Created on Thu Jul  1 11:04:53 2021
 
 @author: akh
 
-Contains various preprocessing data and post processing 
+Contains various preprocessing data and post processing including reading in
+WKT files and exporting WKT files to use in GIS programs
 
-    writeToWQGIS makes the dataframe into a WKT (well known text) string and writes as CSV (comma seperated values)
+    writeToQGIS makes the dataframe into a WKT (well known text) string and writes as CSV (comma seperated values)
+    writeToQGISLong: writes to QGIS after examineMod/extendlines has been applied
     WKTtoArray processes from a WKT CSV to a pandas Dataframe with columns Xstart,Ystart,Xend,Yend,seg_length
     giveID gives a numeric ID to data
+    midPoint: Finds the midpoint of a dataframe of line segments.
+    giveHashID: assigns hash ID to a dataframe based on line endpoints.
+    segLength: calculates segment length
+    transformXstart: reorders dataframe so that Xstart is always < Xend
+    DikesetReprocess: Reprocesses a dataframe containing dike line data to ensure it has essential attributes and is properly formatted.
+    LinesReprocess: Reprocesses a dataframe containing line data to ensure it has essential attributes and is properly formatted.
+    CompletePreprocess:     Fully preprocesses a dataframe containing line data to ensure it has essential attributes and is properly formatted.
+    whichForm: Returns the form of the dataframe column names 
+    MaskArea: Returns dataframe masked by bounds 
+    getCartLimits: Computes the Cartesian limits (x and y) of a set of lines.
+    
+    
 """
 import pandas as pd
 import numpy as np 
@@ -49,11 +63,11 @@ def writeToQGIS(df,name, myProj=None):
     Uses well known text (WKT) to write the data as readable line vectors in QGIS.
     Uses the WKTtoArray function to process the dataframe.
     
-    Input:
+    Parameters:
         df: a pandas dataframe with columns Xstart,Ystart,Xend,Yend,seg_length
         name: the name of the file to be written
         myProj: the projection of the dataframe. If none is given, the projection is set to WGS84
-        Output:
+        Returns:
             A CSV file with the dataframe in the format of a QGIS layer
             """
     
@@ -75,16 +89,17 @@ def writeToQGISLong(df,name, myProj=None):
     
     """
     Writes a dataframe to a CSV file in the format of a QGIS layer.
+    with the lines extended by examineMod/extendLines
     Uses well known text (WKT) to write the data as readable line vectors in QGIS.
 
-    Input:
+    Parameters:
         df: a pandas dataframe with columns Xstart,Ystart,Xend,Yend,seg_length
 
         name: the name of the file to be written
 
         myProj: the projection of the dataframe. If none is given, the projection is set to WGS84
 
-    Output:
+    Returns:
         A CSV file with the dataframe in the format of a QGIS layer
     """
         
@@ -106,9 +121,9 @@ def WKTtoArray(df, plot=False):
     '''
     Processes a dataframe with columns Xstart,Ystart,Xend,Yend,seg_length to a pandas dataframe with columns Xstart,Ystart,Xend,Yend,seg_length
 
-    Input:
+    Parameters:
         df: a pandas dataframe with a Linestring column containing WKT strings
-    Output:
+    Returns:
         df: a pandas dataframe with columns Xstart,Ystart,Xend,Yend,seg_length
     '''
     #import matplotlib.pyplot as plt
@@ -224,9 +239,9 @@ def giveHashID(df):
     """
     Gives a hash ID to a dataframe based on line endpoints.
 
-    Input:
+    Parameters:
         df: a pandas dataframe with columns Xstart,Ystart,Xend,Yend,seg_length
-    Output:
+    Returns:
         df: a pandas dataframe with columns HashID
     """
 
@@ -239,18 +254,19 @@ def giveHashID(df):
     return df
 
 def segLength(df):
-    length=np.sqrt( (df['Xstart']-df['Xend'])**2 + (df['Ystart']-df['Yend'])**2)
-    df['seg_length']=length
+    """
+    Computes and adds a 'seg_length' column to a DataFrame, representing the length of line segments.
+
+    Parameters:
+        df (DataFrame): The input DataFrame containing line data with 'Xstart', 'Xend', 'Ystart', and 'Yend' columns.
+
+    Returns:
+        DataFrame: The input DataFrame with an additional 'seg_length' column representing the length of line segments.
+    """
+    length = np.sqrt((df['Xstart'] - df['Xend'])**2 + (df['Ystart'] - df['Yend'])**2)
+    df['seg_length'] = length
     return df
 
-    
-def preprocess(df):
-    col=[x.upper() for x in df.columns]
-    df=giveID(df)
-    if "SEG_LENGTH" not in col:
-        df=segLength(df)
-        
-    return df
 
 def transformXstart(dikeset, HTredo=True):
     """
@@ -289,35 +305,52 @@ def transformXstart(dikeset, HTredo=True):
     return dikeset
 
 def DikesetReProcess(df, HTredo=True, xc=None, yc=None):
+    """
+    Reprocesses a dataframe containing dike line data to ensure it has essential attributes and is properly formatted.
 
+    Parameters:
+        df (DataFrame): The input dataframe containing dike line data.
+        HTredo (bool, optional): Whether to recalculate Hough Transform attributes (default is True).
+        xc (float, optional): The x-coordinate of the center point for the Hough Transform (default is None).
+        yc (float, optional): The y-coordinate of the center point for the Hough Transform (default is None).
+
+    Returns:
+        DataFrame: The processed dataframe with added or updated attributes.
+    """
+    # Check and transform dataframe columns if necessary
     if 'Xstart' not in df.columns:
-        df=WKTtoArray(df)
-    if 'seg_length' not in df.columns:        
-        df=segLength(df)
-    df=transformXstart(df)
+        df = WKTtoArray(df)
+    if 'seg_length' not in df.columns:
+        df = segLength(df)
+    df = transformXstart(df)
     
+    # Calculate Hough Transform center coordinates if not provided
     if xc is None or yc is None:
-        xc,yc=HT_center(df)
+        xc, yc = HT_center(df)
     
-       
-    df=giveHashID(df)
-    l=len(df)
-    print( l, 'dikes')
-    df=df.drop_duplicates(subset=['HashID'])
-    if l is not len(df):
-        print("Found", l-len(df), "duplicates")
-        
-    if 'Xmid' not in df.columns: 
-        df=midPoint(df)
-        
+    # Assign unique hash IDs to the dataframe
+    df = giveHashID(df)
+    
+    # Remove duplicate entries and report any found duplicates
+    l = len(df)
+    df = df.drop_duplicates(subset=['HashID'])
+    if l != len(df):
+        print("Found", l - len(df), "duplicates")
+    
+    # Calculate midpoints if not present
+    if 'Xmid' not in df.columns:
+        df = midPoint(df)
+    
+    # Calculate Hough Transform attributes (theta, rho) if not present
     if 'theta' not in df.columns or 'rho' not in df.columns:
-        theta,rho,xc,yc=HT(df, xc=xc, yc=yc)
-        df['theta']=theta
-        df['rho']=rho
+        theta, rho, xc, yc = HT(df, xc=xc, yc=yc)
+        df['theta'] = theta
+        df['rho'] = rho
+    
+    # Assign or update Hough Transform center coordinates
     if 'xc' not in df.columns:
-        theta,rho,xc,yc=HT(df, xc=xc, yc=yc)
-        df=df.assign(theta=theta, xc=xc, rho=rho, yc=yc)
-
+        theta, rho, xc, yc = HT(df, xc=xc, yc=yc)
+        df = df.assign(theta=theta, xc=xc, rho=rho, yc=yc)
         df=MidtoPerpDistance(df, xc, yc)
     elif xc is not df['xc'].iloc[0] and HTredo:
         theta,rho,xc,yc=HT(df, xc=xc, yc=yc)
@@ -347,69 +380,94 @@ def DikesetReProcess(df, HTredo=True, xc=None, yc=None):
     return df 
 
 def LinesReProcess(df, HTredo=True):
+    """
+    Reprocesses a dataframe containing line data to ensure it has essential attributes and is properly formatted.
 
-        
-    xc,yc=HT_center(df)
-    df=transformXstart(df)
-       
-    df=giveHashID(df)
-    l=len(df)
-    print( l, 'dikes')
-    df=df.drop_duplicates(subset=['HashID'])
-    if l is not len(df):
-        print("Found", l-len(df), "duplicates")
-    if 'Xmid' not in df.columns: 
-        df=midPoint(df)
+    Parameters:
+        df (DataFrame): The input dataframe containing line data.
+        HTredo (bool, optional): Whether to recalculate Hough Transform attributes (default is True).
+
+    Returns:
+        DataFrame: The processed dataframe with added or updated attributes.
+    """
+    # Calculate Hough Transform center coordinates and transform 'Xstart' if necessary
+    xc, yc = HT_center(df)
+    df = transformXstart(df)
     
-    if HTredo: 
-        theta,rho,xc,yc=HT(df)
+    # Assign unique hash IDs to the dataframe
+    df = giveHashID(df)
+    
+    # Remove duplicate entries and report any found duplicates
+    l = len(df)
+    df = df.drop_duplicates(subset=['HashID'])
+    if l != len(df):
+        print("Found", l - len(df), "duplicates")
+    
+    # Calculate midpoints if not present
+    if 'Xmid' not in df.columns:
+        df = midPoint(df)
+    
+    # Calculate or recalculate Hough Transform attributes (theta, rho)
+    if HTredo:
+        theta, rho, xc, yc = HT(df)
+        df = MidtoPerpDistance(df, xc, yc)
+        df = df.assign(yc=yc, xc=xc, AvgTheta=theta, AvgRho=rho)
+        df = df.assign(xc=xc)
+    
+    # Calculate perpendicular offset distances if not present
+    if 'PerpOffsetDist' not in df.columns:
+        df = MidtoPerpDistance(df, xc, yc)
 
-        df=MidtoPerpDistance(df, xc, yc)
-        df=df.assign(yc=yc, xc=xc, AvgTheta=theta, AvgRho=rho)
-        df=df.assign(xc=xc)
-
-        
-    if 'PerpOffsetDist' not in df.columns: 
-        df=MidtoPerpDistance(df, xc, yc)
-
-    now = datetime.now() 
+    # Assign the processing date
+    now = datetime.now()
     d = now.strftime("%d %b, %Y")
+    df = df.assign(Date_Changed=d)
 
-    df=df.assign(Date_Changed=d)
-
-    
-    return df 
-
-    
+    return df
 
 def completePreProcess(df):
-    
+    """
+    Fully preprocesses a dataframe containing line data to ensure it has essential attributes and is properly formatted.
+
+    Parameters:
+        df (DataFrame): The input dataframe containing line data.
+
+    Returns:
+        DataFrame: The fully processed dataframe with all required attributes.
+    """
+    # Convert WKT column to array format if present
     if "WKT" in df.columns:
-        df=WKTtoArray(df)
-    df=transformXstart(df)
-    df=segLength(df)
+        df = WKTtoArray(df)
+    
+    # Transform 'Xstart', calculate segment lengths, and assign unique hash IDs
+    df = transformXstart(df)
+    df = segLength(df)
+    df = giveHashID(df)
 
-    df=giveHashID(df)
+    # Calculate midpoints
+    df = midPoint(df)
 
-    df=midPoint(df)
-
-    theta,rho,xc,yc=HT(df)
-    df['theta']=theta
-    df['rho']=rho
-    df['yc']=yc
-    df['xc']=xc
-    df=MidtoPerpDistance(df, xc, yc)
-    now = datetime.now() 
+    # Calculate Hough Transform attributes (theta, rho, xc, yc) and perpendicular offset distances
+    theta, rho, xc, yc = HT(df)
+    df['theta'] = theta
+    df['rho'] = rho
+    df['yc'] = yc
+    df['xc'] = xc
+    df = MidtoPerpDistance(df, xc, yc)
+    
+    # Assign the processing date
+    now = datetime.now()
     d = now.strftime("%d %b, %Y")
-
-    df['Date Changed']=[d]*len(df)
-    l=len(df)
-    print( l, 'dikes')
-    df=df.drop_duplicates(subset=['HashID'])
-    if l is not len(df):
-        print("Found", l-len(df), "duplicates")
+    df['Date Changed'] = [d] * len(df)
+    
+    # Remove duplicate entries and report any found duplicates
+    l = len(df)
+    df = df.drop_duplicates(subset=['HashID'])
+    if l != len(df):
+        print("Found", l - len(df), "duplicates")
         
     return df
+
 
 
 
@@ -417,9 +475,9 @@ def whichForm(lines):
     '''
     Returns the form of the dataframe column names 
 
-    Input:
+    Parameters:
         lines: a dataframe with columns containing theta, rho values 
-    Output: 
+    Returns: 
         form: a string with the form of the dataframe column names 
     
     '''
@@ -448,12 +506,12 @@ def MaskArea(df, bounds):
     
     """
     Returns dataframe masked by bounds 
-    Input: 
+    Parameters 
         df: pandas.dataframe with columns 'Xstart' and 'YStart'
         bounds: X and Y bounds in form [x1, y1, x2, y2]
         x1<x2 and y1<y2
         
-    Output: 
+    Returns: 
         df_masked: returns all values for dataframe within those area bounds
     """
     
@@ -467,29 +525,31 @@ def MaskArea(df, bounds):
     return df_masked
 
 def FilterLines(lines):
-    mask=lines['TrustFilter']==1
+    """
+    Filters lines based on a trust filter.
+
+    Parameters:
+        lines (DataFrame): The input dataframe containing line data.
+
+    Returns:
+        DataFrame: A filtered dataframe containing only the lines marked as trusted (TrustFilter == 1).
+    """
+    mask = lines['TrustFilter'] == 1
     return lines[mask]
 
-def LoadCJDS():
-    lines=pd.read_csv('/home/akh/myprojects/Linking-and-Clustering-Dikes/dikedata/crb/AllCRBLinked_euc_18_10_2022.csv')
-    dikeset=pd.read_csv("/home/akh/myprojects/Linking-and-Clustering-Dikes/dikedata/crb/CJDS_FebStraightened.csv")
-    
-    return dikeset, lines
-
-def LoadCentral():
-    lines=pd.read_csv('/home/akh/myprojects/Linking-and-Clustering-Dikes/dikedata/deccandata/Central_Complete_euc_2_3436.csv')
-    dikeset=pd.read_csv("/home/akh/myprojects/Linking-and-Clustering-Dikes/dikedata/deccandata/Central_preprocesed.csv")
-    
-    return dikeset, lines
-def LoadNT():
-
-    lines=pd.read_csv('/home/akh/myprojects/Linking-and-Clustering-Dikes/dikedata/deccandata/NarmadaTapi_Complete_euc_2_1730.csv')
-    dikeset=pd.read_csv("/home/akh/myprojects/Linking-and-Clustering-Dikes/dikedata/deccandata/NarmadaTapi_preprocesed.csv")
-    
-    return dikeset, lines
 
 def getCartLimits(lines):
-    xlim=[ np.min( [lines['Xstart'].min(), lines['Xend'].min()]), np.max( [lines['Xstart'].max(), lines['Xend'].max()])]
-    ylim=[ np.min( [lines['Ystart'].min(), lines['Yend'].min()]), np.max( [lines['Ystart'].max(), lines['Yend'].max()])]
+    """
+    Computes the Cartesian limits (x and y) of a set of lines.
+
+    Parameters:
+        lines (DataFrame): The input dataframe containing line data.
+
+    Returns:
+        tuple: A tuple containing the x and y limits (xlim, ylim) as lists [min, max].
+    """
+    xlim = [np.min([lines['Xstart'].min(), lines['Xend'].min()]), np.max([lines['Xstart'].max(), lines['Xend'].max()])]
+    ylim = [np.min([lines['Ystart'].min(), lines['Yend'].min()]), np.max([lines['Ystart'].max(), lines['Yend'].max()])]
     return xlim, ylim
+
 
