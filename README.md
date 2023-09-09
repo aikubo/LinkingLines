@@ -1,73 +1,66 @@
-# Linking and Clustering Dikes 
-## Purpose of this Code
-The purpose of this group and respository is to explore the mesoscale structure of dikeswarms associated with Large Igneous Provences. 
+
+Linking and Clustering Dikes
+===========================================================
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
 [![DOI](https://zenodo.org/badge/272334230.svg)](https://zenodo.org/badge/latestdoi/272334230)
 
 
-## How to Use this Github 
+About
+-----
+
+Linking and clustering Dike segments uses the Hough Transform and Agglomerative clustering to link together line segments spread over Cartesian space in slope and intercept space. This software was designed to link dissected segments of dikes in Large Igneous Provinces mainly the Columbia River Basalt Group and the Deccan Traps. However, any type of line segment can be linked and clustered and this software has applications in geosciences and planetary sciences. 
 
 
-Sign into your git hub account/ create account. 
+Installation instructions
+-------------------------
 
-###Clone git hub respository
-In your command line interface.
-
- `$ git clone https://github.com/aikubo/Linking-and-Clustering-Dikes.git`
- 
-### Before your first commit 
-Update your config file so it is associated with your github account 
-
-```
-git config user.name <name>
-git config user.email <email>
-```
-
-### First time you commit 
-In the git directory 
+This software uses the conda system to manage python packages. You must have conda, mamba or another env manager before you can run these files. We prefer mamba, see documentation [here](https://mamba.readthedocs.io/en/latest/user_guide/mamba.html).
+Download the github repository using the web interface or commandline. Then make the python environment in the repository directory using the command line command: 
 
 ```
-# add files 
-git add <files>
-# put in a message about what the files do and changes you've made
-git commit -m "message for commit"`
-
-git remote add origin git@github.com:aikubo/Linking-and-Clustering-Dikes.git
-
-git push origin master
-```
-### Work flow 
-Always remember to pull changes when you start working 
-
-```
-git pull
-# do your coding 
-git add <files>
-git commit -m "message"
-git push 
-
-git pull
-# Should say Already up to date.
+mamba create dikes_linking --file dikes_linking.yaml
 ```
 
-### Starting a New Branch 
-Let's say you want to change some aspect of the code to try it out. Rather than do this on the `master` copy. Try it on a new branch. A branch allows you to edit your own version of the code and then later merge the change back into the the main branch. 
+Running and extending Linking and Clustering Dikes
+---------------------------------------
 
-```
-# Create new branch
-git checkout -b <name of new branch>
-# push branch to remote
-git push origin
+You can start to use this code using the demostration file "DemoFile_DikeLinking.py". We recommend using a tool such as Spyder or VSCode to interact with this software, Spyder was installed with the command to create the environment. 
 
-```
-Go to a new branch using 
-```
-git checkout <branch name>
+The demo file shows the entire algorithm from start to finish. 
 
-```
-It is best practices to always work on your own branch. 
+  1. Preprocess dike segments map from CSV file
+  2. Apply the Hough Transform
+  3. Cluster based on Hough Transform results. You can add your own clustering parameters here such as distance and linkage.
+  4. Evaluate clusters and create clustered lines
+  5. Find and plot radial centers
+  6. Save labeled lines to a CSV with WKT 
+
+New projects should begin by placing a copy of this repository into your project repository and modifying the contents of each file as appropriate.
 
 
-### Merge that branch back in 
-Now you've made a new branch and edited some code and are happy with the changes. You can now try to add it back into the main branch. 
-See [tutorial.](https://yangsu.github.io/pull-request-tutorial/#:~:text=From%20Github's%20Using%20Pull%20Requests,follow%2Dup%20commits%20if%20necessary.)
+Citing Linking and Clustering Dikes
+------------------------
+This code was used to create the results of [Kubo Hutchison et al., 2023]() published in G Cubed. Please refer to the paper for the interpretation of dike linking and application to Large Igneous Provinces. 
 
+Linking and Clustering Dikes is free to use and does not require citation or acknowledgement.
+
+Contributing to our software
+----------------------
+
+Linking and Clustering Dikes is a community project that lives by the participation of its
+members — i.e., including you!
+
+Feedback and support
+----------------------
+
+For support, please make a comment on the repository or email me at akubo@uoregon.edu
+
+To contribute to this project, see [CONTRIBUTING.md](CONTRIBUTING.md).
+
+License
+-------
+This work is licensed under the MIT License, see LICENSE for details.
+
+This SOFTWARE_TEMPLATE is published under the [MIT license](LICENSE).
