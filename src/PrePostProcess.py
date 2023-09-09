@@ -201,67 +201,6 @@ def WKTtoArray(df, plot=False):
     
     return df
         
-# def WKTtoArray(df):
-
-#     '''
-#     Processes a dataframe with columns Xstart,Ystart,Xend,Yend,seg_length to a pandas dataframe with columns Xstart,Ystart,Xend,Yend,seg_length
-
-#     Input:
-#         df: a pandas dataframe with a Linestring column containing WKT strings
-#     Output:
-#         df: a pandas dataframe with columns Xstart,Ystart,Xend,Yend,seg_length
-#     '''
-#     import re
-#     xstart=[]
-#     ystart=[]
-    
-#     xend=[]
-#     yend=[]
-#     drop=[]
-#     for i in range(len(df)):
-#         temp=df["WKT"].iloc[i]
-#         temp=re.split(r'[(|)]', temp)[2]
-#         temp=re.split(r'[,\s]+', temp)
-        
-#         if len(temp) < 4 :
-#             drop.append(i)
-#             continue
-        
-#         tempx=np.array(temp[::2]).astype(float)
-#         tempy=np.array(temp[1::2]).astype(float)
-        
-        
-#         from scipy import stats
-#         slope, intercept, r_value, p_value, std_err = stats.linregress(tempx, tempy)
-#         #for x,y in zip(tempx, tempy):
-#         #    m= 
-       
-#         if len(temp)%3 == 0 and '0' in temp: 
-#             xstart.append(float(temp[0]))
-#             ystart.append(float(temp[1]))
-#             xend.append(float(temp[-3]))
-#             yend.append(float(temp[-2]))
-#         else: 
-#             xstart.append(float(temp[0]))
-#             ystart.append(float(temp[1]))
-#             xend.append(float(temp[-2]))
-#             yend.append(float(temp[-1]))
-#         #print(temp)
-            
-            
-#     length=np.sqrt((np.array(xstart)-np.array(xend))**2+(np.array(ystart)-np.array(yend))**2)
-    
-#     if len(drop) >= 0:
-#         df=df.drop(drop)
-
-#     print(len(df), len(xstart))
-#     df['Xstart']=xstart
-#     df['Ystart']=ystart
-#     df['Xend']=xend
-#     df['Yend']=yend
-#     df['seg_length']=length
-    
-#     return df
 
 def giveID(df):
     """

@@ -4,40 +4,94 @@
 Created on Thu Apr  1 12:54:02 2021
 
 @author: akh
+
+examineMod: Module for examining and analyzing line clusters.
+
+This module provides functions to analyze and examine line clusters, including computing bounding rectangles, 
+evaluating cluster properties, and checking for changes between clusters.
+
+Functions:
+    - OutputRectangles(clusters): Compute the coordinates of bounding rectangles for each cluster.
+    - examineCluster(clusters): Generate a summary of properties for each cluster in a set of line clusters.
+    - examineClustersShort(clusters): Generate a summary of properties for clusters in a set of line clusters.
+    - checkClusterChange(lines1, lines2): Check if two sets of line clusters are the same.
+    - checkoutCluster(clusters,label): Display information and plots related to a cluster of lines.
+    - checkoutClusterCart(clusters, label): Display information and plots related to a cluster of lines.in Cartesian space
+    - checkoutby(dikeset, lines, col): plot information based on cluster metrics
+    - RotateOverlap(lines):Calculate the overlap ratio and maximum overlap count of lines after rotation.
+    - enEchelonTwistAngle:Calculate the angle twist and statistical significance of features.
+    -extendLines(lines):Extends lines in dataframe up to min(x)*.5 and max(x)*1.5
+        
+    
+Dependences: 
+
+    fitRectangle (this package)
+    htMOD (this package)
+    plotMod (this package)
+    statsmodels
+    scipy
+    matplotlib
+    numpy
+    pandas
 """
+
 import numpy as np 
 import pandas as pd 
 from fitRectangle import *
 from htMOD import HT_center
 from plotmod import HThist, plotlines, DotsHT, FixAxisAspect, clustered_lines, pltRec, FixCartesianLabels
-from sklearn.neighbors import NearestNeighbors
-from sklearn.preprocessing import scale
+
 from PrePostProcess import *
-from htMOD import rotateData2
+from htMOD import rotateData, CyclicAngleDist
 from clusterMod import *
 import statsmodels.api as sm
 from matplotlib.colors import ListedColormap, LinearSegmentedColormap
 
 from PrePostProcess import completePreProcess, whichForm, midPoint
-import scipy.cluster.hierarchy as sch
-from scipy.spatial.distance import squareform
-from scipy.cluster.hierarchy import dendrogram
-from scipy.spatial.distance import pdist, squareform
 
-import matplotlib.ticker as mticker
+
 import matplotlib.pyplot as plt 
 from scipy import stats
 import warnings
 from matplotlib import cm
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
-import os 
+
 from datetime import datetime
 
 
 def checkoutCluster(dikeset, label):
+    """
+    Display information and plots related to a cluster of lines.
 
-        
-        
+    Parameters:
+        dikeset (DataFrame): A DataFrame containing line data with columns 'xc', 'yc', 'Labels', 'theta', and 'rho'.
+        label (int): The label of the cluster to be analyzed.
+
+    Returns:
+        fig, ax (tuple): A tuple containing the Figure and Axes objects for the generated plots.
+
+    This function takes a DataFrame containing line data and a label specifying a cluster of lines. It generates two subplots:
+    1. Scatter plot of lines' theta and rho values, highlighting the selected cluster in red.
+    2. Rectangle plot showing the lines in the cluster along with additional information.
+
+    The function calculates and displays the following information:
+    - Mean angle (in degrees) of the lines in the cluster.
+    - Mean rho (in km) of the lines in the cluster.
+    - Length and width of the cluster.
+    - Aspect ratio (length/width) of the cluster.
+    - Size of the cluster (number of lines).
+
+    Additionally, it handles cases where the cluster crosses the zero angle boundary and adjusts the plot accordingly.
+
+    Note:
+    - The input DataFrame 'dikeset' must contain columns 'xc', 'yc', 'Labels', 'theta', and 'rho'.
+    - 'label' specifies the cluster to be analyzed.
+    - The function returns the Figure and Axes objects for further customization or saving.
+
+    Example usage:
+    fig, ax = checkoutCluster(lines, 2)
+    plt.show()
+    """
 
     xc=dikeset['xc'].iloc[0]
     yc=dikeset['yc'].iloc[0]
@@ -50,14 +104,13 @@ def checkoutCluster(dikeset, label):
     size=len(lines)
     
     if abs(np.sum(np.sign(lines['theta'].values))) < size: 
-        crossZero=True
+
 
         ang=np.mean(abs(lines['theta'].values))
-        tol=6
+
         if np.isclose(ang,0, atol=4):
             ang=np.mean((lines['theta'].values))
     else:
-        crossZero=False
         ang=np.average((lines['theta']))
         
         
@@ -119,33 +172,6 @@ def checkoutCluster(dikeset, label):
     FixCartesianLabels(ax4)
     FixCartesianLabels(ax[1])
     FixAxisAspect(ax[0],ax[1])
-    # " Need to fix the aspect ratios now"
-    
-    # figW0, figH0 = ax[0].get_figure().get_size_inches()
-    # # Axis size on figure
-    # _, _, w0, h0 = ax[0].get_position().bounds
-    # # Ratio of display units
-    # disp_ratio0 = (figH0 * h0) / (figW0 * w0)
-    
-    # figW1, figH1 = ax[1].get_figure().get_size_inches()
-    # # Axis size on figure
-    # _, _, w1, h1 = ax[1].get_position().bounds
-    # # Ratio of display units
-    # disp_ratio1 = (figH1 * h1) / (figW1 * w1)
-    
-    # if h0 > h1:
-    #     ratio=h0/h1
-    #     y_min, y_max = ax[1].get_ylim()
-    #     deltay=(y_max-y_min)*ratio/2
-    #     ax[1].set_ylim(y_min-deltay, y_max+deltay)
-    #     print('reset Y')
-        
-    # if w0>w1:
-    #     ratio=w0/w1
-    #     y_min, y_max = ax[1].get_xlim()
-    #     deltay=(y_max-y_min)*ratio/2
-    #     ax[1].set_xlim(y_min-deltay, y_max+deltay)
-    #     print('reset X')
     
     if np.sign(ang)>0:
         tlocy=0.95
@@ -180,7 +206,31 @@ def checkoutCluster(dikeset, label):
 
     return fig,ax
 
-def checkoutClusterCart(dikeset,label,fig, ax):
+def checkoutClusterCart(dikeset, label, fig, ax):
+    """
+    Visualize and annotate cluster information in a Cartesian coordinate system.
+
+    Parameters:
+        dikeset (DataFrame): A DataFrame containing line data with columns 'xc', 'yc', 'Labels', 'theta', and 'rho'.
+        label (int): The label of the cluster to be analyzed.
+        fig (Figure): The Figure object for plotting.
+        ax (Axes): The Axes object for plotting.
+
+    Returns:
+        ax (Axes): The updated Axes object after plotting and annotation.
+
+    This function visualizes cluster information in a Cartesian coordinate system. It takes a DataFrame containing line data,
+    a cluster label, and Figure and Axes objects for plotting. The function generates a plot of the cluster's line segments,
+    annotates the plot with information such as the mean angle, length, width, and size of the cluster, and adjusts the plot
+    based on the cluster's orientation.
+
+    The function also prints the cluster's angle mean, rho mean, length, and width for reference.
+
+    Example usage:
+    fig, ax = plt.subplots()
+    ax = checkoutClusterCart(line_data, 2, fig, ax)
+    plt.show()
+    """
 
     xc=dikeset['xc'].iloc[0]
     yc=dikeset['yc'].iloc[0]
@@ -228,24 +278,7 @@ def checkoutClusterCart(dikeset,label,fig, ax):
             loc=3
             tlocx=.60
             tlocx2=.05
-        
     
-    # ax4 =inset_axes(ax,
-    #                 width="20%",  # width = 20% of parent_bbox width
-    #                 height="20%",  # height : 20%
-    #                 loc=loc)
-
-    # plotlines(dikeset, 'grey', ax4, alpha=0.1)
-    # plotlines(lines, 'r', ax4)
-    # ax4.xaxis.tick_top()
-    # ax4.xaxis.set_label_position('top') 
-    
-    #if ang> 0:
-       # ax4.yaxis.tick_right()
-       # ax4.yaxis.set_label_position('right') 
-        
-
-    #FixCartesianLabels(ax4)
     FixCartesianLabels(ax)
 
     
@@ -267,11 +300,42 @@ def checkoutClusterCart(dikeset,label,fig, ax):
     print('Width: '+str(round(w,1)))
     return ax
 
-# def overlap(min1, max1, min2, max2):
-#     return max(0, min(max1, max2) - max(min1, min2))
-
 def CheckoutBy(dikeset, lines, col, maximum=True, minimum=False):
-    
+    """
+    Display cluster information and plots for lines with maximum or minimum values in a specified column.
+
+    Parameters:
+        dikeset (DataFrame): A DataFrame containing line data with columns 'xc', 'yc',
+        'Labels', 'theta', and 'rho'.
+        lines (DataFrame): A DataFrame containing line data with a 'Label' column and 
+        the specified 'col' column.
+        col (str): The column name in 'lines' to identify the maximum or minimum values.
+        maximum (bool): If True, display information and plots for lines with the maximum 'col' value.
+        minimum (bool): If True, display information and plots for lines with the minimum 'col' value.
+
+    Returns:
+        fig, ax (tuple): A tuple containing the Figure and Axes objects for the generated plots.
+
+    Notes:
+    This function allows you to analyze and visualize clusters of lines based 
+    on the maximum or minimum values in a specified column. It can display 
+    cluster information and plots for both maximum and minimum values independently.
+
+    Parameters 'dikeset' and 'lines' should contain the necessary line data,
+    and 'col' should specify the column in 'lines' to determine maximum or 
+    minimum values. You can choose to display information for maximum values,
+    minimum values, or both by setting the 'maximum' and 'minimum' flags accordingly.
+
+    The function utilizes the 'checkoutCluster' function to generate cluster 
+    information and plots and prints the label and the corresponding maximum or 
+    minimum value of the specified column.
+
+    Example usage:
+    fig, ax = CheckoutBy(lines, dikeset, 'theta', maximum=True, minimum=True)
+    plt.show()
+    """
+
+
     if maximum:
         loc=np.nanargmax(lines[col].values)
         label=lines['Label'].iloc[loc]
@@ -287,11 +351,43 @@ def CheckoutBy(dikeset, lines, col, maximum=True, minimum=False):
         
     return fig,ax
 
-
 def RotateOverlap(lines):
+    """
+    Calculate the overlap ratio and maximum overlap count of lines after rotation.
+
+    Parameters:
+        lines (DataFrame): A DataFrame containing line data with 'theta', 'Xstart', and 'Xend' columns.
+
+    Returns:
+        overlap (float): The ratio of overlapping line segments after rotation.
+        max_overlap_count (int): The maximum count of overlapping line segments along the rotated x-axis.
+
+    This function takes a DataFrame of line data and performs the following steps:
+    1. Calculates the mean angle ('theta') of the lines.
+    2. Rotates the line data by the complementary angle (90 degrees minus the mean angle).
+    3. Transforms the 'Xstart' values to ensure they are in the correct order.
+    4. Computes the total length of the line segments.
+    5. Determines the overlapping segments along the rotated x-axis and calculates the overlap ratio.
+
+    The overlap ratio is defined as the ratio of the length of overlapping 
+    segments to the total length of the segments. Higher ratios are more overlap
+    
+    A ratio of 1 would indicate it has two segments that are totally overlapping 
+    while a ratio of 2 would indicate 3 segments totally overlapping.
+    
+    The maximum overlap count represents the maximum number of overlapping 
+    segments along the rotated x-axis.
+
+    Example usage:
+    overlap, max_overlap_count = RotateOverlap(line_data)
+    print("Overlap Ratio:", overlap)
+    print("Maximum Overlap Count:", max_overlap_count)
+    """
+
+
     theta=np.mean(lines['theta'].values)
     
-    dfRotated=rotateData2(lines, (90-theta))
+    dfRotated=rotateData(lines, (90-theta))
     dfRotated=transformXstart(dfRotated)
     
     
@@ -318,9 +414,41 @@ def RotateOverlap(lines):
         
     return overlap, np.max(xcounts)
 
-
-
 def enEchelonAngleTwist(d, avgtheta):
+    """
+    Calculate the angle twist and statistical significance for en échelon features.
+
+    Parameters:
+        d (DataFrame): A DataFrame containing en échelon line segment data with 'Xstart', 'Xend', 'Ystart', 'Yend', 
+                       'Xmid', and 'Ymid' columns.
+        avgtheta (float): The average angle (in degrees) for alignment comparison.
+
+    Returns:
+        angle_twist (float): The angle twist between the average angle and the en échelon feature's orientation.
+        p_value (float): The p-value indicating the statistical significance of the alignment.
+        
+        Xstart (float): The starting x-coordinate of the midpoints line.
+        Xend (float): The ending x-coordinate of the midpoints line.
+        Ystart (float): The corresponding y-coordinate at the starting x-coordinate.
+        Yend (float): The corresponding y-coordinate at the ending x-coordinate.
+
+    This function analyzes features represented as line segments and performs the following steps:
+    1. Fits a linear regression model to the midpoints of the  line feature to estimate its orientation.
+    3. Computes the p-value for the linear regression to assess the statistical significance of the alignment.
+    4. If the p-value is above 0.05, the angle twist is set to 0 (indicating no significant alignment).
+    5. If the p-value is below 0.05 (inidicating significant allignment of midpoints)
+    it caluclates the angle difference between the line created by the midpoints
+    and the average angle of the lines
+
+    Example usage:
+    angle_twist, p_value, Xstart, Xend, Ystart, Yend = enEchelonAngleTwist(en_echelon_data, 30.0)
+    print("Angle Twist (degrees):", angle_twist)
+    print("P-Value:", p_value)
+    print("Starting Coordinates:", Xstart, Ystart)
+    print("Ending Coordinates:", Xend, Yend)
+    """
+
+
     warnings.filterwarnings("ignore")
     if len(d) <3: 
         return 0, 1, d["Xstart"], d["Xend"], d["Ystart"],d["Yend"]
@@ -354,8 +482,37 @@ def enEchelonAngleTwist(d, avgtheta):
     
     return tdiff, p_values.values[0], Xstart, Xend, Ystart, Yend
 
-
 def examineClusterShort(clusters):
+    """
+    Analyze and summarize information about clustered line segments.
+
+    Parameters:
+        clusters (DataFrame): A DataFrame containing line data with columns 'Labels', 'theta', 'rho', and 'HashID'.
+
+    Returns:
+        clusters_data (DataFrame): A DataFrame containing summarized information for each cluster.
+
+    This function analyzes and summarizes information about clustered line segments. 
+    It calculates various statistics for each cluster,
+    including the starting and ending coordinates, the average rho (distance from the origin), 
+    the average theta (angle), and the size
+    (number of lines) within each cluster. Additionally, it computes the midpoint of each 
+    cluster and determines if it is a clustered or
+    non-clustered line segment.
+
+    The function returns a DataFrame ('clusters_data') containing the summarized 
+    information for each cluster, including its label,
+    coordinates, average rho, average theta, size, and a hash identifier.
+    
+    Notes:
+        This is the shorter and faster version of examineCluster
+
+    Example usage:
+    cluster_summary = examineClusterShort(cluster_data)
+    print(cluster_summary.head())
+    """
+    # Function code here
+
     clabel=np.unique(clusters['Labels'])
     nclusters=len(clabel)-1
     notclustered=sum([clusters['Labels']==-1][0])
@@ -406,11 +563,112 @@ def examineClusterShort(clusters):
                                             "Yend":y2, "X0": x0, "Y0": y0, "AvgRho":avgrho,
                                             "AvgTheta":avgtheta, "ClusterHash": hashlines, "Size":size}, ignore_index=True)
     return clusters_data
-
-                                            
+                                       
 def examineClusters(clusters, enEchelonCutofff=7, ifEE=False, MaxNNSegDist=0.5, skipUnlinked=True, xc=None, yc=None):
-    """ Must have  ['Xstart', 'Ystart', 'Xend', 'Yend','seg_length', 'ID', 'rho', 'theta', 'Labels'] """
-    #fig,ax=plt.subplots(1,3)
+    """
+    Analyze and summarize information about clusters of line segments.
+
+    Parameters:
+        clusters (DataFrame): A DataFrame containing line data with columns 'Xstart', 'Ystart', 'Xend', 'Yend', 'seg_length',
+                              'ID', 'rho', 'theta', 'Labels', and 'PerpOffsetDist'.
+        enEchelonCutofff (int): A cutoff value for en échelon angle differences.
+        ifEE (bool): A flag indicating whether en échelon analysis should be performed.
+        MaxNNSegDist (float): The maximum normalized nearest neighbor segment distance for the TrustFilter.
+        skipUnlinked (bool): A flag to skip unlinked segments.
+        xc (float): The x-coordinate of the center (optional).
+        yc (float): The y-coordinate of the center (optional).
+
+    Returns:
+        clusters_data (DataFrame): A DataFrame containing summarized information for each cluster.
+        
+            1. `Label`: Cluster label or identifier.
+            2. `Xstart`: Starting x-coordinate of the clustered line.
+            3. `Ystart`: Starting y-coordinate of the clustered line.
+            4. `Xend`: Ending x-coordinate of the clustered line.
+            5. `Yend`: Ending y-coordinate of the clustered line.
+            6. `X0`: Midpoint of the x-coordinate range of the cluster.
+            7. `Y0`: Midpoint of the y-coordinate range of the cluster.
+            8. `AvgRho`: Average rho for the cluster.
+            9. `AvgTheta`: Average angle (theta) for the cluster.
+            10. `AvgSlope`: Average slope of the lines in the cluster.
+            11. `AvgIntercept`: Average intercept of the lines in the cluster.
+            12. `RhoRange`: Range of rho values within the cluster.
+            13. `Aspect`: Aspect ratio, calculated as the length (l) divided by the width (w).
+            14. `Xmid`: X-coordinate of the midpoint of the fitted rectangle
+            15. `Ymid`: Y-coordinate of the midpoint of the fitted rectangle
+            16. `PerpOffsetDist`: Average perpendicular offset distance for the lines in the cluster.
+            17. `PerpOffsetDistRange`: Range of perpendicular offset distances within the cluster.
+            18. `NormPerpOffsetDist`: Normalized perpendicular offset distance.
+            19. `ThetaRange`: Range of theta values within the cluster.
+            20. `StdRho`: Standard deviation of rho values within the cluster.
+            21. `StdTheta`: Standard deviation of theta values within the cluster.
+            22. `R_Width`: Width (w) of the cluster.
+            23. `R_Length`: Length (l) of the cluster.
+            24. `Size`: Number of lines in the cluster.
+            25. `R_error`: Square root of the error (r) in the cluster's line fit.
+            26. `Linked`: Indicates whether the lines in the cluster are considered linked or not.
+            27. `SegmentLSum`: Sum of the lengths of line segments within the cluster.
+            28. `ClusterHash`: A hash identifier for the cluster.
+            29. `ClusterCrossesZero`: Indicates whether the cluster's angles cross zero.
+            30. `EnEchelonAngleDiff`: Twist angle difference for features within the cluster.
+            31. `Overlap`: Overlap of line segments within the cluster.
+            32. `nOverlapingSegments`: Number of overlapping segments within the cluster.
+            33. `EEPvalue`: P-value related to en échelon analysis.
+            34. `MaxSegNNDist`: Maximum normalized nearest neighbor segment distance.
+            35. `MedianSegNNDist`: Median normalized nearest neighbor segment distance.
+            36. `MinSegNNDist`: Minimum normalized nearest neighbor segment distance.
+            37. `TrustFilter`: A filter indicating trustworthiness based on the
+            maximum normalized nearest neighbor segment distance.
+            38. 'xc': X-coordinate of HT origin
+            39. 'yc': Y-coordinate of HT origin
+            40: 'Date_Changed': date string of generation or change time
+
+        evaluation (DataFrame): A DataFrame containing summary statistics of the clusters.
+        
+        1. `nClusters`: The number of clusters in the `clusters_data` DataFrame.
+        2. `nDikePackets`: The number of clusters with an overlap greater than 0.1 (presumably indicating some form of overlap between line segments).
+        3. `AverageRhoRange`: The average range of rho values within the clusters.
+        4. `MaxRhoRange`: The maximum range of rho values within the clusters.
+        5. `StdRhoRange`: The standard deviation of the range of rho values within the clusters.
+        6. `AverageThetaRange`: The average range of theta values within the clusters.
+        7. `MaxThetaRange`: The maximum range of theta values within the clusters.
+        8. `StdThetaRange`: The standard deviation of the range of theta values within the clusters.
+        9. `AvgClusterSize`: The average size (number of lines) of the clusters.
+        10. `ClusterSizeStd`: The standard deviation of the size of the clusters.
+        11. `ClusterMax`: The maximum size (number of lines) among the clusters.
+        12. `AverageL`: The average length (l) of the clusters.
+        13. `MaxL`: The maximum length (l) among the clusters.
+        14. `StdL`: The standard deviation of the length (l) of the clusters.
+        15. `AverageW`: The average width (w) of the clusters.
+        16. `MaxW`: The maximum width (w) among the clusters.
+        17. `StdW`: The standard deviation of the width (w) of the clusters.
+        18. `nTrustedDikes`: The number of clusters that pass a trust filter (presumably based on some criteria).
+        19. `MaxEEAngleDiff`: The maximum en échelon angle difference among the clusters.
+        20. `AverageEAngleDiff`: The average en échelon angle difference among the clusters.
+        21. `Date`: The date when this summary information was generated.
+
+        
+
+    This function analyzes and summarizes information about clusters of line segments. 
+    It calculates various statistics for each cluster,
+    including coordinates, average rho (distance from the origin), average theta 
+    (angle), size (number of lines) within each cluster, and
+    other cluster-related information. It also includes a TrustFilter based o
+    n the maximum normalized nearest neighbor segment distance.
+
+    The function returns two DataFrames: 'clusters_data' contains summarized 
+    information for each cluster, and 'evaluation' contains summary
+    statistics of the clusters.
+
+    Example usage:
+    cluster_summary, cluster_evaluation = examineClusters(cluster_data,
+                                                          enEchelonCutofff=10, 
+                                                          ifEE=True, 
+                                                          MaxNNSegDist=0.6, 
+                                                          skipUnlinked=True)
+
+    """
+
     clabel=np.unique(clusters['Labels'])
     if xc is None:
         xc,yc=HT_center(clusters)
@@ -421,8 +679,7 @@ def examineClusters(clusters, enEchelonCutofff=7, ifEE=False, MaxNNSegDist=0.5, 
     if "HashID" not in clusters.columns:
         clusters=giveHashID(clusters)
 
-    #print("Found", nclusters)
-    #print( sum( clusters > -1), "clustered out of", len(p))
+
     sizes=[]
     EEDikes=pd.DataFrame()
     
@@ -462,20 +719,12 @@ def examineClusters(clusters, enEchelonCutofff=7, ifEE=False, MaxNNSegDist=0.5, 
         trange=CyclicAngleDist([lines['theta'].min()], [lines['theta'].max()])
 
         
-        # check if it includes different signed angles
-
-            
         
         stdrho=np.std(lines['rho'])
         stdt=np.std(lines['theta'])
         segmentL=lines['seg_length'].sum()
         
-        
-        # rotate data so all are at 20 deg then fit rectangle 
-        # then calculate squares Error 
-        #rotation_angle=-1*avgtheta #+20
-        #rotatedLines=rotateData2(lines, rotation_angle)
-        #print(avgtheta, rotation_angle)
+
         w,l,r,Xe, Ye, Xmid, Ymid=fit_Rec(lines, xc, yc)
 
         x1, x2, y1, y2=clustered_lines(x,y,avgtheta, l, xmid=Xmid, ymid=Ymid)
@@ -544,7 +793,7 @@ def examineClusters(clusters, enEchelonCutofff=7, ifEE=False, MaxNNSegDist=0.5, 
     else:
         nclusters=np.sum(clusters_data['Size']>1)
         
-    notclustered=len(clusters)-nclusters
+
     now = datetime.now()
     date = now.strftime("%d %b, %Y")
     clusters_data=clusters_data.assign(Date_Changed=date, xc=xc, yc=yc)
@@ -575,6 +824,29 @@ def examineClusters(clusters, enEchelonCutofff=7, ifEE=False, MaxNNSegDist=0.5, 
     return clusters_data, evaluation
 
 def evaluationOnClusters(clusters_data):
+    """
+    Calculate evaluation metrics based on cluster data.
+
+    Args:
+    clusters_data (DataFrame): A DataFrame containing cluster information.
+
+    Returns:
+    DataFrame: A summary DataFrame with evaluation metrics.
+
+    This function computes various evaluation metrics based on the provided cluster data. 
+    The metrics include information about the number of clusters, cluster sizes, 
+    rho and theta range statistics, average lengths and widths of clusters, 
+    en échelon angle differences, and more. 
+
+    The resulting summary DataFrame provides insights into the distribution and 
+    characteristics of the clusters, making it useful for further analysis and 
+    interpretation of the data.
+
+    Example:
+    >>> evaluation = evaluationOnClusters(clusters_data)
+    """
+
+
     now = datetime.now()
     date = now.strftime("%d %b, %Y")
     nclusters=np.sum(clusters_data['Size']>1)
@@ -602,339 +874,90 @@ def evaluationOnClusters(clusters_data):
                           index=[0])
     return evaluation
     
-def ClusteredAll(dikeset,lines,cmask):
-    notClustered=dikeset.iloc[~cmask]
-
-
 def checkAllClusterChange(lines1, lines2):
-    hash1=np.sort(lines1['ClusterHash'])
-    hash2=np.sort(lines2['ClusterHash'])
+    """
+    Compare two sets of line clusters to check if they are the same.
+
+    Args:
+    lines1 (DataFrame): The first set of line clusters as a DataFrame.
+    lines2 (DataFrame): The second set of line clusters as a DataFrame.
+
+    Returns:
+    bool: True if the clusters are the same, False otherwise.
+
+    This function compares two sets of line clusters to determine whether they are 
+    identical or different. It does this by sorting and hashing the ClusterHash 
+    values of both sets and then comparing the resulting hash values. If the hash 
+    values are the same, the clusters are considered the same; otherwise, they 
+    are considered different.
+
+    Example:
+    >>> are_clusters_identical = checkAllClusterChange(cluster_data1, cluster_data2)
+    """
+    hash1 = np.sort(lines1['ClusterHash'])
+    hash2 = np.sort(lines2['ClusterHash'])
     hash1.flags.writeable = False
     hash2.flags.writeable = False
+
     if hash(str(hash1)) == hash(str(hash2)):
         print("These clusters are the same")
         return True
     else: 
         print("These clusters are not the same")
         return False
-    
+
 
 def checkIndividualClusterChange(df1, df2):
+    """
+    Compare individual line clusters between two sets of data frames.
 
-    l1=df1['ClusterHash'].values
-    l2=df2['ClusterHash'].values
-    HashList=np.array([l1,l2])
+    Args:
+    df1 (DataFrame): The first set of line clusters as a DataFrame.
+    df2 (DataFrame): The second set of line clusters as a DataFrame.
+
+    Returns:
+    tuple: A tuple containing two NumPy arrays - eqLabels and diffLabels.
+           - eqLabels: An array of labels that are found in both df1 and df2.
+           - diffLabels: An array of labels that are unique to either df1 or df2.
+
+    This function compares individual line clusters between two sets of data frames, 
+    df1 and df2. It identifies which cluster labels are common (eqLabels) and which 
+    are unique to each data frame (diffLabels). It also provides information about 
+    the number of overlapping clusters and the total number of clusters in each data 
+    frame.
+
+    Example:
+    >>> eqLabels, diffLabels = checkIndividualClusterChange(cluster_data1, cluster_data2)
+    """
+    l1 = df1['ClusterHash'].values
+    l2 = df2['ClusterHash'].values
+    HashList = np.array([l1, l2])
     
-    #pick the array with the longest length
-    longest=max(HashList, key=lambda col: len(col))
-    shortest=min(HashList, key=lambda col: len(col))
+    # Pick the array with the longest length
+    longest = max(HashList, key=lambda col: len(col))
+    shortest = min(HashList, key=lambda col: len(col))
 
-    same=np.in1d( longest,shortest) #outputs length of first input
-    s=np.sum(same)
-    eqLabels=np.arange(0,len(longest), 1)[same]
-    diffLabels=np.arange(0,len(longest), 1)[~same]
+    same = np.in1d(longest, shortest)  # Outputs length of first input
+    s = np.sum(same)
+    eqLabels = np.arange(0, len(longest), 1)[same]
+    diffLabels = np.arange(0, len(longest), 1)[~same]
   
     print(s, len(df1), len(df2))
     
-    if (s==len(df1) and s==len(df2)):
+    if (s == len(df1) and s == len(df2)):
         print("These clusters are ALL the same")
     else: 
         print("These clusters are not all the same")
         print("df1 has", str(len(df1)), 'while df2 has', str(len(df2)), "identified clusters")
         print("They have", str(s), "overlapping clusters")
         
-    
-    return eqLabels, diffLabels 
-def checkClusterChange2(Segs, Line1, Line2):
-    
-    c1=np.unique(Line1['Label'])
-    c2=np.unique(Line2['Label'])
-    
-    for i in c1: 
-        lines=Segs[Segs['Label']==i]
-        for j in c2: 
-            
-            x=lines['HashID'].values
-            y=Segs[Segs['TrueLabel']==j]['HashID'].values
-            result = np.where( x==y, x, 0)
-            if np.sum(result) > 0:
-                print(i,j, result, np.sum(result))
-    
-
-def RotateAndCluster(dikeset,dtheta, drho,**kwargs):
-    dikesetOrig, ZOrig=HT_AGG_custom(dikeset, dtheta, drho)
-    
-    dikeset45=rotateData2(dikeset, 45)
-    dikeset45=DikesetReProcess(dikeset45, HTredo=True)
-    dikeset45, Z45=HT_AGG_custom(dikeset45, dtheta, drho)
-    linesOrig=examineClusterShort(dikesetOrig)
-    lines45=examineClusterShort(dikeset45)
-    
-    changedect=checkAllClusterChange(linesOrig, lines45)
-    if changedect:
-        return dikesetOrig
-    if ~changedect:
-        eqLabels, diffLabels=checkIndividualClusterChange(linesOrig, lines45)
-        dikesetFinal=dikesetOrig.iloc[eqLabels[:len(dikesetOrig)]]
-
-        return dikesetFinal
-
-def errorAnalysis(lines, dikeset, plot=False):
-    
-    if plot: 
-        fig,ax=plt.subplots(2,4)
-        ax[0][0].set_ylabel('R_length')
-        ax[0][0].scatter(lines['R_error'], lines['R_Length'])
-        ax[0][1].scatter(lines['R_error'], lines['R_Width'])
-        ax[0][1].set_ylabel('R_Width')
-        
-        ax[0][2].scatter(lines['R_error'], lines['Size'])
-        ax[0][2].set_ylabel('Size')
-        
-        
-        ax[0][3].hist(lines['R_error'], bins=50)
-        ax[0][3].set_ylabel('Counts')
-        
-        ax[1][0].scatter(lines['R_error'], lines['AvgTheta'])
-        ax[1][0].set_ylabel('AvgTheta')
-        
-        ax[1][1].scatter(lines['R_error'], lines['AvgRho'])
-        ax[1][1].set_ylabel('AvgRho')
-        
-        ax[1][2].scatter(lines['R_error'], lines['ThetaRange'])
-        ax[1][2].set_ylabel('ThetaRange')
-        
-        ax[1][3].scatter(lines['R_error'], lines['RhoRange'])
-        ax[1][3].set_ylabel('RhoRange')
-        
-        for i in range(4):
-            ax[1][i].set_xlabel("SS Error (m)")
-    print("Error evaluation")
-    print("average error:", lines['R_error'].mean())
-    print("# clusters over 1 mil error:", max(lines['Label'])-len(lines))
-    print("N% clustered", (np.sum(lines['Size'])/len(dikeset))*100)
-        
-def TopHTSection(lines, dikeset, rstep, tstep,n=1):
-    fig,ax=plt.subplots(1,2)
-    fig.set_size_inches((190/25.4, 60/25.4))
-    fig,ax[0],img=HThist(dikeset, rstep, tstep, ax=ax[0], fig=fig)
-    h=img[0]
-    
-    xedges=img[1]
-    yedges=img[2]
-    xc,yc=HT_center(dikeset)
-
-    plotlines(lines, 'k', ax[1])
-    toplines=pd.DataFrame()
-    top=np.sort(h, axis=None)[-n:]
-    reds = cm.get_cmap('Reds', n*2)
-    level=n
-    ylevel=.85
-    for t in top:
-        im,jm=np.where(h==t)
-        for i,j in zip(im,jm):
-            xe=[xedges[i],xedges[i+1]]
-            ye=[yedges[j],yedges[j+1]]
-            c=reds(2*level)
-            maskTheta=(lines['AvgTheta'] > xe[0]) & (lines['AvgTheta'] < xe[1])
-            maskRho=(lines['AvgRho']/1000 > ye[0]) & (lines['AvgRho']/1000 < ye[1])
-            mask=(maskTheta ==True) & (maskRho==True)
-            toplines2=lines[mask]
-            toplines2=toplines2.assign(Level=level)
-            ax[0].plot( [xe[0], xe[0], xe[1], xe[1], xe[0]], [ye[0], ye[1], ye[1], ye[0], ye[0]],color=c)
-            toplines=pd.concat((toplines,toplines2), ignore_index=True)
-            nlines=len(toplines2)
-            ann=r'\theta :'+str(np.ceil(np.mean(xe)))+ r' \rho :'+str(np.ceil(np.mean(ye)))+ " n="+str(int(t))+"/"+str(nlines)
-            #ax[0].text(0.1,ylevel, ann, color=c,transform=ax[0].transAxes)
-            w,l,r,Xe, Ye, Xmid, Ymid=fit_Rec(toplines2, xc, yc)
-            #plotlines(toplines2, c, ax[1], SpeedUp=False)
-            level=level-1
-            ylevel=ylevel-0.05
-            
-            print('Level', level)
-            print('Counts', t, "Counts %:", t/len(dikeset)*100)
-            print("Theta Range", xe[0], "-", xe[1])
-            print("Rho Range", ye[0], "-", ye[1])
-            print('Width of Linear Swarm:', w)
-            print('Length of Linear Swarm:', l)
-            print("Std Theta:", toplines2['AvgTheta'].std())
-            
-    print("Top 3 cells")
-    w,l,r,Xe, Ye, Xmid, Ymid=fit_Rec(toplines, xc, yc)
-    print('Width of Linear Swarm:', w)
-    print('Length of Linear Swarm:', l)
-    print("Range Theta:", np.ptp(toplines['AvgTheta'].values))
-    print("Range Rho:", np.ptp(toplines['AvgRho'].values))
-    
-    pltRec(toplines, xc, yc)
-            
-    plotlines(toplines, 'k', ax[1], SpeedUp=False, ColorBy='Level', cmap=reds, alpha=0.4)
-    # off axis linear swarm 
-    medianTheta=dikeset['theta'].median()
-    offAxisBy=50
-    t1=medianTheta+offAxisBy
-    t2=medianTheta+2*offAxisBy
-    
-    if abs(t1)>90:
-        t1=t1%90*np.sign(t1)*-1
-    if abs(t2)>90:
-        t2=t2%90*np.sign(t2)*-1
-        
-    if t1>t2:
-        xloc=np.where( np.logical_or((xedges[:-1]>t1),(xedges[:-1]<t2)))
-    else:
-        xloc=np.where( np.logical_and((xedges[:-1]>t1),(xedges[:-1]<t2)))
-    print(medianTheta)
-
-    print(t1, t2)
-
-    offAxisMax=np.max(h[xloc,:], axis=None)
-    im,jm=np.where(h==offAxisMax)
-    print(offAxisMax)
-    i,j=im[0], jm[0]
-    xe=[xedges[i],xedges[i+1]]
-    ye=[yedges[j],yedges[j+1]]
-    c='g'
-    maskTheta=(lines['AvgTheta'] > xe[0]) & (lines['AvgTheta'] < xe[1])
-    maskRho=(lines['AvgRho']/1000 > ye[0]) & (lines['AvgRho']/1000 < ye[1])
-    mask=(maskTheta ==True) & (maskRho==True)
-    toplines2=lines[mask]
-    toplines2=toplines2.assign(Level=-1)
-    ax[0].plot( [xe[0], xe[0], xe[1], xe[1], xe[0]], [ye[0], ye[1], ye[1], ye[0], ye[0]],color=c)
-    toplines=pd.concat((toplines,toplines2), ignore_index=True)
-    plotlines(toplines2, 'g', ax[1], SpeedUp=False)
-    ann=r"theta :"+str(np.ceil(np.mean(xe)))+ r"rho:"+str(np.ceil(np.mean(ye)))+ " n="+str(int(t))+"/"+str(nlines)
-   # ax[0].text(0.1,ylevel, ann, color=c,transform=ax[0].transAxes)
-    t=offAxisMax
-    print('Level', -1)
-    print('Counts', t, "Counts %:", t/len(dikeset)*100)
-    print("Theta Range", xe[0], "-", xe[1])
-    print("Rho Range", ye[0], "-", ye[1])
-    print('Width of Linear Swarm:', w)
-    print('Length of Linear Swarm:', l)
-    print("Std Theta:", toplines2['AvgTheta'].std())
-            
-            
-    plt.tight_layout()
-    
-    return toplines, fig, ax, reds
-
-# def TopHTSectionLocalDetect(lines, dikeset, rstep, tstep,n=1):
-#     fig,ax=plt.subplots(1,2)
-#     gamma=0.2
-#     fig,ax[0],img=HThist(dikeset, rstep, tstep, ax=ax[0], fig=fig, gamma=gamma)
-#     h=img[0]
-#     x,y=h.shape
-#     xedges=img[1]
-#     yedges=img[2]
-    
-#     #normalize H
-#     hnorm=(h/np.max(h))**gamma
-    
-#     [i,j]=np.unravel_index(h.argmax(), h.shape)
-#     """ 
-#     after https://scikit-image.org/docs/stable/auto_examples/color_exposure/plot_regional_maxima.html#sphx-glr-auto-examples-color-exposure-plot-regional-maxima-py
-#     and 
-#     https://scikit-image.org/docs/stable/auto_examples/applications/plot_thresholding.html#:~:text=Thresholding%20is%20used%20to%20create,Histogram%2Dbased.
-    
-#     """
-#     image=img_as_float(hnorm)
-#     image=gaussian_filter(image,1) # filter image
-    
-#     seed=np.copy(image)
-#     seed[1:-1, 1:-1] = image.min()
-#     mask = image
-    
-#     dilated = reconstruction(seed, mask, method='dilation') #dilate
-#     #blocksize=101
-    
-#     #if thresholdType =='otsu':
-#     thresh=threshold_otsu(image-dilated) #otsu (automatic threshold)
-#     #else: 
-#     #    thresh=threshold_local(image-dilated, blocksize)
-#     indicesx, indicesy=np.meshgrid( np.arange(0,h.shape[1]), np.arange(0,h.shape[0]))
-#     spots=image-dilated> thresh
-#     # Now we want the spot with the highest peak
-#     distance = ndi.distance_transform_edt(spots)
-#     coords = peak_local_max(distance, footprint=np.ones((3, 3)), labels=spots)
-#     mask = np.zeros(distance.shape, dtype=bool)
-#     mask[tuple(coords.T)] = True
-#     markers, _ = ndi.label(spots)
-#     labels = watershed(-distance, markers, mask=spots)
-    
-
-#     ind = np.unravel_index(np.argmax(h, axis=None), h.shape)
-#     toplabel=labels[ind]
-    
-#     topmask=(labels==toplabel)
-#     x,y=np.meshgrid(yedges[1:], xedges[1:])
-#     xs=x[topmask]
-#     ys=y[topmask]
-    
-#     # after 
-#     # https://scikit-image.org/docs/dev/auto_examples/edges/plot_contours.html#sphx-glr-download-auto-examples-edges-plot-contours-py
-#     contours=measure.find_contours(labels, 0.5)
-    
-#     if len(contours) is not len(np.unique(labels)):
-#         print("Error:not enough contours found")
-        
-#     interpx= lambda x: np.interp(x, range(len(xedges)), xedges)
-#     interpy= lambda x: np.interp(x, range(len(yedges)), yedges)
-    
-        
-#     for contour in contours:
-#         ncontour=np.array([[ interpx(x), interpy(y)] for x,y in zip(contour[:,0], contour[:,1])])
-#         ax[0].plot(ncontour[:,0], ncontour[:,1], 'r')
-#         path=mpltPath.Path(contour)
-
-        
-        
-    
-    
-    # xe=[xedges[i],xedges[i+1]]
-    # ye=[yedges[j],yedges[j+1]]
-    # print(h.max(), "clustered lines at", xe, "degrees", ye, "rho (m)" )
-    # #     masklat= (dikeset['latitude'] > lat1) & (dikeset['latitude'] < lat2)
-    # # masklong=(dikeset['longitude'] > lon1) & (dikeset['longitude'] < lon2)
-    # # masklatlong= (masklat==1) & (masklong==1)
-    
-    # maskTheta=(lines['AvgTheta'] > xe[0]) & (lines['AvgTheta'] < xe[1])
-    # maskRho=(lines['AvgRho'] > ye[0]) & (lines['AvgRho'] < ye[1])
-    # mask=(maskTheta ==True) & (maskRho==True)
-    # ax[0].plot( [xe[0], xe[0], xe[1], xe[1], xe[0]], [ye[0], ye[1], ye[1], ye[0], ye[0]],'r')
-    # print(np.sum(lines['Size'].loc[mask]), "should equal", h.max())
-    # print(np.sum(lines['Size'].loc[mask])==h.max())
-    # toplines=lines[mask]
-    # plotlines(lines, 'k', ax[1], alpha=0.1)
-    # plotlines(toplines, 'r', ax[1])
-    # print(toplines['Size'].sum(), "dike segements")
-    
-    # if n >1: 
-        
-    #     nextop=np.sort(h, axis=None)[len(h.flatten())-1-n]
-    #     im,jm=np.where(h==nextop)
-    #     for i,j in zip(im,jm):
-    #         xe=[xedges[i],xedges[i+1]]
-    #         ye=[yedges[j],yedges[j+1]]
-           
-    #         maskTheta=(lines['AvgTheta'] > xe[0]) & (lines['AvgTheta'] < xe[1])
-    #         maskRho=(lines['AvgRho'] > ye[0]) & (lines['AvgRho'] < ye[1])
-    #         mask=(maskTheta ==True) & (maskRho==True)
-    #         toplines2=lines[mask]
-    #         plotlines(toplines, 'r', ax[1])
-    #         ax[0].plot( [xe[0], xe[0], xe[1], xe[1], xe[0]], [ye[0], ye[1], ye[1], ye[0], ye[0]],'r')
-    #         toplines=toplines.append(toplines2)
-        
-    plt.tight_layout()
-    
-    return toplines, fig, ax
+    return eqLabels, diffLabels
 
 
-    
 
 
 def extendLines(lines, save=False, name='Longlines.csv'):
-    t,r=whichForm(lines)
+
     """
     Extends lines in dataframe up to min(x)*.5 and max(x)*1.5
         
@@ -950,7 +973,7 @@ def extendLines(lines, save=False, name='Longlines.csv'):
     
 
     """
-    
+    t,r=whichForm(lines)
     xc,yc=HT_center(lines)
     xmid=(lines['Xstart'].values+lines['Xend'].values)/2
     ymid=(lines['Ystart'].values+lines['Yend'].values)/2
@@ -991,170 +1014,45 @@ def extendLines(lines, save=False, name='Longlines.csv'):
     
     return longlines
 
-def Run3Times(dikeset, dtheta, drho, plot=False, **kwargs):
-    xc1,yc1=HT_center(dikeset)
-    # run the first time 
-    dikeset, Z1=HT_AGG_custom(dikeset, dtheta, drho, **kwargs)
-    lines1, IC1=examineClusters(dikeset)
-    
-    # rotate 45 deg 
-    dikeset2=rotateData2(dikeset, 45)
-    theta2, rho2, xc2, yc2=AKH_HT(dikeset2)
-    dikeset2['theta']=theta2
-    dikeset2['rho']=rho2
-    dikeset2, Z2=HT_AGG_custom(dikeset2, dtheta, drho, **kwargs)
-    dikeset2=rotateData2(dikeset2,-45)
-    lines2, IC2=examineClusters(dikeset2)
-    
-    #move to lower left
-    dx=np.min([dikeset['Xstart'].min(), dikeset['Xend'].min()])
-    dy=np.min([dikeset['Ystart'].min(), dikeset['Yend'].min()])
-    theta3, rho3, xc3, yc3=AKH_HT(dikeset, xc=dx,yc=dy)
-    dikeset3=dikeset.copy()
-    dikeset3['theta']=theta3
-    dikeset3['rho']=rho3
-    
-    dikeset3, Z3=HT_AGG_custom(dikeset3, dtheta, drho, **kwargs)
-    
-    lines3, IC3=examineClusters(dikeset3)
-    
-    #check the changes 
-    eq12, diff12=checkClusterChange(lines1, lines2)
-    eq13, diff13=checkClusterChange(lines1, lines3)
-    eq32, diff32=checkClusterChange(lines3, lines2)
-    
-    Flines1=FilterLines(lines1)
-    Flines2=FilterLines(lines2)
-    Flines3=FilterLines(lines3)
-    
-    print("Comparing the filtered lines")
-    eq12, diff12=checkClusterChange(Flines1, Flines2)
-    eq13, diff13=checkClusterChange(Flines1, Flines3)
-    eq32, diff32=checkClusterChange(Flines3, Flines2)
-    
-    if plot: 
-        
-        fig,ax=plt.subplots(1,2)
-        plotlines(lines1, 'k', ax[0])
-        plotlines(lines2, 'b', ax[0])
-        plotlines(lines3, 'r', ax[0])
-        
-        ax[1].scatter(dikeset['theta'], dikeset['rho'], c=dikeset['Labels'].values, alpha=0.6, cmap=cm.Greys, marker='p')
-        ax[1].scatter(dikeset2['theta'], dikeset2['rho'], c=dikeset2['Labels'].values, alpha=0.6, cmap=cm.Blues, marker='*')
-        ax[1].scatter(dikeset3['theta'], dikeset3['rho'], c=dikeset3['Labels'].values, alpha=0.6, cmap=cm.Reds, marker='^')
-        
-        fig,ax=plt.subplots(3,2)
-        
-        plotlines(lines1.iloc[diff12], 'k', ax[0,0])
-        plotlines(lines2.iloc[diff12], 'b', ax[0,1])
-        
-        plotlines(lines1.iloc[diff13], 'k', ax[1,0])
-        plotlines(lines3.iloc[diff13], 'r', ax[1,1])
-        
-        plotlines(lines2.iloc[diff32[diff32<len(lines2)]], 'b', ax[2,0])
-        plotlines(lines3.iloc[diff32], 'r', ax[2,1])
-        
-        
-        
-    return lines1, lines2, lines3
-    
 
-def persitance(df):
-    t,r=whichForm(df)
-
-    theta=df[t].values
-    rho=df[r].values
-
-    X2D = (np.vstack( (theta, rho-np.mean(rho))) ).T
-    
-    #use the scaled version of the distance metric 
-    dtheta=2 
-    drho=df['seg_length'].mean()
-    metric= lambda x,y: CyclicEuclideanScaled(x,y,dtheta,drho)
-    
-    dist = squareform(pdist(X2D, metric))
-    condensedD = squareform(dist)
-    
-    Y = sch.linkage(condensedD, method='complete')
-    Z1 = sch.dendrogram(Y, orientation='left', no_plot=True)
-    
-    dcoord=np.array(Z1['dcoord'])
-    icoord=np.array(Z1['icoord'])
-    c=Z1['color_list']
-    idx=Z1['leaves']
-    
-    
-    #scaling for persistance
-    #a1=(np.max(icoord)+np.max(dcoord))/2
-    #a0=(np.min(icoord)+np.min(dcoord))/2
-    
-    #dcoord=(dcoord-a0)/(a1-a0)
-    #icoord=(icoord-a0)/(a1-a0)
-
-
-    x=np.max(dcoord)
-    fig,ax=plt.subplots(2)
-    ax[0].plot([1,1], [x,x], 'k-', linewidth=10)
-    p=np.append(dcoord[:,1]-dcoord[:,0], dcoord[:,2]-dcoord[:,3])
-    birth=np.array([ dcoord[:,0], dcoord[:,3]])+1
-    death=np.array([ dcoord[:,1], dcoord[:,2]])+1
-    
-    ax[0].plot(birth, death, "*")
-    
-    ax[0].set_yscale('log')
-    ax[0].set_xscale('log')
-    ax[0].plot([1,x], [1,x], 'k-', linewidth=4)
-    
-    ax[1].hist(np.log(p+1), bins=20, color='r')
-    
-    ax[1].set_ylabel('Counts')
-    ax[1].set_xlabel('Persistance')
-    ax[0].set_xlabel('Birth')
-    ax[0].set_ylabel('Death')
-    # for ys, color in zip(dcoord, c):
-    #     #ax[0].plot(xs, ys, color)
-        
-    #     birth=np.array([ys[0]+1, ys[3]+1])
-    #     death=np.array([ys[1]+1, ys[2]+1])
-    #     ax[0].plot(birth,death, "*", color=color)
-    #     p=np.append(birth-death)
-    ax[0].set_yscale('log')
-    return fig, ax, Z1
-
-def testValidity(lines, dtheta, drho):
-    
-    if any(lines['ThetaRange'] > dtheta):
-        print("Failed Theta Validity Check 1")
-    else: 
-        print("Passed Theta Validity Check 1")
-        
-    if any(lines['RhoRange'] > drho):
-        print("Failed Theta Validity Check 1")
-    else: 
-        print("Passed Theta Validity Check 1")
         
 def OutputRectangles(clusters):
+    """
+    Compute the coordinates of bounding rectangles for each cluster in a set of line clusters.
 
-    clabel=np.unique(clusters['Labels'])
-    nclusters=len(clabel)
-    notclustered=sum([clusters['Labels']==-1][0])
-    xc,yc=HT_center(clusters)
-    clusters_data=pd.DataFrame()
-    Xs=np.zeros((nclusters,5))
-    Ys=np.zeros((nclusters,5))
+    Args:
+    clusters (DataFrame): A DataFrame containing line clusters with attributes 'Labels', 'Xmid', 'Ymid'.
+
+    Returns:
+    tuple: A tuple containing two NumPy arrays - Xs and Ys.
+           - Xs: An array of X-coordinates for the corners of bounding rectangles for each cluster.
+           - Ys: An array of Y-coordinates for the corners of bounding rectangles for each cluster.
+
+    This function computes the coordinates of bounding rectangles for each cluster in a set of 
+    line clusters. It uses the 'Xmid' and 'Ymid' attributes of the clusters to determine the 
+    center points and calculates the coordinates of the corners of rectangles that enclose 
+    the clusters.
+
+    Example:
+    >>> Xs, Ys = OutputRectangles(cluster_data)
+    """
+    clabel = np.unique(clusters['Labels'])
+    nclusters = len(clabel)
+    xc, yc = HT_center(clusters)
+    Xs = np.zeros((nclusters, 5))
+    Ys = np.zeros((nclusters, 5))
     
     for i in np.unique(clusters['Labels']): 
-        clustered=True
-        mask=clusters['Labels']==i
-        lines=clusters[mask]
+        clustered = True
+        mask = clusters['Labels'] == i
+        lines = clusters[mask]
         
-        if (i == -1 or len(lines)<2):
-            clustered=False
-            #continue
+        if (i == -1 or len(lines) < 2):
+            clustered = False
             
-        w,l,r,Xe, Ye, Xmid, Ymid=fit_Rec(lines, xc, yc)
-        Xs[i-1,:]=Xe
-        Ys[i-1,:]=Ye
+        w, l, r, Xe, Ye, Xmid, Ymid = fit_Rec(lines, xc, yc)
+        Xs[i - 1, :] = Xe
+        Ys[i - 1, :] = Ye
         
     return Xs, Ys
 
