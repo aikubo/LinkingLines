@@ -1,15 +1,38 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Thu Apr  1 12:49:07 2021
+htMOD Module
 
-@author: akh
+This module provides functions for working with line segments and performing Hough Transform-related calculations.
+
+Functions:
+    - AKH_HT(data, xc=None, yc=None): calculates Hough Transform
+    - HT_center(data): Calculates only HT center cartesian coordinates
+    - rotateData(data, rotation_angle): rotates cartesian data by rotation_angle
+    - MidtoPerpDistance(df, xc, yc): calculates mid to perp distance
+    - moveHTcenter(data, xc=None, yc=None): moves HT center and recalcultes
+
+Notes:
+    - This module contains functions for calculating the Hough Transform of line segments, rotating line segments,
+      finding the center of line segments, calculating distances, and moving the center of line segments.
+
+Author:
+    Created by akh on Thu Apr 1 12:49:07 2021.
+
+Dependencies:
+    - pandas
+    - numpy
+    - matplotlib.pyplot
 """
-import pandas as pd 
+
+import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-from fitRectangle import *
-#from PrePostProcess import midPoint
+
+# Function definitions go here...
+
+
+
 
 def AKH_HT(data, xc=None, yc=None):
     """
@@ -32,7 +55,12 @@ def AKH_HT(data, xc=None, yc=None):
     
     """
     
-    
+    # Check if 'data' is a pandas DataFrame
+    if not isinstance(data, pd.DataFrame):
+        raise ValueError("Input 'data' must be a pandas DataFrame.")
+
+    if len(data) < 1:
+        raise ValueError("Data is empty")
   
     if xc is None or yc is None:
         xc,yc=HT_center(data)
@@ -75,7 +103,7 @@ def HT_center(data):
     
     return xc,yc
 
-def rotateData2(data, rotation_angle):
+def rotateData(data, rotation_angle):
 
     """
     Rotates a dataframe of line segments by a given angle.
@@ -135,37 +163,8 @@ def rotateData2(data, rotation_angle):
     return dataRotated
 
 
-def gridSearch(df,dc):
-    xc1,yc1=HT_center(df)
-    t=0
-    f,a=plt.subplots(4)
-    for i in [-dc, dc]:
-        for j in  [-dc, dc]:
-            theta, rho, xc, yc=AKH_HT(df, xc=xc1+i, yc=yc1+j)
-            npts=np.sum(np.abs(rho)>10000)
-            a[t].scatter(theta,rho)
-            title=str(i)+","+str(j)
-            a[t].set_title(title)
-            print(npts, i, j)
-            t=t+1
-            
 
-def mxb(data, xc=None, yc=None):
-    if xc is None:
-        xc,yc=HT_center(data)
-    
-    o_x1 = data['Xstart'].values - xc
-    o_x2 = data['Xend'].values - xc
-    o_y1 = data['Ystart'].values - yc
-    o_y2 = data['Yend'].values - yc
 
-    A = o_y1.astype(float) - o_y2.astype(float) + 0.0000000000000001;
-    B = o_x1.astype(float) - o_x2.astype(float)+ 0.000000000000000001;
-    
-    m=A/B
-    b1=-1*m*o_x1+o_y1
-
-    return m,b1
 
 def MidtoPerpDistance(df, xc, yc):
     """
@@ -204,6 +203,40 @@ def MidtoPerpDistance(df, xc, yc):
     return df
 
 def moveHTcenter(data, xc=None, yc=None):
+    """
+    Move the center of a DataFrame of line segments to new coordinates (xc, yc).
+
+    Parameters
+    ----------
+    data: pandas.DataFrame
+        A DataFrame containing line segments with columns ['Xstart', 'Ystart', 'Xend', 'Yend'].
+
+    xc, yc: float, optional
+        The new x and y coordinates of the center of the line segments.
+        If 'xc' and 'yc' are not provided, the center is calculated from the input DataFrame.
+
+    Returns
+    -------
+    pandas.DataFrame
+        A new DataFrame with line segments adjusted to the new center coordinates (xc, yc).
+
+    Notes
+    -----
+    - This function takes a DataFrame of line segments and moves their center to the specified coordinates (xc, yc).
+    - If 'xc' and 'yc' are not provided, the center is calculated based on the input DataFrame.
+    - The resulting DataFrame 'df2' contains line segments with updated coordinates.
+
+    Example
+    -------
+    >>> data = pd.DataFrame({'Xstart': [0, 1, 2], 'Ystart': [0, 1, 2], 'Xend': [1, 2, 3], 'Yend': [1, 2, 3]})
+    >>> new_data = moveHTcenter(data, xc=2.0, yc=2.0)
+    >>> print(new_data)
+       Xstart  Ystart  Xend  Yend
+    0    -2.0    -2.0  -1.0  -1.0
+    1    -1.0    -1.0   0.0   0.0
+    2     0.0     0.0   1.0   1.0
+    """
+
     if xc is None and yc is None:
         xc,yc=HT_center(data)
         
