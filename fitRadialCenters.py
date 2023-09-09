@@ -17,6 +17,49 @@ import numpy as np
 
 from scipy.spatial.distance import pdist, squareform
 
+def mysigmoid(x,a, b, c):
+    return a/((1+np.e**(c*x))+0.0000001)+b
+
+def sigmoidFit(lines, plot=False, ColorBy=None, weight='LayerNumber', ThetaRange=[-90,90], xc=None, yc=None):
+    t,r=whichForm(lines)
+    theta=lines[t].values
+    rho=lines[r].values
+    
+    m=(theta>ThetaRange[0]) & (theta<ThetaRange[1])
+    theta=theta[m]
+    rho=rho[m]    
+    
+    if plot:
+        fig,ax=DotsLines(lines, ColorBy=ColorBy, cmap='turbo')
+        xdata=np.linspace(-90,90,200)
+
+            
+    Fits=pd.DataFrame()
+    
+    if 'xc' in lines.columns and xc is None:
+        xc=lines['xc'].values[0]
+        yc=lines['yc'].values[0]
+    elif xc is None: 
+        xc,yc=HT_center(lines)
+        
+        
+    popt, pcov=curve_fit( mysigmoid, theta,rho )
+    perr = np.sqrt(np.diag(pcov))
+    
+    residuals=rho-mysigmoid(theta, *popt)
+    ss_res=np.sum(residuals**2)
+    ss_tot=np.sum( (rho-np.mean(rho))**2)
+    r_sq=1-(ss_res/ss_tot)
+    Fits=pd.DataFrame({ "Sigmoid Fit":[popt], "Std Error": [perr], 'RSq':r_sq})
+    if plot:
+       
+        ax[1].plot(xdata, mysigmoid(xdata, *popt), 'y-',
+                 label='fit: a=%5.3f, b=%5.3f, c=%5.3f'  % tuple(popt), linewidth=3)
+        ax[0].plot( popt[0], popt[1], '*g', markersize=10)
+        
+        plt.legend()
+    
+    return Fits
 
 def CenterFunc(theta,xr,yr, xc, yc):
     rhoRadial=(xr-xc)*np.cos(np.deg2rad(theta))+(yr-yc)*np.sin(np.deg2rad(theta))
@@ -25,35 +68,6 @@ def CenterFunc(theta,xr,yr, xc, yc):
 def CenterFuncDf(centers, xc, yc):
     rhoRadial=(xr-xc)*np.cos(np.deg2rad(theta))+(yr-yc)*np.sin(np.deg2rad(theta))
     return rhoRadial
-
-
-def RadialFitLabels(lines, labels, xc,yc, plot=False):
-    theta=lines['AvgTheta'].values
-    rho=lines['AvgRho'].values
-    
-    if plot:
-        fig,ax=plt.subplots(1,2)
-        
-        xdata=np.linspace(-90,90,200)
-        ax[1].scatter(theta,rho,c=labels, label="data", cmap='turbo')
-        ax[1].set_ylabel('Rho (m)')
-        ax[1].set_ylabel('Theta($^\circ$)')
-            
-    Centers=pd.DataFrame()
-    for i in np.unique(labels):
-        t=theta[labels==i]
-        p=rho[labels==i]
-        popt, pcov=curve_fit( lambda angle, xr,yr: CenterFunc(angle, xr, yr, xc, yc), t,p )
-        perr = np.sqrt(np.diag(pcov))
-        Centers=Centers.append(pd.DataFrame({ "Label":i,"Center":[popt], "Std Error": [perr]}).astype(object), ignore_index=True)
-        
-        if plot:
-           
-            ax.plot(xdata, CenterFunc(xdata, *popt, xc, yc), 'r-',
-                     label='fit: xr=%5.3f, yr=%5.3f' % tuple(popt))
-            
-        plt.legend()
-    return Centers
     
 def RadialFit(lines,plot=False, ColorBy=None, weight='LayerNumber', ThetaRange=[-90,90], xc=None, yc=None):
     t,r=whichForm(lines)

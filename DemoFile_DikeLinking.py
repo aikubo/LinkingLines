@@ -16,7 +16,8 @@ First, please install the correct Conda or Mamba environment. This demo file may
 without the correct packages. 
 
 Use the command: 
-    conda create --name dikes --file requirements.txt
+    mamba create dikes_linking --file dikes_linking.yaml
+    (or use conda)
     
 Please check the paths to make sure you have the necessary files in the correct places.
 

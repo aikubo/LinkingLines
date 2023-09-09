@@ -18,28 +18,6 @@ from jitteringHTcenter import moveHTcenter, rotateHT
 from matplotlib import cm
 from fitRadialCenters import *
 
-def makeRadialSwarm(radius, doubled=True, anglestart=-90, anglestop=90, ndikes=50, center=[0,0]):
-    
-    #center=np.array([0,0])
-    angles=np.linspace(anglestart, anglestop, ndikes)
-    m=np.tan(np.deg2rad(angles))
-    
-    Xstart=np.zeros(ndikes)+center[0]
-    Ystart=np.zeros(ndikes)+center[1]
-    Xend=radius/np.sqrt(1+m**2)+center[0]
-    Yend=Xend*m+center[1]
-    
-    if doubled:
-        
-        Xstart=np.append(Xstart, np.zeros(ndikes)+center[0])
-        Ystart=np.append(Ystart, np.zeros(ndikes)+center[1])
-        Yend=np.append(Yend, -1*Xend*m+center[1])
-        Xend=np.append(Xend, -1*radius/np.sqrt(1+m**2)+center[0])
-        
-        
-    Xstart[abs(Xstart)<10**-6]=1
-    print(center)
-    return Xstart, Ystart, Xend, Yend
 
 def makeRadialSwarmdf(radius, doubled=True, anglestart=-90, anglestop=90, ndikes=50, center=[0,0], label=1, CartRange=100000):
     
@@ -114,27 +92,16 @@ def addSwarms(dflist):
 
     return dfSwarm
 
-def makeLinearSwarm(length, slope,  ndikes=20):
-    
-    Xstart=np.linspace(-1*length,length, ndikes)
-    b=np.random.rand(ndikes)*2*length
-    Ystart=Xstart*slope+b
-    Xend=Xstart+length/np.sqrt(1+slope**2)
-    Yend=Xend*slope+b 
-
-    
-    return Xstart, Ystart, Xend, Yend
-
-# make linear dike swarms of angle and rho distributions 
 def makeLinear2(length, angle, angleSTD, rho, rhoSTD, ndikes=100, CartRange=300000, label=None):
     angles=np.random.normal(angle, angleSTD, ndikes)
     rhos=np.random.normal(rho, rhoSTD, ndikes)
 
     b=rhos/np.sin(np.deg2rad(angles))
     slopes=-1/(np.tan(np.deg2rad(angles))+0.000000001)
-    Xstart=rho #np.random.normal(rho, rhoSTD, ndikes)
+    Xstart=np.random.normal(0, rhoSTD, ndikes)
     
     Ystart=slopes*Xstart+b
+
     Xend=Xstart-length/np.sqrt(1+slopes**2)
     Yend=slopes*Xend+b
     
@@ -151,25 +118,34 @@ def makeLinear2(length, angle, angleSTD, rho, rhoSTD, ndikes=100, CartRange=3000
     
     return df
 
+# make linear dike swarms of angle and rho distributions 
+def makeLinearDf(length, angle, angleSTD, rho, rhoSTD, ndikes=100, CartRange=300000, label=None):
+    angles=np.random.normal(angle, angleSTD, ndikes)
+    rhos=np.random.normal(rho, rhoSTD, ndikes)
 
-# def makeLinearSwarmdf(length, angle, rho=0, ndikes=20, angleSTD=1, rhoSTD=10000, CartRange=300000):
+    b=rhos/np.sin(np.deg2rad(angles))
+    slopes=-1/(np.tan(np.deg2rad(angles))+0.000000001)
+    Xstart=np.random.normal(0, rhoSTD, ndikes)
     
+    Ystart=slopes*Xstart+b
+    a=np.array([1,-1])
+    c=np.random.choice(a, ndikes)
+    Xend=Xstart-length/np.sqrt(1+slopes**2)*c
+    Yend=slopes*Xend+b
     
-#     angles=np.random.normal(angle, angleSTD, ndikes)
-#     slopes=-1/np.tan(np.deg2rad(angles))
-#     Xstart= np.random.random_sample(0, rhoSTD*5,ndikes)#(3*length)*np.random.random_sample(ndikes) + 2*length#np.linspace(-1*length,length, ndikes)  
-#     b=np.random.normal(rho, rhoSTD, ndikes)*np.sin(np.deg2rad(angles))
+    if type(label) is int:
+        labels=np.ones(ndikes)*label
+    else:
+        labels=np.arange(0,ndikes)
     
-#     Ystart=Xstart*slopes+b
-#     Xend=Xstart-length**2/(1+slopes**2)
-#     Yend=Xend*slopes+b 
+    df=pd.DataFrame({'Xstart':Xstart, 'Xend': Xend, 'Ystart': Ystart, 'Yend':Yend, 'theta':angles, 'rho':rhos, 'Labels':labels})
     
-#     df=pd.DataFrame({'Xstart':ystart, 'Xend':Yend 'Ystart': Xstart, 'Yend':Yend})
+    df=df.drop(df[ abs(df['Ystart']) > CartRange].index)
+    labels=[label]*len(df)
+    df['Label']=labels
     
-#     largenss= (abs(Xstart-Xend) > CartRange) | (abs(Ystart-Yend) > CartRange)
-#     #df.drop(largenss)
-                     
-#     return df
+    return df
+
 
 
 def OverLappingSwarms(nlinear, nradial, A1,A2, slope, center):
@@ -197,55 +173,7 @@ def OverLappingSwarms(nlinear, nradial, A1,A2, slope, center):
 
     return df
 
-def ManyRadial(nradial):
-    length=5000
-    ndikes=50
     
-    Xstart, Ystart, Xend, Yend=makeRadialSwarm(length, doubled=True, anglestart=30, anglestop=90, ndikes=ndikes, center=[0,0])
-    
-    for i in range(nradial-1):
-        center= [5000*(i+1),5000*(i+1)]
-        X1=Xstart+center[0]
-        Y1=Ystart+center[1]
-        X2=Xend+center[0]
-        Y2=Yend+center[1]
-        print(center)
-        Xstart=np.append(Xstart,X1)
-        Ystart=np.append(Ystart,Y1)
-    
-        Xend=np.append(Xend,X2)
-        Yend=np.append(Yend,Y2)
-
-    
-    #print(len(Xstart), len(Ystart))
-    
-    iddike=np.arange(0, len(Xstart))
-    dlength=np.sqrt( (Xstart-Xend)**2 + (Ystart-Yend)**2)
-
-    """ Regime label, 1 for radial 0 for linear"""
-    #print(len(iddike), len(reg), len(dlength))
-    df=pd.DataFrame({'Xstart':Xstart, 'Xend': Xend, 'Ystart': Ystart, 'Yend':Yend, 'ID': iddike, 'seg_length':dlength})
-
-
-    return df
-
-    
-def RandomDikes(n, CartRange=100000):
-
-    Xstart=np.random.uniform(-1*CartRange,CartRange,n)
-    Ystart=np.random.uniform(-1*CartRange,CartRange,n)
-    Xend=np.random.uniform(-1*CartRange,CartRange,n)
-    Yend=np.random.uniform(-1*CartRange,CartRange,n)
-
-    angles=np.arctan2(Yend-Ystart, Xend-Xstart)
-   
-
-
-    df=pd.DataFrame({'Xstart':Xstart, 'Xend': Xend, 'Ystart': Ystart, 'Yend':Yend})
-    
-    df=df.drop(df[ abs(df['Ystart']) > CartRange].index)
-    return df
-
 def standardSpacing(ndikes, angle, RhoStart, RhoSpacing, CartRange=100000 ):
     angles=np.ones(ndikes)*angle #np.random.normal(angle, angleSTD, ndikes)
     RhoEnd=RhoStart+ndikes*RhoSpacing

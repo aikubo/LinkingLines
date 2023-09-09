@@ -1102,7 +1102,7 @@ def DotsHT(fig,ax,lines, color=None, ColorBy="Dike Cluster Length (km)", label=N
     return fig,ax
 
 
-def DotsLines(lines, ColorBy="seg_length",cmap=cm.turbo, fig=None, ax=None, Cbar=True, CbarLabels=True, StrOn=False, color=None):
+def DotsLines(lines, ColorBy="seg_length",cmap=cm.turbo, linewidth=1, fig=None, ax=None, Cbar=True, CbarLabels=True, StrOn=False, color=None):
     t,r=whichForm(lines)
     #plt.rcParams.update({'font.size': 50, 'font.weight': 'normal'})
     #sns.set_context("talk")
@@ -1116,7 +1116,7 @@ def DotsLines(lines, ColorBy="seg_length",cmap=cm.turbo, fig=None, ax=None, Cbar
         c='k'
     else:
         c=color
-    plotlines(lines, c, ax[0], ColorBy=ColorBy, cmap=cmap)
+    plotlines(lines, c, ax[0], ColorBy=ColorBy, cmap=cmap, linewidth=linewidth)
    
 
     #ax[1], h2=HThist(lines['Average Rho (m)'], lines['Average Theta ($^\circ$)'], rstep, tstep, weights=lines['Dike Cluster Length (km)'], ax=ax[1],rbins=rbins)

@@ -15,21 +15,13 @@ import matplotlib.pyplot as plt
 
 from jitteringHTcenter import moveHTcenter, rotateHT
 from matplotlib import cm
-from skimage.morphology import reconstruction
 
 from scipy.ndimage import gaussian_filter
 
-from skimage import img_as_float
-from skimage.filters import threshold_otsu, threshold_local
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy import ndimage as ndi
 from plotmod import plotlines
-from skimage.segmentation import watershed
-from skimage.feature import peak_local_max
-
-from skimage import feature
-
 
 
 def findLocations(err,n=2): 

@@ -34,16 +34,6 @@ import os
 from datetime import datetime
 
 
-from skimage.morphology import reconstruction
-from scipy.ndimage import gaussian_filter
-from skimage import img_as_float
-from skimage.filters import threshold_otsu, threshold_local
-from scipy import ndimage as ndi
-from skimage.segmentation import watershed
-from skimage.feature import peak_local_max
-import matplotlib.path as mpltPath
-from skimage import measure
-
 def checkoutCluster(dikeset, label):
 
         
