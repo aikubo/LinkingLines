@@ -6,24 +6,23 @@ The provided Python module appears to be a collection of functions for analyzing
  and processing dike lines data in a geospatial context. Here's a summary of the
  module's main functionalities and the purpose of each function:
 
-1. `CenterFunc(theta, xr, yr, xc, yc)`: Calculates the radial distance of a point from a given center for a specified angle.
+- `CenterFunc(theta, xr, yr, xc, yc)`: Calculates the radial distance of a point from a given center for a specified angle.
 
-2. `RadialFit(lines, plot=False, ColorBy=None, weight='LayerNumber', ThetaRange=[-90, 90], xc=None, yc=None)`: Fits a radial model to dike lines data, optionally visualizing the fit. It returns center information such as coordinates and goodness of fit.
+- `RadialFit(lines, plot=False, ColorBy=None, weight='LayerNumber', ThetaRange=[-90, 90], xc=None, yc=None)`: Fits a radial model to dike lines data, optionally visualizing the fit. It returns center information such as coordinates and goodness of fit.
 
-3. `RadialAzimuthal(lines, Center)`: Calculates radial azimuthal angles of dike lines relative to a specified center.
+- `RadialAzimuthal(lines, Center)`: Calculates radial azimuthal angles of dike lines relative to a specified center.
 
-4. `CyclicAngle360(u, v)`: Computes the cyclic angle between two angles in the range [0, 360).
+- `CyclicAngle360(u, v)`: Computes the cyclic angle between two angles in the range [0, 360).
 
-5. `AngleSpacing(rAngle)`: Calculates statistics related to the spacing between radial azimuthal angles.
+- `AngleSpacing(rAngle)`: Calculates statistics related to the spacing between radial azimuthal angles.
 
-6. `RipleyRadial(rAngle, plot=False)`: Measures the "clumpiness" of radial dike swarm angles using the Ripley K function, with an option to visualize the results.
+- `RipleyRadial(rAngle, plot=False)`: Measures the "clumpiness" of radial dike swarm angles using the Ripley K function, with an option to visualize the results.
 
-7. `ExpandingR(lines, Center)`: Measures the density of lines at different radial distances from a center.
+- `ExpandingR(lines, Center)`: Measures the density of lines at different radial distances from a center.
 
-8. `NearCenters(lines, Center, tol=10000, printOn=False)`: Identifies lines near a specified center within a tolerance, providing detailed information about those lines.
+- `NearCenters(lines, Center, tol=10000, printOn=False)`: Identifies lines near a specified center within a tolerance, providing detailed information about those lines.
 
-9. `writeCenterWKT(df, name)`: Writes center information to a Well-Known Text (WKT) file, allowing for easy geospatial data export.
-
+- `writeCenterWKT(df, name)`: Writes center information to a Well-Known Text (WKT) file, allowing for easy geospatial data export.
 Overall, this module is designed for the analysis of geological dike structures, 
 particularly in terms of their orientation and distribution relative to a central
  point. It includes functions for fitting radial models, assessing clustering patterns,

@@ -18,7 +18,7 @@ import matplotlib as mpl
 from matplotlib.ticker import PercentFormatter
 
 from pyproj import Proj
-
+from dilationCalculation import dilation
 from matplotlib.colors import ListedColormap, LinearSegmentedColormap, Normalize
 import seaborn as sns
 import matplotlib.colors as mcolors
@@ -38,114 +38,151 @@ import matplotlib.ticker as mticker
 
 class FixCartesianLabels():
     """ 
-        Moves Offset axis tick label to axis label 
-        based on: https://stackoverflow.com/questions/45760763/how-to-move-the-y-axis-scale-factor-to-the-position-next-to-the-y-axis-label
+    Moves Offset axis tick label to axis label.
+    
+    This class is used to adjust the axis labels by moving the offset (scale factor) of the axis tick labels to the axis label itself. It's particularly helpful when dealing with plots where the offset notation is desired to be shown as part of the axis label.
+
+    Attributes:
+        None
+    
+    Methods:
+        __init__(self, ax):
+            Initializes an instance of the FixCartesianLabels class for a given axis.
+
+        update(self, ax, lim):
+            Updates the axis labels by moving the offset to the axis label.
+
+    Example:
+        import matplotlib.pyplot as plt
+
+        # Create a sample plot
+        fig, ax = plt.subplots()
+        ax.plot([1, 2, 3], [1e6, 2e6, 3e6])
+
+        # Initialize FixCartesianLabels for the y-axis
+        y_label_fixer = FixCartesianLabels(ax.yaxis)
+
+        plt.show()
     """
-    def __init__(self,  ax):
+    def __init__(self, ax):
         # self.axis = {"y":ax.yaxis, "x":ax.xaxis}[axis]
         # self.labelx=""
         ax.callbacks.connect('Cartesian Plots Updated', self.update)
         ax.figure.canvas.draw()
-        self.update(ax,None)
+        self.update(ax, None)
 
     def update(self, ax, lim):
-        
-        for i,l in zip ( [ax.yaxis, ax.xaxis], ['Y', 'X']):
+        """
+        Updates the axis labels by moving the offset to the axis label.
+
+        Args:
+            ax (matplotlib.axis.Axis): The axis for which the labels should be updated.
+            lim: Unused parameter (needed for the callback).
+
+        Returns:
+            None
+        """
+        for i, l in zip([ax.yaxis, ax.xaxis], ['Y', 'X']):
             fmt = i.get_major_formatter()
             i.offsetText.set_visible(False)
-            i.set_label_text(l + " ("+ fmt.get_offset()+" m )" )
-            # formatter = mticker.ScalarFormatter(useMathText=True)
-            # formatter.set_powerlimits((-1,9))
-            # i.set_major_formatter(formatter)
+            i.set_label_text(l + " (" + fmt.get_offset() + " m )")
 
-class Labeloffset():
-    """ 
-        Moves Offset axis tick label to axis label 
-        based on: https://stackoverflow.com/questions/45760763/how-to-move-the-y-axis-scale-factor-to-the-position-next-to-the-y-axis-label
-    """
-    def __init__(self,  ax, label="", axis="y"):
-        self.axis = {"y":ax.yaxis, "x":ax.xaxis}[axis]
-        self.label=label
-        ax.callbacks.connect(axis+'lim_changed', self.update)
-        ax.figure.canvas.draw()
-        self.update(None)
-
-    def update(self, lim):
-        fmt = self.axis.get_major_formatter()
-        self.axis.offsetText.set_visible(False)
-        self.axis.set_label_text(self.label + " ("+ fmt.get_offset()+")" )
 
 def get_ax_size_inches(ax):
-    fig=ax.get_figure()
+    """
+    Get the size of a matplotlib axis in inches.
+
+    This function calculates the size (width and height) of a matplotlib axis in inches, taking into account the current figure's DPI settings.
+
+    Parameters:
+        ax (matplotlib.axes._subplots.AxesSubplot): The axis for which the size should be calculated.
+
+    Returns:
+        tuple: A tuple containing the width and height of the axis in inches.
+
+    Example:
+        import matplotlib.pyplot as plt
+
+        # Create a sample plot
+        fig, ax = plt.subplots()
+
+        # Get the size of the axis in inches
+        width, height = get_ax_size_inches(ax)
+
+        print(f"Width: {width} inches, Height: {height} inches")
+    """
+    fig = ax.get_figure()
     bbox = ax.get_window_extent().transformed(fig.dpi_scale_trans.inverted())
     width, height = bbox.width, bbox.height
 
     return width, height
-
 def FixAxisAspect(ax1, ax2):
-    
-    " Need to fix the aspect ratios now"
+    """
+    Adjust the aspect ratios of two matplotlib axes to match each other.
 
+    This function adjusts the aspect ratios of two axes to make them visually compatible. It ensures that the data displayed in both axes appears with the correct proportions.
+
+    Parameters:
+        ax1 (matplotlib.axes._subplots.AxesSubplot): The first axis to be adjusted.
+        ax2 (matplotlib.axes._subplots.AxesSubplot): The second axis to be adjusted.
+
+    Example:
+        import matplotlib.pyplot as plt
+
+        # Create two sample plots with different aspect ratios
+        fig, ax1 = plt.subplots()
+        ax2 = plt.axes([0.2, 0.2, 0.4, 0.4])
+
+        # Adjust the aspect ratios to match
+        FixAxisAspect(ax1, ax2)
+
+        plt.show()
+    """
     figW0, figH0 = ax1.get_figure().get_size_inches()
     # Axis size on figure
     _, _, w0, h0 = ax1.get_position().bounds
     # Ratio of display units
     disp_ratio0 = (figH0 * h0) / (figW0 * w0)
     
-    w0i,h0i=get_ax_size_inches(ax1)
+    w0i, h0i = get_ax_size_inches(ax1)
     
     figW1, figH1 = ax2.get_figure().get_size_inches()
     # Axis size on figure
     _, _, w1, h1 = ax2.get_position().bounds
     # Ratio of display units
     disp_ratio1 = (figH1 * h1) / (figW1 * w1)
-    w1i,h1i=get_ax_size_inches(ax2)
+    w1i, h1i = get_ax_size_inches(ax2)
    
-    if h0i >  h1i:
-  
+    if h0i > h1i:
         y_min, y_max = ax2.get_ylim()
-        yperinch=(y_max-y_min)/h1i
-        deltah=h0i-h1i
-        
-        deltay=deltah*yperinch/2
-        ax2.set_ylim(y_min-deltay, y_max+deltay)
+        yperinch = (y_max - y_min) / h1i
+        deltah = h0i - h1i
+        deltay = deltah * yperinch / 2
+        ax2.set_ylim(y_min - deltay, y_max + deltay)
         print('reset Y')
         
     if w0i > w1i:
         x_min, x_max = ax2.get_xlim()
-        xperinch=(x_max-x_min)/w1i
-        deltaw=w0i-w1i
-        
-        deltax=deltaw*xperinch/2
-        ax2.set_xlim(x_min-deltax, x_max+deltax)
+        xperinch = (x_max - x_min) / w1i
+        deltaw = w0i - w1i
+        deltax = deltaw * xperinch / 2
+        ax2.set_xlim(x_min - deltax, x_max + deltax)
         print('reset x')
-    # if h0 !=  h1:
-    #     ratio=h0/h1
-    #     y_min, y_max = ax2.get_ylim()
-    #     deltay=(y_max-y_min)*ratio/2
-    #     ax2.set_ylim(y_min-deltay, y_max+deltay)
-    #     print('reset Y')
-        
-    # if w0 != w1:
-    #     ratio=w0/w1
-    #     y_min, y_max = ax2.get_xlim()
-    #     deltay=(y_max-y_min)*ratio/2
-    #     ax2.set_xlim(y_min-deltay, y_max+deltay)
-    #     print('reset X')
+
 
 def labelSubplots(ax, labels=None, **kwargs):
     
     """
     Adds alphabet label to corner of each subplot
     
-    INPUT: 
+    Parameters: 
         ax: list, dict, or array 
         returns error for just one AxesSubplot object
         label: Default=None 
         Defaults to "A", "B", "C " etc but 
         could be any string 
         
-    output: none 
+    Returns: none 
     adds label to right top corner of plot
     
     """
@@ -191,11 +228,28 @@ def identify_axes(ax_dict, fontsize=12, **kwargs):
         ax.text(0.95, 0.05, k, transform=ax.transAxes, **kw)
         
 from operator import sub
+
 def get_aspect(ax):
-    """ Returns plot aspect ratio
-    based on: https://stackoverflow.com/questions/41597177/get-aspect-ratio-of-axes
-    answer by @Mad Physicist
-    
+    """
+    Calculate the aspect ratio of a matplotlib axes.
+
+    This function calculates the aspect ratio of a given matplotlib axes, taking into account both the aspect ratio of the figure and the aspect ratio of the data displayed in the axes.
+
+    Parameters:
+        ax (matplotlib.axes._subplots.AxesSubplot): The axes for which to calculate the aspect ratio.
+
+    Returns:
+        float: The aspect ratio of the axes.
+
+    Example:
+        import matplotlib.pyplot as plt
+
+        # Create a sample plot
+        fig, ax = plt.subplots()
+
+        # Calculate and print the aspect ratio
+        aspect_ratio = get_aspect(ax)
+        print("Aspect Ratio:", aspect_ratio)
     """
     # Total figure size
     figW, figH = ax.get_figure().get_size_inches()
@@ -209,15 +263,18 @@ def get_aspect(ax):
 
     return disp_ratio / data_ratio
 
+
 def RGBtoHex(vals, rgbtype=1):
   """Converts RGB values in a variety of formats to Hex values.
 
-     @param  vals     An RGB/RGBA tuple
-     @param  rgbtype  Valid valus are:
+    Parameters:
+        vals     An RGB/RGBA tuple
+        rgbtype  Valid valus are:
                           1 - Inputs are in the range 0 to 1
                         256 - Inputs are in the range 0 to 255
 
-     @return A hex string in the form '#RRGGBB' or '#RRGGBBAA'
+     Returns:
+         A hex string in the form '#RRGGBB' or '#RRGGBBAA'
 """
 
   if len(vals)!=3 and len(vals)!=4:
@@ -233,39 +290,100 @@ def RGBtoHex(vals, rgbtype=1):
   return '#' + ''.join(['{:02X}'.format(int(round(x))) for x in vals])
 
 def RGBArraytoHexArray(c):
+    """
+    Convert an array of RGB or RGBA values to an array of Hex values.
+
+    This function takes an array of RGB or RGBA tuples and converts them to an array of their corresponding hexadecimal color representations.
+
+    Parameters:
+        c (list): A list of RGB or RGBA tuples.
+
+    Returns:
+        list: A list of hex strings in the form '#RRGGBB' or '#RRGGBBAA'.
+
+    Example:
+        # Convert an array of RGB (0-1 range) to Hex
+        rgb_colors = [(0.2, 0.5, 0.8), (0.9, 0.1, 0.4)]
+        hex_colors = RGBArraytoHexArray(rgb_colors)
+        print("Hex Colors:", hex_colors)
+    """
     return [RGBtoHex(i) for i in c]
 
+
 def StringColors(values, palette="turbo"):
+    """
+    Map a list of strings to colors using a specified color palette.
+
+    This function takes a list of strings and maps each unique string to a unique color from a specified color palette.
+
+    Parameters:
+        values (list): A list of strings to be mapped to colors.
+        palette (str, optional): The name of the color palette to use. Defaults to "turbo".
+
+    Returns:
+        tuple: A tuple containing two elements:
+            - color_idx (numpy.ndarray): An array of indices representing the colors for each string.
+            - cm (matplotlib.colors.LinearSegmentedColormap): The colormap used for mapping the strings to colors.
+
+    Example:
+        # Map a list of categories to colors
+        categories = ["Category A", "Category B", "Category C", "Category A"]
+        color_indices, colormap = StringColors(categories, palette="viridis")
+        print("Color Indices:", color_indices)
+    """
     if type(values[0]) is not str:
-        raise Exception("Must pass list of stings")
-    if len(values)<2:
-        raise Exception("Must pass list of greater than 2 ")
-        
-    labels=np.unique(values)
-    n_colors=len(labels)
-    
-    colors=[RGBtoHex(x) for x in sns.color_palette(palette)]
-    
-    cm=LinearSegmentedColormap.from_list("StringCM", colors, N=n_colors)
-    color_idx=np.array([np.where(i==labels)[0][0] for i in values])
-    #[hash(label) for label in values] significantly faster than np.where
-    
+        raise ValueError("Must pass a list of strings.")
+    if len(values) < 2:
+        raise ValueError("Must pass a list with more than 2 elements.")
+
+    labels = np.unique(values)
+    n_colors = len(labels)
+
+    colors = [RGBtoHex(x) for x in sns.color_palette(palette)]
+
+    cm = LinearSegmentedColormap.from_list("StringCM", colors, N=n_colors)
+    color_idx = np.array([np.where(i == labels)[0][0] for i in values])
+
     return color_idx, cm
-    
+
 def StringCbar(c, fig, ax, values):
-    labels=np.unique(values)
-    n_colors=len(labels)
-    c_ticks = np.arange(n_colors) #* (n_colors / (n_colors + 1)) + (2 / n_colors)
-    #c_ticks=[hash(x) for x in labels]
-    
+    """
+    Create a colorbar for string-based categorical data.
+
+    This function creates a colorbar for visualizing categorical data that has been mapped to colors using the StringColors function.
+
+    Parameters:
+        c (matplotlib.collections.Collection): The collection of colored elements (e.g., scatter points) in the plot.
+        fig (matplotlib.figure.Figure): The figure object containing the plot.
+        ax (matplotlib.axes.Axes): The axes object on which the plot is drawn.
+        values (list): A list of strings representing the categorical data.
+
+    Returns:
+        matplotlib.colorbar.Colorbar: The colorbar object associated with the categorical data.
+
+    Example:
+        # Create a scatter plot with categorical colors
+        values = ["Category A", "Category B", "Category C", "Category A"]
+        color_indices, colormap = StringColors(values, palette="viridis")
+        scatter = ax.scatter(x, y, c=color_indices, cmap=colormap)
+        colorbar = StringCbar(scatter, fig, ax, values)
+        plt.show()
+    """
+    labels = np.unique(values)
+    n_colors = len(labels)
+    c_ticks = np.arange(n_colors)
+
+    # Clean labels by removing any prefixes (e.g., "Category:")
     for i in range(len(labels)):
         if ":" in labels[i]:
-            labels[i]=labels[i].split(":")[1]
-    
+            labels[i] = labels[i].split(":")[1]
+
+    # Create the colorbar and set tick labels
     cbar = fig.colorbar(c, ticks=c_ticks, ax=ax)
     cbar.ax.set_yticklabels(labels, rotation='vertical')
 
-    return cbar 
+    return cbar
+
 
 def fontItems(fig, ax):
     """
@@ -373,64 +491,89 @@ def jgrSize(fig, ax, finalSize, units="mm"):
     
     
     return fig
-
 def SetupJGRFig(finalSize, orientation, units='mm'):
-        SMALL_SIZE = 8
-        MEDIUM_SIZE = 8
-        BIGGER_SIZE = 8
-        
-        plt.rc('font', size=SMALL_SIZE)          # controls default text sizes
-        plt.rc('axes', titlesize=SMALL_SIZE)     # fontsize of the axes title
-        plt.rc('axes', labelsize=MEDIUM_SIZE)    # fontsize of the x and y labels
-        plt.rc('xtick', labelsize=SMALL_SIZE)    # fontsize of the tick labels
-        plt.rc('ytick', labelsize=SMALL_SIZE)    # fontsize of the tick labels
-        plt.rc('legend', fontsize=SMALL_SIZE)    # legend fontsize
-        plt.rc('figure', titlesize=MEDIUM_SIZE)  # fontsize of the figure title
-        plt.rcParams['legend.title_fontsize'] = SMALL_SIZE
-        
-        fig=plt.figure()
-        
-       
-        if finalSize=='quarter':
-            w=95/25.4 ## cm/(cm/in)
-            l=115/25.4
-        elif finalSize=='half':
-            if orientation=='landscape':
-                w=190/25.4/2
-                l=230/25.4
-            if orientation=='portrait':
-                w=190/25.4
-                l=230/25.4/2
-                
-        elif finalSize=='full':
-            w=190/25.4
-            l=230/25.4
-        elif type(finalSize)==float:
-            w=190/25.4*finalSize
-            l=230/25.4*finalSize
-        elif type(finalSize)==list or type(finalSize)==tuple:
-            if units=='mm':
-                w=finalSize[0]/25.4
-                l=finalSize[1]/25.4
-            elif units=='cm':
-                w=finalSize[0]/2.54
-                l=finalSize[1]/2.54
-            elif units=='inches':
-                w=finalSize[0]
-                l=finalSize[1]
-        else:
-            w=190/2/25.4
-            l=230/2/25.4
-            
-        if orientation=='landscape':
-            fig.set_size_inches(l,w)
-        if orientation=='portrait':
-            fig.set_size_inches(w,l)
-        
-       
-        #fig.set_dpi(600)
-        
-        return fig
+    """
+    Set up a Matplotlib figure for creating a JGR (Journal of Geophysical Research) style plot.
+
+    This function configures Matplotlib settings for creating a JGR-style plot, adjusting font sizes and figure size based on the desired final size and orientation.
+
+    Parameters:
+        finalSize (str, float, list, or tuple): The final size of the plot. Valid options are:
+            - 'quarter': Quarter page size.
+            - 'half': Half page size (landscape or portrait orientation).
+            - 'full': Full page size.
+            - A float value specifying the size as a fraction of full page size.
+            - A list or tuple containing width and height values (in specified units).
+        orientation (str): The orientation of the plot. Valid options are 'landscape' or 'portrait'.
+        units (str): The units for specifying the final size if using a list or tuple. Valid options are 'mm', 'cm', or 'inches'.
+
+    Returns:
+        matplotlib.figure.Figure: The configured Matplotlib figure object for creating the plot.
+
+    Example:
+        # Set up a JGR-style figure with half page size in landscape orientation
+        fig = SetupJGRFig('half', 'landscape')
+        plt.plot(x, y)
+        plt.xlabel('X Label')
+        plt.ylabel('Y Label')
+        plt.title('JGR-style Plot')
+        plt.savefig('jgr_plot.png', dpi=300, bbox_inches='tight')
+        plt.show()
+    """
+    SMALL_SIZE = 8
+    MEDIUM_SIZE = 8
+    BIGGER_SIZE = 8
+
+    # Configure font sizes
+    plt.rc('font', size=SMALL_SIZE)
+    plt.rc('axes', titlesize=SMALL_SIZE)
+    plt.rc('axes', labelsize=MEDIUM_SIZE)
+    plt.rc('xtick', labelsize=SMALL_SIZE)
+    plt.rc('ytick', labelsize=SMALL_SIZE)
+    plt.rc('legend', fontsize=SMALL_SIZE)
+    plt.rc('figure', titlesize=MEDIUM_SIZE)
+    plt.rcParams['legend.title_fontsize'] = SMALL_SIZE
+
+    # Create a Matplotlib figure
+    fig = plt.figure()
+
+    # Set the figure size based on finalSize and orientation
+    if finalSize == 'quarter':
+        w = 95 / 25.4  # cm/(cm/in)
+        l = 115 / 25.4
+    elif finalSize == 'half':
+        if orientation == 'landscape':
+            w = 190 / 25.4 / 2
+            l = 230 / 25.4
+        elif orientation == 'portrait':
+            w = 190 / 25.4
+            l = 230 / 25.4 / 2
+    elif finalSize == 'full':
+        w = 190 / 25.4
+        l = 230 / 25.4
+    elif isinstance(finalSize, float):
+        w = 190 / 25.4 * finalSize
+        l = 230 / 25.4 * finalSize
+    elif isinstance(finalSize, (list, tuple)):
+        if units == 'mm':
+            w = finalSize[0] / 25.4
+            l = finalSize[1] / 25.4
+        elif units == 'cm':
+            w = finalSize[0] / 2.54
+            l = finalSize[1] / 2.54
+        elif units == 'inches':
+            w = finalSize[0]
+            l = finalSize[1]
+    else:
+        w = 190 / 2 / 25.4
+        l = 230 / 2 / 25.4
+
+    if orientation == 'landscape':
+        fig.set_size_inches(l, w)
+    elif orientation == 'portrait':
+        fig.set_size_inches(w, l)
+
+    return fig
 
 def combinePlots(fig1,fig2, path):
     """
@@ -480,218 +623,236 @@ def combinePlots(fig1,fig2, path):
 
 
 def clustered_lines(xs, ys, theta, length, xmid=None, ymid=None):
-    xstart=np.max(xs)
-    ystart=np.max(ys)
+    """
+    Calculate the coordinates of two points to represent a line segment based on clustering.
+
+    Given a set of x and y coordinates, a central point (xmid, ymid), an angle (theta), and a length, this function
+    calculates the coordinates of two points that represent a line segment with one end clustered around (xmid, ymid).
+
+    Parameters:
+        xs (array-like): Array of x-coordinates of data points.
+        ys (array-like): Array of y-coordinates of data points.
+        theta (float): Angle in degrees for the line segment.
+        length (float): Length of the line segment.
+        xmid (float, optional): X-coordinate of the central point. If None, it is calculated as the average of xs.
+        ymid (float, optional): Y-coordinate of the central point. If None, it is calculated as the average of ys.
+
+    Returns:
+        tuple: A tuple containing four integers (x1, x2, y1, y2) representing the coordinates of two points that
+        define the line segment.
+
+    Example:
+        # Calculate coordinates for a clustered line segment
+        xs = [1, 2, 3, 4, 5]
+        ys = [2, 3, 4, 5, 6]
+        theta = 45  # Angle in degrees
+        length = 3
+        xmid, ymid = 3, 4  # Central point
+        x1, x2, y1, y2 = clustered_lines(xs, ys, theta, length, xmid, ymid)
+        print(f'Point 1: ({x1}, {y1})')
+        print(f'Point 2: ({x2}, {y2})')
+    """
+    xstart = np.max(xs)
+    ystart = np.max(ys)
     
-    xend=np.min(xs)
-    yend=np.min(ys)
-    
-    
+    xend = np.min(xs)
+    yend = np.min(ys)
     
     if xmid is None or ymid is None:
-        print('calculating xmid ymid')
-        xmid=(xstart+xend)/2
-        ymid=(ystart+yend)/2
-        
+        print('Calculating xmid and ymid')
+        xmid = (xstart + xend) / 2
+        ymid = (ystart + yend) / 2
     
     a = np.cos(np.deg2rad(theta))
     b = np.sin(np.deg2rad(theta))
     
     x0 = xmid
     y0 = ymid
-    x1 = int(x0 + length/2 * (-b))
-    y1 = int(y0 + length/2 * (a))
-    x2 = int(x0 - length/2 * (-b))
-    y2 = int(y0 - length/2 * (a))
+    x1 = int(x0 + length / 2 * (-b))
+    y1 = int(y0 + length / 2 * (a))
+    x2 = int(x0 - length / 2 * (-b))
+    y2 = int(y0 - length / 2 * (a))
     
     return x1, x2, y1, y2
-
-def clustered_lines2(xs, ys, theta, rho, length, xc, yc):
-    xstart=np.max(xs)
-    ystart=np.max(ys)
-    
-    xend=np.min(xs)
-    yend=np.min(ys)
-    
-    xmid=(xstart+xend)/2
-    ymid=(ystart+yend)/2
-
-    
-    slope = -1/np.tan(np.deg2rad(theta)+0.00000000001)
-    b=rho/np.sin((np.deg2rad(theta))+0.00000000001)+yc-xc*slope
-    
-    x1=xstart
-    x2=xend 
-    
-    y1=x1*slope+b
-    y2=x2*slope+b
-    
-    
-    return x1, x2, y1, y2
-
-def clusteredLinesComplete(lines):
-    xs,ys=endpoints2(lines)
-    
-
-    if abs(np.sum(np.sign(lines['theta'].values))) < size: 
-        crossZero=True
-
-        avgtheta=np.mean(abs(lines['theta'].values))
-        tol=6
-        if np.isclose(avgtheta,0, atol=4):
-            avgtheta=np.mean((lines['theta'].values))
-    else:
-        crossZero=False
-        avgtheta=np.average((lines['theta']))
-   
-    rotation_angle=-1*avgtheta #+20
-    rotatedLines=rotateData2(lines, rotation_angle)
-    #print(avgtheta, rotation_angle)
-    w,l=fit_Rec(rotatedLines, xc, yc)
-    xstart=np.max(xs)
-    ystart=np.max(ys)
-    
-    xend=np.min(xs)
-    yend=np.min(ys)
-    
-    xmid=(xstart+xend)/2
-    ymid=(ystart+yend)/2
-    
-    
-    a = np.cos(np.deg2rad(theta))
-    b = np.sin(np.deg2rad(theta))
-    
-    x0 = xmid
-    y0 = ymid
-    x1 = int(x0 + length/2 * (-b))
-    y1 = int(y0 + length/2 * (a))
-    x2 = int(x0 - length/2 * (-b))
-    y2 = int(y0 - length/2 * (a))
-    
-    
-    return 
-
 def pltRec(lines, xc, yc, fig=None, ax=None): 
     """
-    plots the rectangle defined by the center, a, and the lines
+    Plot the rectangle defined by the center and lines, illustrating the orientation and dimensions.
+
+    This function takes a set of lines, a center (xc, yc), and optionally a figure and axis to create a plot
+    illustrating a rectangle that represents the orientation and dimensions of the lines with respect to the center.
+
+    Parameters:
+        lines (DataFrame): DataFrame containing line data, including angles (theta) and lengths (rho).
+        xc (float): X-coordinate of the center.
+        yc (float): Y-coordinate of the center.
+        fig (matplotlib.figure.Figure, optional): The figure to use for plotting. If None, a new figure is created.
+        ax (matplotlib.axes._subplots.AxesSubplot, optional): The axis to use for plotting. If None, a new axis is created.
+
+    Returns:
+        matplotlib.figure.Figure: The figure used for plotting.
+        matplotlib.axes._subplots.AxesSubplot: The axis used for plotting.
+        float: The length of the rectangle.
+        float: The width of the rectangle.
+
+    Example:
+        # Plot a rectangle representing the orientation and dimensions of lines
+        fig, ax, length, width = pltRec(lines_df, 0, 0)
+        plt.show()
     """
-    col=lines.columns 
+    col = lines.columns 
     
-    post=['Theta', 'AvgTheta', 'theta']
-    posr=['Rho', 'AvgRho', 'rho']
+    post = ['Theta', 'AvgTheta', 'theta']
+    posr = ['Rho', 'AvgRho', 'rho']
 
     for p in post: 
         if p in col:
-            t=p 
-    
+            t = p 
+
     for p in posr: 
         if p in col:
-            r=p
+            r = p
             
     if 'Average Rho (m)' in col:
-        r='Average Rho (m)'
-        t='Average Theta ($^\circ$)'
+        r = 'Average Rho (m)'
+        t = 'Average Theta ($^\circ$)'
         
-    if t=='AvgTheta' or t=='Average Theta ($^\circ$)':
-        segl='R_Length'
+    if t == 'AvgTheta' or t == 'Average Theta ($^\circ$)':
+        segl = 'R_Length'
     else:
-        segl='seg_length'
+        segl = 'seg_length'
         
     if fig is None or ax is None:
-        fig,ax=plt.subplots()
-    xi,yi=endpoints2(lines)
-    x0=xc
-    y0=yc
-    size=len(lines)
+        fig, ax = plt.subplots()
+    xi, yi = endpoints2(lines)
+    x0 = xc
+    y0 = yc
+    size = len(lines)
     if abs(np.sum(np.sign(lines[t].values))) < size: 
-        crossZero=True
-        ang=np.mean(abs(lines[t].values))
-        tol=6
-        if np.isclose(ang,0, atol=4):
-            ang=np.mean((lines[t].values))
+        crossZero = True
+        ang = np.mean(abs(lines[t].values))
+        tol = 6
+        if np.isclose(ang, 0, atol=4):
+            ang = np.mean((lines[t].values))
     else:
-        crossZero=False
-        
-        ang=np.mean((lines[t].values))
+        crossZero = False
+        ang = np.mean((lines[t].values))
 
+    xp, yp = rotateXYShift(np.deg2rad(-1 * ang), xi, yi, x0, y0)
 
+    width = np.ptp(xp.flatten())
+    length = np.ptp(yp.flatten())
 
-    xp, yp= rotateXYShift(np.deg2rad(-1*ang), xi,yi, x0,y0)
-    #plotlines(lines, 'k.-', a)
-    
-    width=np.ptp(xp.flatten())
-    length=np.ptp(yp.flatten())
-    # if width>length :
-    #     length=width
-    #     width=length
-    xc=(max(xp)-min(xp))/2 + min(xp)
-    yc=(max(yp)-min(yp))/2 + min(yp)
-    
-    xr=xc+width/2
-    xl=xc-width/2
-    yu=yc+length/2
-    yd=yc-length/2
-    xs=np.append(xr,xl)
-    ys=np.append(yu,yd)
-    
-    
-    xpi, ypi=unrotate(np.deg2rad(-1*ang), xp, yp, x0, y0)
+    xc = (max(xp) - min(xp)) / 2 + min(xp)
+    yc = (max(yp) - min(yp)) / 2 + min(yp)
 
-    Xedges=np.array([xs[0], xs[0], xs[1], xs[1], xs[0]])
-    Yedges=np.array([ys[1], ys[0], ys[0], ys[1], ys[1]])
+    xr = xc + width / 2
+    xl = xc - width / 2
+    yu = yc + length / 2
+    yd = yc - length / 2
+    xs = np.append(xr, xl)
+    ys = np.append(yu, yd)
 
-    Xmid=(np.max(xs)+np.min(xs))/2
-    Ymid=(np.max(ys)+np.min(ys))/2
+    xpi, ypi = unrotate(np.deg2rad(-1 * ang), xp, yp, x0, y0)
 
-    xs,ys=unrotate(np.deg2rad(-1*ang),Xedges,Yedges,x0,y0)
-    Xmid, Ymid=unrotate(np.deg2rad(-1*ang), Xmid, Ymid, x0, y0)
-    
+    Xedges = np.array([xs[0], xs[0], xs[1], xs[1], xs[0]])
+    Yedges = np.array([ys[1], ys[0], ys[0], ys[1], ys[1]])
+
+    Xmid = (np.max(xs) + np.min(xs)) / 2
+    Ymid = (np.max(ys) + np.min(ys)) / 2
+
+    xs, ys = unrotate(np.deg2rad(-1 * ang), Xedges, Yedges, x0, y0)
+    Xmid, Ymid = unrotate(np.deg2rad(-1 * ang), Xmid, Ymid, x0, y0)
+
     ax.plot(xs, ys, 'k-.', alpha=0.7, linewidth=1)
 
-    xstart, xend, ystart, yend=clustered_lines(xi, yi, ang, length, xmid=Xmid, ymid=Ymid)
-    
-    
-    ax.plot( [xstart, xend], [ystart, yend], 'g.-', linewidth=1)
-    for i in range(0,len(lines)):
-        ax.plot( [xi[i], xi[i+len(lines)]],  [yi[i], yi[i+len(lines)]], 'r-', linewidth=2)
+    xstart, xend, ystart, yend = clustered_lines(xi, yi, ang, length, xmid=Xmid, ymid=Ymid)
+
+    ax.plot([xstart, xend], [ystart, yend], 'g.-', linewidth=1)
+    for i in range(0, len(lines)):
+        ax.plot([xi[i], xi[i + len(lines)]], [yi[i], yi[i + len(lines)]], 'r-', linewidth=2)
     ax.plot(Xmid, Ymid, 'yp')
     ax.set_aspect('equal')
 
-    return fig,ax, length, width
+    return fig, ax, length, width
+
 
 def labelcolors(labels, colormap):
-    n=len(np.unique(labels))
-    c=colormap(np.linspace(0, 1, n))
-    colors=[]
-    colorsShort=[ RGBtoHex(c[i]) for i in range(n)]
-    
+    """
+    Assigns colors to unique labels using a colormap.
+
+    This function takes a list of labels and a colormap and assigns a unique color to each unique label based on the
+    colormap. It returns a list of colors corresponding to the input labels.
+
+    Parameters:
+        labels (list or pandas.Series): A list of labels.
+        colormap (matplotlib.colors.Colormap): A colormap to assign colors from.
+
+    Returns:
+        list: A list of colors in hexadecimal format (#RRGGBB) corresponding to the input labels.
+        list: A list of short color names (e.g., 'red', 'blue') corresponding to the input labels.
+
+    Example:
+        # Assign colors to unique labels using a colormap
+        labels = ['A', 'B', 'A', 'C', 'B']
+        colormap = plt.get_cmap('viridis')
+        label_colors, short_colors = labelcolors(labels, colormap)
+    """
+    n = len(np.unique(labels))
+    c = colormap(np.linspace(0, 1, n))
+    colors = []
+    colors_short = [RGBtoHex(c[i]) for i in range(n)]
+
     for i in range(len(labels)):
-        cloc=np.where(np.unique(labels)==labels.iloc[i])[0][0]
-        cval=RGBtoHex(c[cloc])
-        colors.append(cval)
-        
-    return colors, colorsShort
+        c_loc = np.where(np.unique(labels) == labels.iloc[i])[0][0]
+        c_val = RGBtoHex(c[c_loc])
+        colors.append(c_val)
+
+    return colors, colors_short
+
 
 def plotlines(data, col, ax, alpha=1, myProj=None, maskar=None, linewidth=1, 
               ColorBy=None, center=False, xc=None, yc=None, extend=False, 
               cmap=cm.turbo, cbarStatus=False, SpeedUp=True, equal=True):
+    """
+    Plots line segments on a specified axis.
 
-    #plots the line segments contained in data[maskar]
-    # in the color col 
-    # converts UTM to lat/long
-    
-    # data - data frame with columns 
-    # 'Xstart', 'Xend', 'Yend', 'Ystart'
-    # which are UTM coordinates 
-    
-    # maskar - arraylike, type logical mask of len(data)
-    #       masking of data you want to plot
-    
-    # col   - string or RGB tuple 
-    #        color you want all lines to be plotted
-    
-    # ax    - object you want to plot on 
+    This function plots line segments based on input data, allowing customization of various plot attributes such as
+    color, transparency, and more.
 
+    Parameters:
+        data (pandas.DataFrame): A DataFrame containing columns 'Xstart', 'Xend', 'Yend', and 'Ystart' representing
+            UTM coordinates of line segments.
+        col (str or RGB tuple): The color in which to plot the lines. Can be a string specifying a named color or
+            an RGB tuple (e.g., (0.5, 0.5, 0.5)).
+        ax (matplotlib.axes._axes.Axes): The axes object on which to plot the line segments.
+        alpha (float, optional): The transparency level of the lines (0.0 for fully transparent, 1.0 for fully opaque).
+            Default is 1.
+        myProj (pyproj.Proj, optional): A PyProj projection object to convert UTM coordinates to lat/long. If None, UTM
+            coordinates are assumed to be in lat/long format. Default is None.
+        maskar (array-like, optional): A logical mask of the same length as the data, indicating which lines to plot.
+            Default is None, which plots all lines.
+        linewidth (float, optional): The width of the plotted lines. Default is 1.
+        ColorBy (str, optional): A column name from the data DataFrame to color the lines based on a data attribute.
+            Default is None, which results in a single color for all lines.
+        center (bool, optional): If True, plots the center point of the data points on the map. Default is False.
+        xc (float, optional): X-coordinate of the center point. Required if `center` is True and not provided in data.
+        yc (float, optional): Y-coordinate of the center point. Required if `center` is True and not provided in data.
+        extend (bool, optional): If True, extends the plotted lines beyond their endpoints. Default is False.
+        cmap (matplotlib.colors.Colormap, optional): A colormap to use for coloring lines based on the `ColorBy`
+            parameter. Default is the 'turbo' colormap.
+        cbarStatus (bool, optional): If True, displays a colorbar when coloring lines based on `ColorBy`. Default is False.
+        SpeedUp (bool, optional): If True and the data size is large, downsamples the data to speed up plotting.
+            Default is True.
+        equal (bool, optional): If True, ensures that the plot aspect ratio is equal, maintaining the correct scale.
+            Default is True.
+
+    Returns:
+        None
+
+    Example:
+        # Plot line segments in red with transparency, color lines based on 'Value' column, and display a colorbar
+        plotlines(data, 'red', ax, alpha=0.6, ColorBy='Theta', cbarStatus=True)
+    """
     if maskar is not None:
         temp=data.loc[maskar]
         if not isinstance(col,str):
@@ -781,106 +942,8 @@ def plotlines(data, col, ax, alpha=1, myProj=None, maskar=None, linewidth=1,
             
             FixCartesianLabels(ax)
             ax.set_aspect('equal')
-    #if ColorBy is not None: 
-    #   fig.colorbar(label=ColorBy)
-
-def trueDikeLength(lines, dikeset, maxL, Lstep=2000, secondbar=False, axs=None):
-
-    if axs is None:
-        fig,axs=plt.subplots() #(2)
-    axs.grid(False)
-    
-    a=axs
-    bins=np.arange(1,maxL,5)
-    a.hist(lines['Dike Cluster Length (km)'], bins=bins, stacked=True,color='tab:blue', label='Linked Segment Length')
-    a.set_ylabel('Count of Linked Dikes' ,color='tab:blue')
-    a.tick_params(axis='y', labelcolor='tab:blue')
-    oldavg=np.mean(dikeset['seg_length'])
-    oldstd=np.std(dikeset['seg_length'])
-    
-    newavg=np.mean(lines['Dike Cluster Length (km)'])
-    newstd=np.std(lines['Dike Cluster Length (km)'])
-    if secondbar:
-        a2=a.twinx()
-        a2.grid(False)
-        #a2=axs[1]
-        bins=np.arange(1,maxL,500)
-        a2.hist(dikeset['seg_length'], density=True, stacked=True,histtype="step", color='tab:red', label='Single Segment Length')
-        a2.set_ylabel('Count of Segments', color='tab:red')
-        a2.tick_params(axis='y', labelcolor='tab:red')
-        
-        
-    a.set_xlabel('Length (m)')
-    plt.tight_layout()
-    
-    oldavg=np.median(dikeset['seg_length'])
-    oldstd=np.std(dikeset['seg_length'])
-    
-    newavg=np.median(lines['Dike Cluster Length (km)'])
-    newstd=np.std(lines['Dike Cluster Length (km)'])
-    
-    a.text(.60,.80,'Dike median:'+str(round(newavg,0)), transform=a.transAxes)
-    a.text( .60, .70, 'Dike STD:'+str(round(newstd,0)),transform=a.transAxes)
-    
-    a.text( .60,.50 ,'Segment median:'+str(round(oldavg,0)),transform=a.transAxes)
-    a.text( .60,.40, 'Segment std:'+str(round(oldstd,0)),transform=a.transAxes)
-    
-    return axs
-
-def plotbyAngleBin(lines, AngleBin, absValue=False):
-    
-    #colorsSegments=labelcolors(dikeset['Labels'],cm.turbo)
-    #colorsDikes=labelcolors(lines['Label'],cm.turbo)
-    
-    bins=int(180/AngleBin)
-    start=-90 
-    if absValue:
-        lines['Average Theta ($^\circ$)']=abs( lines['Average Theta ($^\circ$)'])
-        bins=int(90/AngleBin)
-        start=0
-    
-    if bins > 9: 
-        fig,ax=plt.subplots(2, int(bins/2))
-        fig2,ax2=plt.subplots(2, int(bins/2))
-    else:
-        fig,ax=plt.subplots(2,bins)
-    
-    colors= cm.get_cmap('viridis', bins)
-    j=0
-    for i in range(bins): 
-        stop=start+AngleBin
-        #mask1= (dikeset['theta']>start) & (dikeset['theta']<stop)
-        mask= (lines['Average Theta ($^\circ$)']>start) & (lines['Average Theta ($^\circ$)']<stop)
-        
-
-        if start >= 0 and bins > 9:
-            
-            ax1=ax2[0][j]
-            ax22=ax2[1][j]
-            j=j+1
-        else:
-            ax1=ax[0][i]
-            ax22=ax[1][i]
-            
-        ax1.hist(lines[mask]['Average Theta ($^\circ$)'], bins=30, color=colors(i))
-        ax1.set_title(str(start)+"-"+str(stop))
-        ax1.set_xlabel('Theta (deg)')
-       
-        ax22.hist(lines[mask]['Average Rho (m)'],bins=30, color=colors(i))
-        ax22.set_xlabel('Rho (m)')
-        #plotlines(lines, 'grey', ax2,alpha=0.2)
-        
-        #plotlines(dikeset, colorsSegments, ax2, maskar=mask1)
-        #plotlines(lines, colorsDikes, ax2, alpha=0.4, maskar=mask2)
-        
-        
-        start=stop
-        
-    return fig, ax
 
 
-    
-    
 def HThist(lines, rstep, tstep, weights=None,fig=None, ax=None, rbins=None, tbins=None, cmap=cm.Blues, gamma=0.3):
     t,r=whichForm(lines)
     
@@ -901,35 +964,6 @@ def HThist(lines, rstep, tstep, weights=None,fig=None, ax=None, rbins=None, tbin
     
     return fig, ax, [h, xe,ye,c]
 
-def LinesPlusHT(dikeset,lines): 
-    fig,ax=plt.subplots(1,2)
-    plotlines(lines, 'grey', ax[0] )
-    plotlines(dikeset, 'k', ax[0],  center=True)
-    
-    c1=ax[1].scatter(lines['Average Theta ($^\circ$)'], lines['Average Rho (m)'], c=lines['Xstart'], cmap=cm.plasma, edgecolor='black')
-    ax[1].set_title('Hough Space')
-    ax[0].set_title('Cartesian Space')
-    ax[1].set_xlabel('Theta (degrees)')
-    ax[1].set_ylabel('Rho (m)')
-    cbar=fig.colorbar(c1, ax=ax[1])
-    cbar.set_label('Segment Length (m)')
-    return fig,ax
-    
-# def roseRhoDiagram(df):
-#     ax=plt.subplot(projection='polar')
-#     ax.bar(df['Average Theta ($^\circ$)'], df['Average Rho (m)'],alpha=0.5)
-    
-#     return ax
-
-# def roseCountsDiagram(df):
-#     ax=plt.subplot(projection='polar')
-#     counts,angles=np.histogram(df['Average Theta ($^\circ$)'], bins=np.arange(-90,100,10))
-#     area = counts / angles.size
-#     radius = (area / np.pi)**.5
-    
-#     ax.bar(np.deg2rad(angles[:-1]), radius,alpha=0.5)
-    
-#     return ax
 def annotateWLines(ax, angles=None):
     #doesn't work unless axis are equal
     if angles is None:
@@ -972,34 +1006,7 @@ def AngleHistograms(dikeset,lines, ax=None, fig=None, Trusted=True, Annotate=Fal
         annotateWLines(ax)
     return ax
 
-def FullAlgoFigure(dikeset,lines, ax, fig): 
-    if len(ax) <4: 
-        print("Error: axis is not array of size 4")
-            
-    plotlines(dikeset, 'k', ax[0], center=True )
-    plotlines(lines, 'grey', ax[2] )
-    plotlines(dikeset, 'k', ax[2],  center=True)
-    
-    c1=ax[1].scatter(dikeset['theta'], dikeset['rho'], c=dikeset['Ystart'], cmap=cm.plasma, edgecolor='black')
-    c2=ax[3].scatter(lines['Average Theta ($^\circ$)'], lines['Average Rho (m)'], c=lines['Ystart'], cmap=cm.plasma, edgecolor='black')
-        #lines['Average Theta ($^\circ$)'], lines['Average Rho (m)'], c=lines['Xstart'], cmap=cm.plasma, edgecolor='black')
-    ax[0].set_title('Cartesian Space (Raw Data), n='+str(len(dikeset)))
-    ax[1].set_title('Hough Space (Raw Data)')
-    ax[2].set_title('Cartesian Space (Linked), n='+str(len(lines)))
-    ax[3].set_title('Hough Space (Linked)')
-    
-    ax[1].set_xlabel('Theta (degrees)')
-    ax[1].set_ylabel('Rho (m)')
-    ax[3].set_xlabel('Theta (degrees)')
-    ax[3].set_ylabel('Rho (m)')
-    cbar=fig.colorbar(c1, ax=ax[1])
-    cbar.set_label('Latitude')
-    
-    cbar=fig.colorbar(c2, ax=ax[3])
-    cbar.set_label('Latitude')
-    
-    return ax
-    
+
 def BA_HT(dikeset,lines,rstep=5000):
     fig,ax=plt.subplots(1,3)
      #lines['StdRho'].mean()*2
@@ -1031,12 +1038,50 @@ def BA_HT(dikeset,lines,rstep=5000):
 
 
 
-def DotsHT(fig,ax,lines, color=None, ColorBy="Dike Cluster Length (km)", label=None, cmap=cm.turbo, marker='o', 
+def DotsHT(fig, ax, lines, color=None, ColorBy="Dike Cluster Length (km)", label=None, cmap=cm.turbo, marker='o',
            rhoScale=True, Cbar=True, title=None, CbarLabels=True,
-           axlabels=(True,True), StrOn=True, palette=None, alpha=0.4):
-    
-    #plt.rcParams.update({'font.size': 50, 'font.weight': 'normal'})
-    #sns.set_context("talk")
+           axlabels=(True, True), StrOn=True, palette=None, alpha=0.4):
+    """
+    Create a scatter plot of rho and theta
+
+    This function creates a scatter plot of data points on a polar plot, allowing for customization of various plot
+    attributes such as colors, markers, scales, and more.
+
+    Parameters:
+        fig (matplotlib.figure.Figure): The Figure object to place the plot on.
+        ax (matplotlib.axes._subplots.PolarAxes): The polar axes object on which to create the scatter plot.
+        lines (pandas.DataFrame): A DataFrame containing data points to be plotted.
+        color (str or None, optional): The color of the data points. Can be a string specifying a named color or
+            None to use default color. Default is None.
+        ColorBy (str, optional): The name of the DataFrame column to color the data points based on its values.
+            Default is "Dike Cluster Length (km)".
+        label (str or None, optional): The label to be shown in the colorbar if ColorBy is used. Default is None.
+        cmap (matplotlib.colors.Colormap, optional): A colormap to use for coloring data points based on ColorBy.
+            Default is the 'turbo' colormap.
+        marker (str, optional): The marker style for data points. Default is 'o' (circle).
+        rhoScale (bool, optional): If True, scales the rho values by dividing by 1000 to display in kilometers.
+            Default is True.
+        Cbar (bool, optional): If True, displays a colorbar when coloring data points based on ColorBy. Default is True.
+        title (str or None, optional): The title of the scatter plot. Default is None (no title).
+        CbarLabels (bool, optional): If True, displays tick labels on the colorbar; otherwise, hides them. Default is True.
+        axlabels (tuple, optional): A tuple (ax_theta_label, ax_rho_label) specifying whether to display axis labels for
+            theta and rho. Default is (True, True).
+        StrOn (bool, optional): If True and ColorBy values are strings, enables string-based colorbar and labels.
+            Default is True.
+        palette (str or None, optional): The name of the color palette to use for string-based coloring when ColorBy
+            values are strings. Default is None.
+        alpha (float, optional): The transparency level of the data points (0.0 for fully transparent, 1.0 for fully
+            opaque). Default is 0.4.
+
+    Returns:
+        matplotlib.figure.Figure: The modified Figure object.
+        matplotlib.axes._subplots.PolarAxes: The modified polar axes object.
+
+    Example:
+        # Create a scatter plot of data points colored by the 'Value' column
+        fig, ax = DotsHT(fig, ax, data, ColorBy='theta', cmap=cm.inferno)
+    """
+
     t,r=whichForm(lines)
     
     if axlabels[0]:
@@ -1072,10 +1117,7 @@ def DotsHT(fig,ax,lines, color=None, ColorBy="Dike Cluster Length (km)", label=N
     c2=ax.scatter(lines[t].values, rho, c=c, cmap=cmap, edgecolor='black', marker=marker, alpha=alpha)
     if title is not None:
         ax.set_title(title)
-    
-    
- 
-    
+
     
     if ColorBy is not None and Cbar: 
         
@@ -1102,10 +1144,39 @@ def DotsHT(fig,ax,lines, color=None, ColorBy="Dike Cluster Length (km)", label=N
     return fig,ax
 
 
-def DotsLines(lines, ColorBy="seg_length",cmap=cm.turbo, linewidth=1, fig=None, ax=None, Cbar=True, CbarLabels=True, StrOn=False, color=None):
-    t,r=whichForm(lines)
-    #plt.rcParams.update({'font.size': 50, 'font.weight': 'normal'})
-    #sns.set_context("talk")
+def DotsLines(lines, ColorBy="seg_length", cmap=cm.turbo, linewidth=1, fig=None, ax=None, Cbar=True, CbarLabels=True, StrOn=False, color=None):
+    """
+    Create a side-by-side plot with line segments on the left and a scatter plot on the right.
+
+    This function creates a side-by-side plot with line segments on the left panel and a scatter plot on the right panel.
+    The scatter plot can be customized by specifying the ColorBy column, colormap, linewidth, and more.
+
+    Parameters:
+        lines (pandas.DataFrame): A DataFrame containing line segment data.
+        ColorBy (str, optional): The name of the DataFrame column to color the scatter plot points based on its values.
+            Default is "seg_length".
+        cmap (matplotlib.colors.Colormap, optional): A colormap to use for coloring the scatter plot points based on ColorBy.
+            Default is the 'turbo' colormap.
+        linewidth (int, optional): The linewidth of the line segments in the left panel. Default is 1.
+        fig (matplotlib.figure.Figure or None, optional): The Figure object to place the plot on. If None, a new Figure will be created.
+        ax (list of matplotlib.axes._subplots.PolarAxes or None, optional): A list of two polar axes objects (left and right panels).
+            If None, new axes will be created. Default is None.
+        Cbar (bool, optional): If True, displays a colorbar when coloring scatter plot points based on ColorBy. Default is True.
+        CbarLabels (bool, optional): If True, displays tick labels on the colorbar; otherwise, hides them. Default is True.
+        StrOn (bool, optional): If True and ColorBy values are strings, enables string-based colorbar and labels.
+            Default is False.
+        color (str or None, optional): The color of the line segments. Can be a string specifying a named color or None to use default color.
+            Default is None.
+
+    Returns:
+        matplotlib.figure.Figure: The modified Figure object.
+        list of matplotlib.axes._subplots.PolarAxes: A list of two polar axes objects (left and right panels).
+
+    Example:
+        # Create a side-by-side plot of line segments and a scatter plot colored by the 'Value' column
+        fig, ax = DotsLines(data, ColorBy='Length', cmap=cm.inferno)
+    """
+
     if fig is None:
         fig,ax=plt.subplots(1,2)
         # fig = SetupJGRFig('quarter', 'landscape')
@@ -1147,78 +1218,6 @@ def DotsLinesHist(lines, rstep, tstep, cmap1=cm.turbo, cmap2=cm.gray, ColorBy=No
 
     return fig, ax
     
-def BA_Density(dikeset,lines): 
-    fig,a=plt.subplots(1,2)
-    
-    h1=densityPlot(dikeset, ax=a[0], fig=fig)
-    h1=densityPlot(lines,ax=a[1], fig=fig)
-    
-def HT3D(lines, ColorBy='PerpOffsetDist'):
-    t,r=whichForm(lines)
-    X=lines[t].values
-    Y=lines[r].values
-    Z=lines['PerpOffsetDist'].values
-    
-    C=lines[ColorBy].values
-    
-    sns.set(rc={'axes.facecolor':'white', 'figure.facecolor':'white'})
-    fig = plt.figure(facecolor='w')
-    ax = fig.add_subplot(111, projection='3d')
-    
-    norm=Normalize(vmin=min(C), vmax=max(C))
-    cmap=cm.turbo
-    m = cm.ScalarMappable(norm=norm, cmap=cmap)   
-    c=m.to_rgba(C)
-    
-    ax.scatter(X,Y/1000,Z/1000, c=c, cmap=cm.turbo, edgecolor='grey', alpha=0.3)
-    ax.set_xlabel("\nTheta ($^\circ$)")
-    ax.set_ylabel("\nRho (km)")
-    ax.set_zlabel("\nPerp to Mid (km)", linespacing=3.1)
-    plt.tight_layout()
-    
-    return fig, ax
-    
-def rotateHT3D(fig,ax,name):
-    i=0
-    for angle in range(0, 270, 10):
-        ax.view_init(30, angle)
-        plt.draw()
-        #plt.pause(.001)
-        
-        fig.savefig(name+str(i)+".png",dpi=300)
-        i=i+1
-
-
-#plot results of linking algorithm
-def plotResults(data):
-    
-    fig,ax=plt.subplots(1,5)
-    
-    
-    #plot lines
-    plotlines(data, 'k', ax[0], alpha=1, ColorBy='Average Theta ($^\circ$)')
-    
-    ax[0].axis('equal')
-
-    #plot histogram of length 
-    ax[1].hist(data['Dike Cluster Length (km)'], bins=np.arange(1, 200, 5))
-    ax[1].set_xlabel('Dike Length (km)')
-
-    #plot histogram of width
-    ax[2].hist(data['Dike Cluster Width (m)'], bins=np.arange(100, 2000, 200))
-    ax[2].set_xlabel('Width (m)')
-
-    #plot histogram of Average Theta ($^\circ$)
-    ax[3].hist(data['Average Theta ($^\circ$)'], bins=np.arange(-90,90, 5))
-    ax[3].set_xlabel('Theta $^\circ$')
-
-    #plot histogram of Average Rho (m)
-    ax[4].hist(data['Average Rho (m)']/1000, bins=np.arange(min(data['Average Rho (m)'])/1000, max(data['Average Rho (m)'])/1000, 20))
-    ax[4].set_xlabel('Rho (km)')
-
-# Helper function used for visualization in the following examples
-
-        
         
 def breakXaxis(xlim, numAxes=1):
     """
@@ -1365,426 +1364,37 @@ def plotRadialOver(fig,ax1, ax2,xc,yc,Crange=50000,n=4, step=None, color='gray',
     colors = cm.rainbow(np.linspace(0, 1, len(ys)))
     
     return r
-def persistancePlot(Z, fig=None,ax=None, log=False):
-    
-    if fig is None and ax is None: 
-        fig, ax=plt.subplots()
-        
-    Z1 = sch.dendrogram(Z, orientation='left', no_plot=True)
-    
-    dcoord=np.array(Z1['dcoord'])
-    icoord=np.array(Z1['icoord'])
-    c=Z1['color_list']
-    idx=Z1['leaves']
-    
-    
-    #scaling for persistance
-    #a1=(np.max(icoord)+np.max(dcoord))/2
-    #a0=(np.min(icoord)+np.min(dcoord))/2
-    
-    #dcoord=(dcoord-a0)/(a1-a0)
-    #icoord=(icoord-a0)/(a1-a0)
-    x=np.max(dcoord)
-    
-    #ax[0].plot([1,1], [x,x], 'k-', linewidth=10)
-    p=np.append(dcoord[:,1]-dcoord[:,0], dcoord[:,2]-dcoord[:,3])
-    birth=np.array([ dcoord[:,0], dcoord[:,3]])+1
-    death=np.array([ dcoord[:,1], dcoord[:,2]])+1
-    
-    ax.scatter(birth, p, s=p+5, alpha=0.6, edgecolors="k")
-    
-    if log:
-        
-        ax.set_yscale('log')
-        ax.set_xscale('log')
-
-    #
-    ax.set_xlabel('Birth')
-    ax.set_ylabel('Persistance')
-    #ax.set_xlim((-2,np.max(birth)))
-    #ax.set_ylim((-2,np.max(p)))
-
-    return fig, ax, p, birth
-from matplotlib.patches import Arc
-from matplotlib.transforms import IdentityTransform, TransformedBbox, Bbox
 
 
-class AngleAnnotation(Arc):
+def plotScatterHist(lines, x, y, hue=None, hue_norm=None, xlim=None, ylim=None, log_scale=(False, False), palette='Spectral', style=None, **kwargs): 
     """
-    Draws an arc between two vectors which appears circular in display space.
+    Create a scatter plot with histograms for two variables.
+
+    This function creates a scatter plot with histograms for two variables (x and y) and the option to color points by a third variable (hue).
+
+    Parameters:
+        lines (pandas.DataFrame): A DataFrame containing the data to plot.
+        x (str): The name of the column to use for the x-axis.
+        y (str): The name of the column to use for the y-axis.
+        hue (str, optional): The name of the column to use for coloring points.
+        hue_norm (tuple, optional): A tuple specifying the normalization range for the hue variable (min, max).
+        xlim (tuple, optional): A tuple specifying the x-axis limits (min, max).
+        ylim (tuple, optional): A tuple specifying the y-axis limits (min, max).
+        log_scale (tuple, optional): A tuple specifying whether to use a log scale for the x and y axes (x_log, y_log).
+        palette (str or list, optional): The color palette to use for hue values.
+        style (str, optional): The style of the scatter plot (e.g., 'o', 's', 'D').
+        **kwargs: Additional keyword arguments to pass to the scatterplot function.
+
+    Returns:
+        matplotlib.figure.Figure: The modified Figure object.
+        list of matplotlib.axes._subplots.AxesSubplot: A list of three axes objects (scatter plot, x-axis histogram, and y-axis histogram).
+
+    Example:
+        # Create a scatter plot with histograms
+        fig, axes = plotScatterHist(data_df, x='X', y='Y', hue='Z', xlim=(0, 100), log_scale=(False, True))
     """
-    def __init__(self, xy, p1, p2, size=75, unit="points", ax=None,
-                 text="", textposition="inside", text_kw=None, **kwargs):
-        """
-        Parameters
-        ----------
-        xy, p1, p2 : tuple or array of two floats
-            Center position and two points. Angle annotation is drawn between
-            the two vectors connecting *p1* and *p2* with *xy*, respectively.
-            Units are data coordinates.
+    # Function code goes here...
 
-        size : float
-            Diameter of the angle annotation in units specified by *unit*.
-
-        unit : str
-            One of the following strings to specify the unit of *size*:
-
-            * "pixels": pixels
-            * "points": points, use points instead of pixels to not have a
-              dependence on the DPI
-            * "axes width", "axes height": relative units of Axes width, height
-            * "axes min", "axes max": minimum or maximum of relative Axes
-              width, height
-
-        ax : `matplotlib.axes.Axes`
-            The Axes to add the angle annotation to.
-
-        text : str
-            The text to mark the angle with.
-
-        textposition : {"inside", "outside", "edge"}
-            Whether to show the text in- or outside the arc. "edge" can be used
-            for custom positions anchored at the arc's edge.
-
-        text_kw : dict
-            Dictionary of arguments passed to the Annotation.
-
-        **kwargs
-            Further parameters are passed to `matplotlib.patches.Arc`. Use this
-            to specify, color, linewidth etc. of the arc.
-
-        """
-        self.ax = ax or plt.gca()
-        self._xydata = xy  # in data coordinates
-        self.vec1 = p1
-        self.vec2 = p2
-        self.size = size
-        self.unit = unit
-        self.textposition = textposition
-
-        super().__init__(self._xydata, size, size, angle=0.0,
-                         theta1=self.theta1, theta2=self.theta2, **kwargs)
-
-        self.set_transform(IdentityTransform())
-        self.ax.add_patch(self)
-
-        self.kw = dict(ha="center", va="center",
-                       xycoords=IdentityTransform(),
-                       xytext=(0, 0), textcoords="offset points",
-                       annotation_clip=True)
-        self.kw.update(text_kw or {})
-        self.text = ax.annotate(text, xy=self._center, **self.kw)
-
-    def get_size(self):
-        factor = 1.
-        if self.unit == "points":
-            factor = self.ax.figure.dpi / 72.
-        elif self.unit[:4] == "axes":
-            b = TransformedBbox(Bbox.from_bounds(0, 0, 1, 1),
-                                self.ax.transAxes)
-            dic = {"max": max(b.width, b.height),
-                   "min": min(b.width, b.height),
-                   "width": b.width, "height": b.height}
-            factor = dic[self.unit[5:]]
-        return self.size * factor
-
-    def set_size(self, size):
-        self.size = size
-
-    def get_center_in_pixels(self):
-        """return center in pixels"""
-        return self.ax.transData.transform(self._xydata)
-
-    def set_center(self, xy):
-        """set center in data coordinates"""
-        self._xydata = xy
-
-    def get_theta(self, vec):
-        vec_in_pixels = self.ax.transData.transform(vec) - self._center
-        return np.rad2deg(np.arctan2(vec_in_pixels[1], vec_in_pixels[0]))
-
-    def get_theta1(self):
-        return self.get_theta(self.vec1)
-
-    def get_theta2(self):
-        return self.get_theta(self.vec2)
-
-    def set_theta(self, angle):
-        pass
-
-    # Redefine attributes of the Arc to always give values in pixel space
-    _center = property(get_center_in_pixels, set_center)
-    theta1 = property(get_theta1, set_theta)
-    theta2 = property(get_theta2, set_theta)
-    width = property(get_size, set_size)
-    height = property(get_size, set_size)
-
-    # The following two methods are needed to update the text position.
-    def draw(self, renderer):
-        self.update_text()
-        super().draw(renderer)
-
-    def update_text(self):
-        c = self._center
-        s = self.get_size()
-        angle_span = (self.theta2 - self.theta1) % 360
-        angle = np.deg2rad(self.theta1 + angle_span / 2)
-        r = s / 2
-        if self.textposition == "inside":
-            r = s / np.interp(angle_span, [60, 90, 135, 180],
-                                          [3.3, 3.5, 3.8, 4])
-        self.text.xy = c + r * np.array([np.cos(angle), np.sin(angle)])
-        if self.textposition == "outside":
-            def R90(a, r, w, h):
-                if a < np.arctan(h/2/(r+w/2)):
-                    return np.sqrt((r+w/2)**2 + (np.tan(a)*(r+w/2))**2)
-                else:
-                    c = np.sqrt((w/2)**2+(h/2)**2)
-                    T = np.arcsin(c * np.cos(np.pi/2 - a + np.arcsin(h/2/c))/r)
-                    xy = r * np.array([np.cos(a + T), np.sin(a + T)])
-                    xy += np.array([w/2, h/2])
-                    return np.sqrt(np.sum(xy**2))
-
-            def R(a, r, w, h):
-                aa = (a % (np.pi/4))*((a % (np.pi/2)) <= np.pi/4) + \
-                     (np.pi/4 - (a % (np.pi/4)))*((a % (np.pi/2)) >= np.pi/4)
-                return R90(aa, r, *[w, h][::int(np.sign(np.cos(2*a)))])
-
-            bbox = self.text.get_window_extent()
-            X = R(angle, r, bbox.width, bbox.height)
-            trans = self.ax.figure.dpi_scale_trans.inverted()
-            offs = trans.transform(((X-s/2), 0))[0] * 72
-            self.text.set_position([offs*np.cos(angle), offs*np.sin(angle)])
-            
-def DrawHTRays(df, xc=None, yc=None):
-    fig,ax=plt.subplots()
-    
-    if xc is None and yc is None:
-        xc,yc=HT_center(data)
-        
-    t,r=whichForm(df)
-    x1=df[r].values*np.cos(np.deg2rad(df[t].values))
-    y1=df[r].values*np.sin(np.deg2rad(df[t].values))
-    
-    for x,y in zip(x1,y1):
-        
-        ax.arrow( xc,yc, x,y, head_width=10, head_length=20, fc='k', ec='k', length_includes_head=True)
-        
-    ax.plot(xc,yc, 'r*', markersize=5)
-    ax.set_aspect('equal')
-    return x1,y1
-
-def dilationPlot(df, binWidth=1700, EWDilation=None, NSDilation=None, **kwargs):
-
-    fig = SetupJGRFig('quarter', 'portrait')
-    gs = gridspec.GridSpec(3, 3)
-    ax_main = plt.subplot(gs[1:3, :2])
-    ax_xDist = plt.subplot(gs[0, :2],sharex=ax_main)
-    ax_yDist = plt.subplot(gs[1:3, 2],sharey=ax_main)
-    
-    
-    if EWDilation is None or NSDilation is None:
-        from dilationCalculation import dilation
-        EWDilation, NSDilation, binx,biny=dilation(df, binWidth=binWidth, **kwargs)
-    ys=[np.min(biny), np.max(biny)]
-    xs=[np.min(binx), np.max(binx)]
-    plotlines(df, 'k', ax_main, alpha=0.6)
-   
-    #ax_xDist.plot(binx[:-1], NSDilation[:-1])
-    ax_xDist.fill_between(binx,0, NSDilation)
-        
-        
-    #ax_yDist.plot(EWDilation[:-1], biny[:-1])
-    ax_yDist.fill_between(EWDilation,0,biny )
-    
-    ax_xDist.set(ylabel='NS Dilaton (m)')
-    ax_yDist.set(xlabel='EW Dilaton (m)')
-    ax_xDist.set_ylim([0,np.max(NSDilation)+100])
-    ax_yDist.set_xlim([0,np.max(EWDilation)+100])
-    ax_yDist.set_ylim([ys[0], ys[1]])
-    
-def DoubleDilationPlot(df, lines, **kwargs):
-    fig = SetupJGRFig('quarter', 'portrait')
-    gs = gridspec.GridSpec(3, 3)
-    ax_main = plt.subplot(gs[1:3, :2])
-    ax_xDist = plt.subplot(gs[0, :2],sharex=ax_main)
-    ax_yDist = plt.subplot(gs[1:3, 2],sharey=ax_main)
-    pos0 = ax_xDist.get_position()
-    pos1 = ax_main.get_position()
-    ax_xDist.set_position([pos0.x0, pos0.y0, pos1.width, pos0.height])
-    
-    from dilationCalculation import dilation
-    EWDilation1, NSDilation1, binx1,biny1=dilation(df, **kwargs)
-    EWDilation, NSDilation, binx,biny=dilation(lines, **kwargs)
-    
-    ys=[np.min(biny), np.max(biny)]
-
-    plotlines(lines, 'r', ax_main, alpha=0.6)
-    plotlines(df, 'b', ax_main, alpha=0.6)
-   
-    #ax_xDist.plot(binx[:-1], NSDilation[:-1])
-
-    
-    ax_xDist.fill_between(binx,0, NSDilation, alpha=0.6, color='b')
-        
-        
-    #ax_yDist.plot(EWDilation[:-1], biny[:-1])
-    ax_yDist.fill_between(EWDilation,0,biny, alpha=0.6, color='r' )
-    
-    ax_xDist.fill_between(binx1,0, NSDilation1, alpha=0.6, color='r')
-    ax_xDist.tick_params(axis='x',          # changes apply to the x-axis
-                        which='both',      # both major and minor ticks are affected
-                        bottom=False,      # ticks along the bottom edge are off
-                        top=False,         # ticks along the top edge are off
-                        labelbottom=False) # labels along the bottom edge are off)
-    ax_yDist.tick_params(axis='y',
-                         which='both',
-                         left=False,
-                         right=False,
-                         labelleft=False)
-        
-    #ax_yDist.plot(EWDilation[:-1], biny[:-1])
-    ax_yDist.fill_between(EWDilation1,0,biny1, alpha=0.6, color='r' )
-    
-    ax_xDist.set(ylabel='NS Dilaton (m)')
-    ax_yDist.set(xlabel='EW Dilaton (m)')
-
-    ax_yDist.set_ylim([ys[0], ys[1]])
-    
-    
-    
-    return fig, [ax_main, ax_xDist, ax_yDist]
-
-def TripleDilationPlot(df, lines, shape=['half', 'portrait'], kwargs=None):
-    fig = SetupJGRFig(shape[0], shape[1])
-    
-    
-   
-    xlim=[ np.min( [lines['Xstart'].min(), lines['Xend'].min()]), np.max( [lines['Xstart'].max(), lines['Xend'].max()])]
-    ylim=[ np.min( [lines['Ystart'].min(), lines['Yend'].min()]), np.max( [lines['Ystart'].max(), lines['Yend'].max()])]
-    aspect=np.diff(xlim)[0]/np.diff(ylim)[0]
-    #aspect is w/h, xlim is w and ylim is h
-    
-    gskw = dict(width_ratios = [ .75, .25],
-                height_ratios= [ .25,.75])
-    
-    gs = gridspec.GridSpec(2, 2, **gskw)
-    ax_main = plt.subplot(gs[1, 0])
-
-    
-    
-    ax_xDist = plt.subplot(gs[0, 0], sharex=ax_main, adjustable='box')
-    ax_yDist = plt.subplot(gs[1, 1], sharey=ax_main, adjustable='box')
-    
-    
-    
-    from dilationCalculation import dilation
-    EWDilation, NSDilation, binx,biny=dilation(df, **kwargs)
-    EWDilation1, NSDilation1, binx1,biny1=dilation(lines, **kwargs)
-    
-    m=lines['TrustFilter']==1
-
-    EWDilation2, NSDilation2, binx2,biny2=dilation(lines[m], **kwargs)
-    
-    ys=[np.min(biny), np.max(biny)]
-
-
-    #ax_xDist.plot(binx[:-1], NSDilation[:-1])
-
-    ax_xDist.fill_between(binx1,0, NSDilation1, alpha=0.6, color='r')
-    ax_xDist.fill_between(binx,0, NSDilation, alpha=0.6, color='b')
-    
-    f1=ax_yDist.fill_between(EWDilation1,0,biny1, alpha=0.6, color='r', label='All Linked' )
-    f2=ax_yDist.fill_between(EWDilation,0,biny, alpha=0.6, color='b', label='Segments' )
-    
-    
-    
-    #ax_yDist.plot(EWDilation2,biny2, color='k', label='Filtered' )
-    
-    #ax_xDist.plot(binx2,NSDilation2, color='k' )
-    # EWorder=np.argsort([np.sum(i) for i in EWl])
-    # colors=['gray', 'green', 'yellow']
-    # for i in EWorder:
-    #     ax_yDist.fill_between(EWl[i],0,yl[i], alpha=0.6, color=colors[i] )
-        
-    # NSorder=np.argsort([np.sum(i) for i in NSl])
-
-    # for i in NSorder:
-    #     ax_xDist.fill_between(xl[i],0, NSl[i], alpha=0.6, color=colors[i])
-        
-    
-    
-    ax_xDist.set(ylabel='NS Dilaton (m)')
-    ax_yDist.set(xlabel='EW Dilaton (m)')
-        
-    ax_xDist.tick_params(axis='x',          # changes apply to the x-axis
-                        which='both',      # both major and minor ticks are affected
-                        bottom=False,      # ticks along the bottom edge are off
-                        top=False,         # ticks along the top edge are off
-                        labelbottom=False) # labels along the bottom edge are off)
-    ax_yDist.tick_params(axis='y',
-                         which='both',
-                         left=False,
-                         right=False,
-                         labelleft=False)
-    
-    ax_yDist.set_ylim([ys[0], ys[1]])
-    labelSubplots([ax_main, ax_xDist, ax_yDist])
-    plotlines(lines, 'r', ax_main, alpha=0.6)
-    plotlines(df, 'b', ax_main, alpha=0.6)
-    yMean=np.average(biny2, weights=EWDilation2)
-    xMean=np.average(binx2, weights=NSDilation2)
-    print(yMean, xMean)
-    m=ax_yDist.axhline(y=yMean, color='navy', linestyle=":", label='Mean')
-    ax_xDist.axvline(x=xMean,color='navy', linestyle=":")
-    
-    
-    ax_main.axhline(y=yMean, color='navy', linestyle=":")
-    ax_main.axvline(x=xMean,color='navy', linestyle=":")
-    
-
-    ax_yDist.legend(loc="lower left")
-    print("")
-    print("EW")
-    print("Max segment")
-    print(np.max(EWDilation))
-    print("Max Linked")
-    print(np.max(EWDilation1))
-    print("Max Filtered")
-    print(np.max(EWDilation2))
-    print("XRange (m)")
-    print( xlim[1]-xlim[0])
-    print('max strain')
-    print("segment")
-    print(np.max(EWDilation)/( xlim[1]-xlim[0])*100)
-    print("Linked")
-    print(np.max(EWDilation1)/( xlim[1]-xlim[0])*100)
-    print("Filtered")
-    print(np.max(EWDilation2)/( xlim[1]-xlim[0])*100)
-    print("")
-    print("NS")
-    print("Max segment")
-    print(np.max(NSDilation))
-    print("Max Linked")
-    print(np.max(NSDilation1))
-    print("Max Filtered")
-    print(np.max(NSDilation2))
-    print("YRange (m)")
-    print( ylim[1]-ylim[0])
-    print('max strain')
-    print("segment")
-    print(np.max(NSDilation)/( ylim[1]-ylim[0])*100)
-    print("Linked")
-    print(np.max(NSDilation1)/( ylim[1]-ylim[0])*100)
-    print("Filtered")
-    print(np.max(NSDilation2)/( ylim[1]-ylim[0])*100)
-    print("")
-
-    return fig, [ax_main, ax_xDist, ax_yDist]
-
-
-def plotScatterHist(lines, x,y, hue=None, hue_norm=None, xlim=None, ylim=None, log_scale=(False, False), palette='Spectral', style=None, **kwargs): 
-    
     sns.set_theme(style="ticks")
         
     fig = SetupJGRFig((115,190), 'landscape')
@@ -1890,13 +1500,55 @@ def plotScatterHist(lines, x,y, hue=None, hue_norm=None, xlim=None, ylim=None, l
     return fig, [ax_main, ax_xDist, ax_yDist]
 
 def plotRatioLine(ax, x, ratio, line_kw=None):
+    """
+    Plot a line with a specified ratio.
+
+    This function plots a line on a given axis with a specified ratio (slope) by specifying the x values. You can customize the appearance of the line using the `line_kw` argument.
+
+    Parameters:
+        ax (matplotlib.axes._subplots.AxesSubplot): The axis object on which to plot the line.
+        x (array-like): The x values for the line.
+        ratio (float): The desired slope (ratio) of the line.
+        line_kw (dict, optional): A dictionary of keyword arguments to customize the line's appearance (e.g., color, linestyle, label).
+
+    Returns:
+        matplotlib.axes._subplots.AxesSubplot: The modified axis object.
+        list of matplotlib.lines.Line2D: A list containing the line objects created.
+
+    Example:
+        # Plot a line with a 1:2 slope (y = 0.5 * x)
+        fig, ax = plt.subplots()
+        ax, line = plotRatioLine(ax, x=[0, 10], ratio=0.5, line_kw={'color': 'red', 'linestyle': '--', 'label': 'Line'})
+        ax.legend()
+    """
+
+
     xs=np.linspace(min(x), max(x))
     ys=ratio*xs
     l=ax.plot(xs,ys, **line_kw)
     return ax, l
 
-def plotByLoc(lines, col, log_scale=(False,False)):
-    
+def plotByLoc(lines, col, log_scale=(False, False)):
+    """
+    Plot histograms of a column against Xmid and Ymid, with color-coded distributions.
+
+    This function creates a 2x2 subplot grid with two main plots on the left and two color bars (inset axes) on the right. It uses seaborn's histplot to create histograms of a specified column col, mapping the color to the values in col. The function also provides options to use a logarithmic scale on the x-axis and y-axis of the main plots.
+
+    Parameters:
+        lines (pandas.DataFrame): The DataFrame containing the data.
+        col (str): The column name to plot against Xmid and Ymid.
+        log_scale (tuple of bool, optional): A tuple of two boolean values specifying whether to use a logarithmic scale for the x-axis and y-axis of the main plots, respectively. Default is (False, False).
+
+    Returns:
+        matplotlib.figure.Figure: The created figure object.
+        list of matplotlib.axes._subplots.AxesSubplot: A list containing the main axis objects.
+        list of matplotlib.axes._axes.Axes: A list containing the inset (color bar) axis objects.
+
+    Example:
+        # Plot histograms of a column 'Value' against Xmid and Ymid with logarithmic y-axis scale
+        fig, [ax, axins1, axins2] = plotByLoc(lines, col='Value', log_scale=(False, True))
+    """
+
     if "Xmid" not in lines.columns:
         lines=lines.assign( Xmid=(lines['Xstart']+lines['Xend'])/2, Ymid=(lines['Ystart']+lines['Yend'])/2)
     fig, ax=plt.subplots(1,2)
@@ -1923,236 +1575,6 @@ def plotByLoc(lines, col, log_scale=(False,False)):
     
     return fig, [ax, axins1, axins2]
 
-def AverageSpatially(df, col, CartBin=None, DefaultValue=0, nLabels=6):
-    
-    if CartBin==None:
-        
-        if "Rho_Threshold" in df.columns: 
-            CartBin=df['Rho_Threshold'].values[0]*10
-        else:
-            CartBin=5000
-    
-    xlim,ylim=getCartLimits(df)
-    
-    xs=np.arange(xlim[0], xlim[1],CartBin)
-    ys=np.arange(ylim[0], ylim[1],CartBin)
-    
-    xx,yy=np.meshgrid(xs,ys)
-    avg=np.empty_like(xx)
-    
-    Xstart=df['Xstart'].values
-    Ystart=df['Ystart'].values
-    Xend=df['Xend'].values
-    Yend=df['Yend'].values
-    
-    y=np.array([Ystart,Yend]).T
-    Ystart=np.min(y, axis=1)
-    Yend=np.max(y, axis=1)+1
-    
-    x=np.array([Xstart,Xend]).T
-    Xstart=np.min(x, axis=1)
-    Xend=np.max(x, axis=1)+1
-    
-    for i in range(len(xx.flatten())):
-            x=xx.ravel()[i]
-            y=yy.ravel()[i]
-            masky=np.logical_and( (Ystart<y), (Yend>y+CartBin) )
-            maskx=np.logical_and( (Xstart<x), (Xend>x+CartBin) )
-            mask=np.logical_and( masky, maskx)
-            val=df[mask][col].mean()
-            if np.sum(mask)==0 or  np.sum(mask)<2 :
-                val=DefaultValue
-            
-            ind=np.unravel_index(i, avg.shape)
-            avg[ind]=val
-    df_avg=pd.DataFrame(avg, index=ys, columns=xs)
-    cmap = sns.cubehelix_palette(start=0, light=1, as_cmap=True)
-    fig, ax=plt.subplots()
-    
-    
-    axins1 = inset_axes(ax,
-                    width="5%",  # width = 50% of parent_bbox width
-                    height="25%",  # height : 5%
-                    loc='upper right')
-    #g=sns.heatmap( df_avg, ax=ax, cbar_ax=axins1, square=True, cmap=cmap, cbar_kws={'label': col})
-    c=ax.pcolormesh(xx,yy, avg, cmap=cmap)
-    cbar=fig.colorbar(c, cax=axins1, label=col)
-    ax.set_ylabel('Y (m)')
-    ax.set_xlabel('X (m)')
-    plotlines(df, 'k', ax, alpha=.01)
-    FixCartesianLabels(ax)
-    ls=ax.get_xticklabels()
-    
-    if len(ls) > nLabels: 
-        n=int(len(ls)/nLabels)
-        #g.set_xticklabels(ls[::n])
-        ax.set_xticks(ax.get_xticks()[::n])
-    
-    ls=ax.get_yticklabels()
-    
-    if len(ls) > nLabels: 
-        n=int(len(ls)/nLabels)
-        ax.set_yticks(ax.get_yticks()[::n])
-    
-    return avg, fig, ax
 
-def plotByAngle(lines, col, log_scale=(False, False)):
-    t,r=whichForm(lines)
-
-    #cmap = sns.cubehelix_palette(start=0, light=1, as_cmap=True)
-    cmap=sns.color_palette("rocket", as_cmap=True)
-    #g1=sns.histplot(data=lines, x=t, y=col, ax=ax, cmap=cmap, cbar=True, cbar_ax=axins1, **kwargs)
-
-    g=sns.JointGrid(data=lines, x=t, y=col, hue_norm=(lines[col].mean(), lines[col].max()))
-    axins1=g.fig.add_axes([.73, .66, .05, .15])
-    g.plot_joint( sns.histplot , cmap=cmap, cbar=True, cbar_ax=axins1, stat='percent',  log_scale=log_scale, hue_norm=(lines[col].min(), lines[col].median()))
-    g.plot_marginals(sns.histplot, color="#03051A", alpha=1, stat='percent',  log_scale=log_scale)
-
-    axins1.yaxis.set_ticks_position("left")
-    axins1.set_ylabel('Percent')
-
-    
-    return g.fig
-
-        
-def TopHTSection(lines, dikeset, rstep, tstep,n=1):
-    fig,ax=plt.subplots(1,2)
-    fig.set_size_inches((190/25.4, 60/25.4))
-    fig,ax[0],img=HThist(dikeset, rstep, tstep, ax=ax[0], fig=fig)
-    h=img[0]
-    
-    xedges=img[1]
-    yedges=img[2]
-    xc,yc=HT_center(dikeset)
-
-    plotlines(lines, 'k', ax[1])
-    toplines=pd.DataFrame()
-    top=np.sort(h, axis=None)[-n:]
-    reds = cm.get_cmap('Reds', n*2)
-    level=n
-    ylevel=.85
-    for t in top:
-        im,jm=np.where(h==t)
-        for i,j in zip(im,jm):
-            xe=[xedges[i],xedges[i+1]]
-            ye=[yedges[j],yedges[j+1]]
-            c=reds(2*level)
-            maskTheta=(lines['AvgTheta'] > xe[0]) & (lines['AvgTheta'] < xe[1])
-            maskRho=(lines['AvgRho']/1000 > ye[0]) & (lines['AvgRho']/1000 < ye[1])
-            mask=(maskTheta ==True) & (maskRho==True)
-            toplines2=lines[mask]
-            toplines2=toplines2.assign(Level=level)
-            ax[0].plot( [xe[0], xe[0], xe[1], xe[1], xe[0]], [ye[0], ye[1], ye[1], ye[0], ye[0]],color=c)
-            toplines=pd.concat((toplines,toplines2), ignore_index=True)
-            nlines=len(toplines2)
-            ann=r'\theta :'+str(np.ceil(np.mean(xe)))+ r' \rho :'+str(np.ceil(np.mean(ye)))+ " n="+str(int(t))+"/"+str(nlines)
-            #ax[0].text(0.1,ylevel, ann, color=c,transform=ax[0].transAxes)
-            w,l,r,Xe, Ye, Xmid, Ymid=fit_Rec(toplines2, xc, yc)
-            #plotlines(toplines2, c, ax[1], SpeedUp=False)
-            level=level-1
-            ylevel=ylevel-0.05
-            
-            print('Level', level)
-            print('Counts', t, "Counts %:", t/len(dikeset)*100)
-            print("Theta Range", xe[0], "-", xe[1])
-            print("Rho Range", ye[0], "-", ye[1])
-            print('Width of Linear Swarm:', w)
-            print('Length of Linear Swarm:', l)
-            print("Std Theta:", toplines2['AvgTheta'].std())
-            
-    print("Top 3 cells")
-    w,l,r,Xe, Ye, Xmid, Ymid=fit_Rec(toplines, xc, yc)
-    print('Width of Linear Swarm:', w)
-    print('Length of Linear Swarm:', l)
-    print("Range Theta:", np.ptp(toplines['AvgTheta'].values))
-    print("Range Rho:", np.ptp(toplines['AvgRho'].values))
-    
-    pltRec(toplines, xc, yc)
-            
-    plotlines(toplines, 'k', ax[1], SpeedUp=False, ColorBy='Level', cmap=reds, alpha=0.4)
-    # off axis linear swarm 
-    medianTheta=dikeset['theta'].median()
-    offAxisBy=50
-    t1=medianTheta+offAxisBy
-    t2=medianTheta+2*offAxisBy
-    
-    if abs(t1)>90:
-        t1=t1%90*np.sign(t1)*-1
-    if abs(t2)>90:
-        t2=t2%90*np.sign(t2)*-1
-        
-    if t1>t2:
-        xloc=np.where( np.logical_or((xedges[:-1]>t1),(xedges[:-1]<t2)))
-    else:
-        xloc=np.where( np.logical_and((xedges[:-1]>t1),(xedges[:-1]<t2)))
-    print(medianTheta)
-
-    print(t1, t2)
-
-    offAxisMax=np.max(h[xloc,:], axis=None)
-    im,jm=np.where(h==offAxisMax)
-    print(offAxisMax)
-    i,j=im[0], jm[0]
-    xe=[xedges[i],xedges[i+1]]
-    ye=[yedges[j],yedges[j+1]]
-    c='g'
-    maskTheta=(lines['AvgTheta'] > xe[0]) & (lines['AvgTheta'] < xe[1])
-    maskRho=(lines['AvgRho']/1000 > ye[0]) & (lines['AvgRho']/1000 < ye[1])
-    mask=(maskTheta ==True) & (maskRho==True)
-    toplines2=lines[mask]
-    toplines2=toplines2.assign(Level=-1)
-    ax[0].plot( [xe[0], xe[0], xe[1], xe[1], xe[0]], [ye[0], ye[1], ye[1], ye[0], ye[0]],color=c)
-    toplines=pd.concat((toplines,toplines2), ignore_index=True)
-    plotlines(toplines2, 'g', ax[1], SpeedUp=False)
-    ann=r"theta :"+str(np.ceil(np.mean(xe)))+ r"rho:"+str(np.ceil(np.mean(ye)))+ " n="+str(int(t))+"/"+str(nlines)
-   # ax[0].text(0.1,ylevel, ann, color=c,transform=ax[0].transAxes)
-    t=offAxisMax
-    print('Level', -1)
-    print('Counts', t, "Counts %:", t/len(dikeset)*100)
-    print("Theta Range", xe[0], "-", xe[1])
-    print("Rho Range", ye[0], "-", ye[1])
-    print('Width of Linear Swarm:', w)
-    print('Length of Linear Swarm:', l)
-    print("Std Theta:", toplines2['AvgTheta'].std())
-            
-            
-    plt.tight_layout()
-    
-    return toplines, fig, ax, reds
-
-def errorAnalysis(lines, dikeset, plot=False):
-    
-    if plot: 
-        fig,ax=plt.subplots(2,4)
-        ax[0][0].set_ylabel('R_length')
-        ax[0][0].scatter(lines['R_error'], lines['R_Length'])
-        ax[0][1].scatter(lines['R_error'], lines['R_Width'])
-        ax[0][1].set_ylabel('R_Width')
-        
-        ax[0][2].scatter(lines['R_error'], lines['Size'])
-        ax[0][2].set_ylabel('Size')
-        
-        
-        ax[0][3].hist(lines['R_error'], bins=50)
-        ax[0][3].set_ylabel('Counts')
-        
-        ax[1][0].scatter(lines['R_error'], lines['AvgTheta'])
-        ax[1][0].set_ylabel('AvgTheta')
-        
-        ax[1][1].scatter(lines['R_error'], lines['AvgRho'])
-        ax[1][1].set_ylabel('AvgRho')
-        
-        ax[1][2].scatter(lines['R_error'], lines['ThetaRange'])
-        ax[1][2].set_ylabel('ThetaRange')
-        
-        ax[1][3].scatter(lines['R_error'], lines['RhoRange'])
-        ax[1][3].set_ylabel('RhoRange')
-        
-        for i in range(4):
-            ax[1][i].set_xlabel("SS Error (m)")
-    print("Error evaluation")
-    print("average error:", lines['R_error'].mean())
-    print("# clusters over 1 mil error:", max(lines['Label'])-len(lines))
-    print("N% clustered", (np.sum(lines['Size'])/len(dikeset))*100)
 
 
