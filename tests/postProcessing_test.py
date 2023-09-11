@@ -1,6 +1,32 @@
 # #!/usr/bin/env python3
 # # -*- coding: utf-8 -*-
 # """
+import pytest
+import pandas as pd
+import numpy as np
+from fitRectangle import rotateXYShift
+
+class TestRotate:
+    
+    @staticmethod
+    def test_rotate90():
+        # Test case 1: Rotate 90 degrees counterclockwise about the origin
+        x, y = 1, 0
+        ang = np.pi / 2
+        xp, yp = rotateXYShift(ang, x, y, 0, 0)
+        assert np.isclose(xp, 0)
+        assert np.isclose(yp, 1)
+        
+    @staticmethod
+    def test_rotate45():
+        # Test case 2: Rotate 45 degrees clockwise about (1, 1)
+        x, y = 2, 1
+        ang = -np.pi / 4
+        h, k = 1, 1
+        xp, yp = rotateXYShift(ang, x, y, h, k)
+        assert np.isclose(xp, 1 + np.sqrt(2))
+        assert np.isclose(yp, 1 - np.sqrt(2))
+        
 # Created on Sat Sep  9 09:44:53 2023
 
 # @author: akh

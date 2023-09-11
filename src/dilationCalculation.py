@@ -167,3 +167,157 @@ In summary, the choice between Expanded, Average, or Total dilation depends on y
 
     return EWDilation, NSDilation, binx, biny
 
+
+def TripleDilationPlot(df, lines, shape=['half', 'portrait'], kwargs=None):
+    """
+    Create a triple-panel plot showing dilation results.
+
+    This function creates a triple-panel plot to visualize dilation results. It includes a main panel with line segments
+    in Cartesian coordinates on the left, a histogram of NS dilation values on the bottom, and a histogram of EW dilation
+    values on the right.
+
+    Parameters:
+        df (pandas.DataFrame): A DataFrame containing data points.
+        lines (pandas.DataFrame): A DataFrame containing line segment data.
+        shape (list, optional): A list specifying the final figure size and orientation.
+            Defaults to ['half', 'portrait'].
+        kwargs (dict, optional): Additional keyword arguments to pass to the `dilation` function for calculating dilation.
+            Defaults to None.
+
+    Returns:
+        matplotlib.figure.Figure: The modified Figure object.
+        list of matplotlib.axes._subplots.AxesSubplot: A list of three axes objects (main panel, NS dilation histogram, and EW dilation histogram).
+
+    Example:
+        # Create a triple-panel dilation plot
+        fig, ax = TripleDilationPlot(data_df, lines_df, shape=['half', 'portrait'], kwargs={'rstep': 0.1, 'tstep': 10})
+    """
+
+
+    fig = SetupJGRFig(shape[0], shape[1])
+    
+    
+   
+    xlim=[ np.min( [lines['Xstart'].min(), lines['Xend'].min()]), np.max( [lines['Xstart'].max(), lines['Xend'].max()])]
+    ylim=[ np.min( [lines['Ystart'].min(), lines['Yend'].min()]), np.max( [lines['Ystart'].max(), lines['Yend'].max()])]
+    aspect=np.diff(xlim)[0]/np.diff(ylim)[0]
+    #aspect is w/h, xlim is w and ylim is h
+    
+    gskw = dict(width_ratios = [ .75, .25],
+                height_ratios= [ .25,.75])
+    
+    gs = gridspec.GridSpec(2, 2, **gskw)
+    ax_main = plt.subplot(gs[1, 0])
+
+    
+    
+    ax_xDist = plt.subplot(gs[0, 0], sharex=ax_main, adjustable='box')
+    ax_yDist = plt.subplot(gs[1, 1], sharey=ax_main, adjustable='box')
+    
+    
+    
+
+    EWDilation, NSDilation, binx,biny=dilation(df, **kwargs)
+    EWDilation1, NSDilation1, binx1,biny1=dilation(lines, **kwargs)
+    
+    m=lines['TrustFilter']==1
+
+    EWDilation2, NSDilation2, binx2,biny2=dilation(lines[m], **kwargs)
+    
+    ys=[np.min(biny), np.max(biny)]
+
+
+    #ax_xDist.plot(binx[:-1], NSDilation[:-1])
+
+    ax_xDist.fill_between(binx1,0, NSDilation1, alpha=0.6, color='r')
+    ax_xDist.fill_between(binx,0, NSDilation, alpha=0.6, color='b')
+    
+    f1=ax_yDist.fill_between(EWDilation1,0,biny1, alpha=0.6, color='r', label='All Linked' )
+    f2=ax_yDist.fill_between(EWDilation,0,biny, alpha=0.6, color='b', label='Segments' )
+    
+    
+    
+    #ax_yDist.plot(EWDilation2,biny2, color='k', label='Filtered' )
+    
+    #ax_xDist.plot(binx2,NSDilation2, color='k' )
+    # EWorder=np.argsort([np.sum(i) for i in EWl])
+    # colors=['gray', 'green', 'yellow']
+    # for i in EWorder:
+    #     ax_yDist.fill_between(EWl[i],0,yl[i], alpha=0.6, color=colors[i] )
+        
+    # NSorder=np.argsort([np.sum(i) for i in NSl])
+
+    # for i in NSorder:
+    #     ax_xDist.fill_between(xl[i],0, NSl[i], alpha=0.6, color=colors[i])
+        
+    
+    
+    ax_xDist.set(ylabel='NS Dilaton (m)')
+    ax_yDist.set(xlabel='EW Dilaton (m)')
+        
+    ax_xDist.tick_params(axis='x',          # changes apply to the x-axis
+                        which='both',      # both major and minor ticks are affected
+                        bottom=False,      # ticks along the bottom edge are off
+                        top=False,         # ticks along the top edge are off
+                        labelbottom=False) # labels along the bottom edge are off)
+    ax_yDist.tick_params(axis='y',
+                         which='both',
+                         left=False,
+                         right=False,
+                         labelleft=False)
+    
+    ax_yDist.set_ylim([ys[0], ys[1]])
+    labelSubplots([ax_main, ax_xDist, ax_yDist])
+    plotlines(lines, 'r', ax_main, alpha=0.6)
+    plotlines(df, 'b', ax_main, alpha=0.6)
+    yMean=np.average(biny2, weights=EWDilation2)
+    xMean=np.average(binx2, weights=NSDilation2)
+    print(yMean, xMean)
+    m=ax_yDist.axhline(y=yMean, color='navy', linestyle=":", label='Mean')
+    ax_xDist.axvline(x=xMean,color='navy', linestyle=":")
+    
+    
+    ax_main.axhline(y=yMean, color='navy', linestyle=":")
+    ax_main.axvline(x=xMean,color='navy', linestyle=":")
+    
+
+    ax_yDist.legend(loc="lower left")
+    print("")
+    print("EW")
+    print("Max segment")
+    print(np.max(EWDilation))
+    print("Max Linked")
+    print(np.max(EWDilation1))
+    print("Max Filtered")
+    print(np.max(EWDilation2))
+    print("XRange (m)")
+    print( xlim[1]-xlim[0])
+    print('max strain')
+    print("segment")
+    print(np.max(EWDilation)/( xlim[1]-xlim[0])*100)
+    print("Linked")
+    print(np.max(EWDilation1)/( xlim[1]-xlim[0])*100)
+    print("Filtered")
+    print(np.max(EWDilation2)/( xlim[1]-xlim[0])*100)
+    print("")
+    print("NS")
+    print("Max segment")
+    print(np.max(NSDilation))
+    print("Max Linked")
+    print(np.max(NSDilation1))
+    print("Max Filtered")
+    print(np.max(NSDilation2))
+    print("YRange (m)")
+    print( ylim[1]-ylim[0])
+    print('max strain')
+    print("segment")
+    print(np.max(NSDilation)/( ylim[1]-ylim[0])*100)
+    print("Linked")
+    print(np.max(NSDilation1)/( ylim[1]-ylim[0])*100)
+    print("Filtered")
+    print(np.max(NSDilation2)/( ylim[1]-ylim[0])*100)
+    print("")
+
+    return fig, [ax_main, ax_xDist, ax_yDist]
+
+

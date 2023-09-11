@@ -18,7 +18,6 @@ import matplotlib as mpl
 from matplotlib.ticker import PercentFormatter
 
 from pyproj import Proj
-from dilationCalculation import dilation
 from matplotlib.colors import ListedColormap, LinearSegmentedColormap, Normalize
 import seaborn as sns
 import matplotlib.colors as mcolors

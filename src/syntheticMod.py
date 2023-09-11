@@ -10,7 +10,7 @@ and modeling purposes.
 @author: akh
 """
 import pandas as pd
-from htMOD import AKH_HT as HT
+from htMOD import HoughTransform
 from sklearn.preprocessing import scale
 import numpy as np 
 from clusterMod import *
@@ -310,7 +310,7 @@ def fromHT(angles, rhos, scale=10000, length=10000, xc=0, yc=0, CartRange=100000
     
     df=pd.DataFrame({'Xstart':Xstart, 'Xend': Xend, 'Ystart': Ystart, 'Yend':Yend, 
                     'seg_length':l, 'slope': slopes, 'intercept': b, 'Label': labels})
-    theta1, rho1, xc,yc=HT(df, xc=xc, yc=yc)
+    theta1, rho1, xc,yc=HoughTransform(df, xc=xc, yc=yc)
     df=df.assign(rho=rho1, theta=theta1, xc=xc, yc=yc)
 
 

@@ -17,7 +17,7 @@ import scipy.cluster.hierarchy as sch
 import matplotlib.pyplot as plt
 
 
-def HT_AGG_custom(dikeset, dtheta, drho, dimensions=2, linkage='complete', rotate=False, metric='Euclidean'):
+def AggCluster(dikeset, dtheta, drho, dimensions=2, linkage='complete', rotate=False, metric='Euclidean'):
     """
     Agglomerative clustering with custom metric on Hough transform data.
 

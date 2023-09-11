@@ -28,7 +28,7 @@ WKT files and exporting WKT files to use in GIS programs
 import pandas as pd
 import numpy as np 
 from htMOD import MidtoPerpDistance, HT_center
-from htMOD import AKH_HT as HT 
+from htMOD import HoughTransform, segLength
 from datetime import datetime
 import re
 from scipy import stats
@@ -253,19 +253,7 @@ def giveHashID(df):
     
     return df
 
-def segLength(df):
-    """
-    Computes and adds a 'seg_length' column to a DataFrame, representing the length of line segments.
 
-    Parameters:
-        df (DataFrame): The input DataFrame containing line data with 'Xstart', 'Xend', 'Ystart', and 'Yend' columns.
-
-    Returns:
-        DataFrame: The input DataFrame with an additional 'seg_length' column representing the length of line segments.
-    """
-    length = np.sqrt((df['Xstart'] - df['Xend'])**2 + (df['Ystart'] - df['Yend'])**2)
-    df['seg_length'] = length
-    return df
 
 
 def transformXstart(dikeset, HTredo=True):
@@ -296,7 +284,7 @@ def transformXstart(dikeset, HTredo=True):
     
     # if HTredo:
     #     t,r=whichForm(dikeset)
-    #     theta,rho,xc,yc=HT(dikeset)
+    #     theta,rho,xc,yc=HoughTransform(dikeset)
     #     dikeset['theta']=theta
     #     dikeset['rho']=rho
     #     dikeset['yc']=yc
@@ -343,24 +331,24 @@ def DikesetReProcess(df, HTredo=True, xc=None, yc=None):
     
     # Calculate Hough Transform attributes (theta, rho) if not present
     if 'theta' not in df.columns or 'rho' not in df.columns:
-        theta, rho, xc, yc = HT(df, xc=xc, yc=yc)
+        theta, rho, xc, yc = HoughTransform(df, xc=xc, yc=yc)
         df['theta'] = theta
         df['rho'] = rho
     
     # Assign or update Hough Transform center coordinates
     if 'xc' not in df.columns:
-        theta, rho, xc, yc = HT(df, xc=xc, yc=yc)
+        theta, rho, xc, yc = HoughTransform(df, xc=xc, yc=yc)
         df = df.assign(theta=theta, xc=xc, rho=rho, yc=yc)
         df=MidtoPerpDistance(df, xc, yc)
     elif xc is not df['xc'].iloc[0] and HTredo:
-        theta,rho,xc,yc=HT(df, xc=xc, yc=yc)
+        theta,rho,xc,yc=HoughTransform(df, xc=xc, yc=yc)
         df['theta']=theta
         df['rho']=rho
         df=MidtoPerpDistance(df, xc, yc)
         df=df.assign(yc=yc)
         df=df.assign(xc=xc)
     elif HTredo: 
-        theta,rho,xc,yc=HT(df, xc=xc, yc=yc)
+        theta,rho,xc,yc=HoughTransform(df, xc=xc, yc=yc)
         df['theta']=theta
         df['rho']=rho
         df=MidtoPerpDistance(df, xc, yc)
@@ -409,7 +397,7 @@ def LinesReProcess(df, HTredo=True):
     
     # Calculate or recalculate Hough Transform attributes (theta, rho)
     if HTredo:
-        theta, rho, xc, yc = HT(df)
+        theta, rho, xc, yc = HoughTransform(df)
         df = MidtoPerpDistance(df, xc, yc)
         df = df.assign(yc=yc, xc=xc, AvgTheta=theta, AvgRho=rho)
         df = df.assign(xc=xc)
@@ -448,7 +436,7 @@ def completePreProcess(df):
     df = midPoint(df)
 
     # Calculate Hough Transform attributes (theta, rho, xc, yc) and perpendicular offset distances
-    theta, rho, xc, yc = HT(df)
+    theta, rho, xc, yc = HoughTransform(df)
     df['theta'] = theta
     df['rho'] = rho
     df['yc'] = yc

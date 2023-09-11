@@ -7,7 +7,7 @@ This module provides functions for working with line segments and performing Hou
 
 Functions:
     - CyclicAngleDistance(u,v): calculates smallest distance between angles
-    - AKH_HT(data, xc=None, yc=None): calculates Hough Transform
+    - HoughTransform(data, xc=None, yc=None): calculates Hough Transform
     - HT_center(data): Calculates only HT center cartesian coordinates
     - rotateData(data, rotation_angle): rotates cartesian data by rotation_angle
     - MidtoPerpDistance(df, xc, yc): calculates mid to perp distance
@@ -28,18 +28,18 @@ Dependencies:
 
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
+from PrePostProcess import segLength
 
 def CyclicAngleDist(u, v):
     """
     Calculate the cyclic angle distance between two angles in degrees.
 
     Parameters:
-        u (list or float): The first angle(s) in degrees.
-        v (list or float): The second angle(s) in degrees.
+        u (list or array): The first angle(s) in degrees.
+        v (list or array): The second angle(s) in degrees.
 
     Returns:
-        dist (float): The cyclic angle distance between the two angles, ranging from 0 to 90 degrees.
+        dist (list or array): The cyclic angle distance between the two angles, ranging from 0 to 90 degrees.
 
     This function calculates the cyclic angle distance between two angles in 
     degrees, considering the cyclical nature of angles.
@@ -47,8 +47,8 @@ def CyclicAngleDist(u, v):
     angles, ranging from 0 to 90 degrees.
 
     Example usage:
-    angle1 = 45.0
-    angle2 = 160.0
+    angle1 = [45.0]
+    angle2 = [160.0]
     distance = CyclicAngleDist(angle1, angle2)
     print("Cyclic Angle Distance (degrees):", distance)
     """
@@ -58,7 +58,7 @@ def CyclicAngleDist(u, v):
 
 
 
-def AKH_HT(data, xc=None, yc=None):
+def HoughTransform(data, xc=None, yc=None):
     """
     Calculates the Hough Transform of a dataframe of line segments.
 
@@ -84,18 +84,25 @@ def AKH_HT(data, xc=None, yc=None):
         raise ValueError("Input 'data' must be a pandas DataFrame.")
 
     if len(data) < 1:
-        raise ValueError("Data is empty")
+        raise ValueError("DataFrame is empty")
+        
+    data=segLength(data)
+    
+    if any(np.isclose(data['segLength'],0)):
+        raise ValueError('Some lines are points')
+
   
     if xc is None or yc is None:
         xc,yc=HT_center(data)
+        
 
     o_x1 = data['Xstart'].values - xc
     o_x2 = data['Xend'].values - xc
     o_y1 = data['Ystart'].values - yc
     o_y2 = data['Yend'].values - yc
 
-    A = o_y1.astype(float) - o_y2.astype(float) + 0.0000000000000001;
-    B = o_x1.astype(float) - o_x2.astype(float)+ 0.000000000000000001;
+    A = o_y1.astype(float) - o_y2.astype(float) +0.00000000001 
+    B = o_x1.astype(float) - o_x2.astype(float) +0.00000000001 
 
     m=A/B
     angle=np.arctan(-1/m)
@@ -177,7 +184,7 @@ def rotateData(data, rotation_angle):
     dataRotated['Yend']=y2+yc
     
     #xcR, ycR=HT_center(dataRotated)
-    theta, rho, xc, yc=AKH_HT(dataRotated, xc=xc, yc=yc)
+    theta, rho, xc, yc=HoughTransform(dataRotated, xc=xc, yc=yc)
     dataRotated['theta']=theta
     dataRotated['rho']=rho
     
@@ -217,7 +224,7 @@ def MidtoPerpDistance(df, xc, yc):
     #     df=midPoint(df)
         
     
-    theta,rho,xc,yc=AKH_HT(df, xc, yc)
+    theta,rho,xc,yc=HoughTransform(df, xc, yc)
     intx=rho*np.cos(np.deg2rad(theta))
     inty=rho*np.sin(np.deg2rad(theta))
     df['PerpOffsetDist']=np.sqrt( (df['Xmid'].values-intx)**2 +  (df['Ymid'].values-inty)**2)*np.sign((df['Ymid'].values-inty))
