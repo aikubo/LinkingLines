@@ -28,7 +28,22 @@ Dependencies:
 
 import pandas as pd
 import numpy as np
-from PrePostProcess import segLength
+
+
+
+def segLength(df):
+    """
+    Computes and adds a 'seg_length' column to a DataFrame, representing the length of line segments.
+
+    Parameters:
+        df (DataFrame): The input DataFrame containing line data with 'Xstart', 'Xend', 'Ystart', and 'Yend' columns.
+
+    Returns:
+        DataFrame: The input DataFrame with an additional 'seg_length' column representing the length of line segments.
+    """
+    length = np.sqrt((df['Xstart'] - df['Xend'])**2 + (df['Ystart'] - df['Yend'])**2)
+    df['seg_length'] = length
+    return df
 
 def CyclicAngleDist(u, v):
     """
@@ -88,7 +103,7 @@ def HoughTransform(data, xc=None, yc=None):
         
     data=segLength(data)
     
-    if any(np.isclose(data['segLength'],0)):
+    if any(np.isclose(data['seg_length'],0)):
         raise ValueError('Some lines are points')
 
   

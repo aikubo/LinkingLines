@@ -81,7 +81,21 @@ class TestHough:
         # Call the HoughTransform function with the non-DataFrame input
         with pytest.raises(ValueError):
             theta, rho, xc, yc = HoughTransform(array)
-    
+            
+    # Test case for points not lines
+    @staticmethod
+    def test_points_ht():
+        data = pd.DataFrame({
+            'Xstart': [0, 1, 2, 3],
+            'Ystart': [0, 1, 2, 3],
+            'Xend': [0, 1, 2, 3],
+            'Yend': [0, 1, 2, 3]
+        })
+
+        # Call the HoughTransform function with the points input
+        with pytest.raises(ValueError):
+            theta, rho, xc, yc = HoughTransform(data)
+
     # Test case for HoughTransform with specified center coordinates
     @staticmethod
     def test_akht_with_center():
@@ -192,6 +206,7 @@ class TestPreProcessingFunctions():
     # Test case for CyclicAngleDist function
     @staticmethod
     def testCyclicAngleDist():
+        #Test cases for Cyclic angle distance
         assert CyclicAngleDist([20.], [20.]) == 0
         assert CyclicAngleDist([90.], [-90.]) == 0
         assert CyclicAngleDist([0.], [90.]) == 90.0
@@ -200,6 +215,8 @@ class TestPreProcessingFunctions():
 
     @staticmethod
     def test_rotateData():
+        #Test rotation of vertical to horizontal 
+        #Create dataframe
         data = pd.DataFrame({
             'Xstart': [0, 1, 2, 3],
             'Ystart': [0, 0, 0, 0],
@@ -207,7 +224,10 @@ class TestPreProcessingFunctions():
             'Yend': [3, 3, 3, 3]
         })
 
+        #Rotate by 90
         dataRotated=rotateData(data,90)
+        
+        
         assert len(data)==len(dataRotated)
         theta_true = np.array([-90., -90., -90., -90.])
         assert all([np.isclose(a, b) for a, b in zip(dataRotated['theta'].values, theta_true)])
@@ -223,3 +243,37 @@ class TestSynthetic:
     
     @staticmethod
     def test_fromHT():
+        
+        # Test non equal arrays 
+        theta_true = np.array([90., 90.])
+        rho_true=np.array([1., 1., 1., 1.])
+        l=5
+        with pytest.raises(ValueError):
+            df=fromHT(theta_true, rho_true, length=l, scale=1)
+        
+        # Test 90 degree angle
+        theta_true = np.array([90., 90., 90., 90.])
+        rho_true=np.array([1., 1., 1., 1.])
+        l=5
+        df=fromHT(theta_true, rho_true, length=l, scale=1)
+        
+        assert len(theta_true)==len(df)
+        
+        assert all([np.isclose(l,a) for a in df['seg_length'].values])
+        assert all([np.isclose(a,b) for a,b in zip(df['theta'].values, theta_true)])
+        assert all([np.isclose(a,b) for a,b in zip(df['rho'].values, rho_true)])
+        
+        # Test 0 degree angle 
+        theta_true = np.array([0.,0., 0., 0.])
+        rho_true=np.array([1., 1., 1., 1.])
+        l=5
+        df=fromHT(theta_true, rho_true, length=l, scale=1)
+        
+        assert len(theta_true)==len(df)
+        
+        assert all([np.isclose(l,a) for a in df['seg_length'].values])
+        assert np.allclose(df['theta'].values, theta_true, atol=1e-7)
+        assert np.allclose(df['rho'].values, rho_true, rtol=1e-2)
+        
+        
+        

@@ -19,6 +19,8 @@ from plotmod import plotlines, labelcolors, BA_HT, HThist, DotsLines, labelSubpl
 from examineMod import examineClusters
 import seaborn as sns
 from matplotlib import cm
+from PrePostProcess import transformXstart, DikesetReProcess
+
 
 
 
@@ -278,12 +280,16 @@ def fromHT(angles, rhos, scale=10000, length=10000, xc=0, yc=0, CartRange=100000
     Returns:
         DataFrame: A DataFrame containing dike data generated from HT parameters.
     """
+    if len(angles) is not len(rhos):
+        raise ValueError('Angles and Rhos arrays are not the same length')
+        
 
     ndikes=len(angles)
     
     slopes=-1/(np.tan(np.deg2rad(angles))+0.000000001)
 
-    b=rhos/np.sin(np.deg2rad(angles))+yc-xc*slopes
+    b=rhos/(np.sin(np.deg2rad(angles))+0.000000001)+yc-xc*slopes
+
 
     if xrange is None:
         a=np.array([1,-1])
@@ -308,27 +314,10 @@ def fromHT(angles, rhos, scale=10000, length=10000, xc=0, yc=0, CartRange=100000
     
     l=np.sqrt( (Xstart-Xend)**2 + (Ystart-Yend)**2)
     
-    df=pd.DataFrame({'Xstart':Xstart, 'Xend': Xend, 'Ystart': Ystart, 'Yend':Yend, 
-                    'seg_length':l, 'slope': slopes, 'intercept': b, 'Label': labels})
-    theta1, rho1, xc,yc=HoughTransform(df, xc=xc, yc=yc)
-    df=df.assign(rho=rho1, theta=theta1, xc=xc, yc=yc)
+    df=pd.DataFrame({'Xstart':Xstart, 'Xend': Xend, 'Ystart': Ystart, 'Yend':Yend})
+    
+    df=DikesetReProcess(df, xc=xc, yc=yc)
 
-
-    if test:
-        if any(~np.isclose(abs(theta1), abs(angles))):
-            print( "ERROR angles not equivilent")
-            
-            print(theta1[~np.isclose(theta1, angles)])
-            print(angles[~np.isclose(theta1, angles)])
-        
-        if any(~np.isclose(rho1, rhos)):
-            print( "ERROR rhos not equivilent")
-            
-            print(rhos[~np.isclose(rho1, rhos)])
-            print(rhos1[~np.isclose(rho1, rhos)])
-            
-    df=df.drop(df[ abs(df['Ystart'])-yc > CartRange].index)
-    df=df.drop(df[ abs(df['Xstart'])-xc > CartRange].index)
     
     return df 
 
