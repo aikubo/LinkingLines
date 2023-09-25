@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>fitRadialCenters module &#8212; LinkingLines 0.2 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=4f649999" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=039e1c02" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js?v=d7c963c3"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=4825356b"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="module-fitRadialCenters">
+<span id="fitradialcenters-module"></span><h1>fitRadialCenters module<a class="headerlink" href="#module-fitRadialCenters" title="Permalink to this heading">¶</a></h1>
+<dl class="simple">
+<dt>The provided Python module appears to be a collection of functions for analyzing</dt><dd><p>and processing dike lines data in a geospatial context. Here’s a summary of the
+module’s main functionalities and the purpose of each function:</p>
+</dd>
+</dl>
+<ul class="simple">
+<li><p><cite>CenterFunc(theta, xr, yr, xc, yc)</cite>: Calculates the radial distance of a point from a given center for a specified angle.</p></li>
+<li><p><cite>RadialFit(lines, plot=False, ColorBy=None, weight=’LayerNumber’, ThetaRange=[-90, 90], xc=None, yc=None)</cite>: Fits a radial model to dike lines data, optionally visualizing the fit. It returns center information such as coordinates and goodness of fit.</p></li>
+<li><p><cite>RadialAzimuthal(lines, Center)</cite>: Calculates radial azimuthal angles of dike lines relative to a specified center.</p></li>
+<li><p><cite>CyclicAngle360(u, v)</cite>: Computes the cyclic angle between two angles in the range [0, 360).</p></li>
+<li><p><cite>AngleSpacing(rAngle)</cite>: Calculates statistics related to the spacing between radial azimuthal angles.</p></li>
+<li><p><cite>RipleyRadial(rAngle, plot=False)</cite>: Measures the “clumpiness” of radial dike swarm angles using the Ripley K function, with an option to visualize the results.</p></li>
+<li><p><cite>ExpandingR(lines, Center)</cite>: Measures the density of lines at different radial distances from a center.</p></li>
+<li><p><cite>NearCenters(lines, Center, tol=10000, printOn=False)</cite>: Identifies lines near a specified center within a tolerance, providing detailed information about those lines.</p></li>
+<li><p><cite>writeCenterWKT(df, name)</cite>: Writes center information to a Well-Known Text (WKT) file, allowing for easy geospatial data export.</p></li>
+</ul>
+<p>Overall, this module is designed for the analysis of geological dike structures,
+particularly in terms of their orientation and distribution relative to a central</p>
+<blockquote>
+<div><p>point. It includes functions for fitting radial models, assessing clustering patterns,
+and exporting results in a geospatial format.</p>
+<p>written by akh</p>
+</div></blockquote>
+<dl class="py function">
+<dt class="sig sig-object py" id="fitRadialCenters.AngleSpacing">
+<span class="sig-prename descclassname"><span class="pre">fitRadialCenters.</span></span><span class="sig-name descname"><span class="pre">AngleSpacing</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rAngle</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fitRadialCenters.AngleSpacing" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate statistics related to angle spacing in a set of radial azimuthal angles.</p>
+<dl class="simple">
+<dt>Parameters:</dt><dd><p>rAngle (np.array): Array of radial azimuthal angles.</p>
+</dd>
+<dt>Returns:</dt><dd><p>tuple: Mean, median, minimum, and maximum angle spacing.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="fitRadialCenters.CenterFunc">
+<span class="sig-prename descclassname"><span class="pre">fitRadialCenters.</span></span><span class="sig-name descname"><span class="pre">CenterFunc</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">theta</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">yr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">yc</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fitRadialCenters.CenterFunc" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate the radial distance of a point from a center given an angle.</p>
+<dl class="simple">
+<dt>Parameters:</dt><dd><p>theta (float): Angle in degrees.
+xr (float): X-coordinate of the point.
+yr (float): Y-coordinate of the point.
+xc (float): X-coordinate of the center.
+yc (float): Y-coordinate of the center.</p>
+</dd>
+<dt>Returns:</dt><dd><p>float: Radial distance of the point from the center.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="fitRadialCenters.CyclicAngle360">
+<span class="sig-prename descclassname"><span class="pre">fitRadialCenters.</span></span><span class="sig-name descname"><span class="pre">CyclicAngle360</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fitRadialCenters.CyclicAngle360" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate the cyclic angle between two angles in the range [0, 360).</p>
+<dl class="simple">
+<dt>Parameters:</dt><dd><p>u (float): First angle.
+v (float): Second angle.</p>
+</dd>
+<dt>Returns:</dt><dd><p>float: Cyclic angle between the two angles.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="fitRadialCenters.ExpandingR">
+<span class="sig-prename descclassname"><span class="pre">fitRadialCenters.</span></span><span class="sig-name descname"><span class="pre">ExpandingR</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lines</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Center</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fitRadialCenters.ExpandingR" title="Permalink to this definition">¶</a></dt>
+<dd><p>Measure the density of lines at different radial distances from a center.</p>
+<dl class="simple">
+<dt>Parameters:</dt><dd><p>lines (pd.DataFrame): Dataframe containing dike lines data.
+Center (pd.DataFrame): Dataframe containing center information.</p>
+</dd>
+<dt>Returns:</dt><dd><p>list: List of density values at different radial distances.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="fitRadialCenters.NearCenters">
+<span class="sig-prename descclassname"><span class="pre">fitRadialCenters.</span></span><span class="sig-name descname"><span class="pre">NearCenters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lines</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Center</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">printOn</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fitRadialCenters.NearCenters" title="Permalink to this definition">¶</a></dt>
+<dd><p>Find lines near a given center within a specified tolerance.</p>
+<dl class="simple">
+<dt>Parameters:</dt><dd><p>lines (pd.DataFrame): Dataframe containing dike lines data.
+Center (pd.DataFrame): Dataframe containing center information.
+tol (float, optional): Tolerance for considering lines as near centers. Defaults to 10000.
+printOn (bool, optional): Whether to print information about the lines. Defaults to False.</p>
+</dd>
+<dt>Returns:</dt><dd><p>pd.DataFrame: Dataframe containing lines near centers.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="fitRadialCenters.RadialAzimuthal">
+<span class="sig-prename descclassname"><span class="pre">fitRadialCenters.</span></span><span class="sig-name descname"><span class="pre">RadialAzimuthal</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lines</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Center</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fitRadialCenters.RadialAzimuthal" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate the radial azimuthal angles of dike lines relative to a given center.</p>
+<dl class="simple">
+<dt>Parameters:</dt><dd><p>lines (pd.DataFrame): Dataframe containing dike lines data.
+Center (pd.DataFrame): Dataframe containing center information.</p>
+</dd>
+<dt>Returns:</dt><dd><p>np.array: Array of radial azimuthal angles.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="fitRadialCenters.RadialFit">
+<span class="sig-prename descclassname"><span class="pre">fitRadialCenters.</span></span><span class="sig-name descname"><span class="pre">RadialFit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lines</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ColorBy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weight</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'LayerNumber'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ThetaRange</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[-90,</span> <span class="pre">90]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">yc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fitRadialCenters.RadialFit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fit a radial model to dike lines data.</p>
+<dl class="simple">
+<dt>Parameters:</dt><dd><p>lines (pd.DataFrame): Dataframe containing dike lines data.
+plot (bool, optional): Whether to plot the fitted model. Defaults to False.
+ColorBy (str, optional): Column name to color the lines in the plot. Defaults to None.
+weight (str, optional): Column name for weighting in the plot. Defaults to ‘LayerNumber’.
+ThetaRange (list, optional): Range of angles to consider for the fit. Defaults to [-90, 90].
+xc (float, optional): X-coordinate of the center. Defaults to None.
+yc (float, optional): Y-coordinate of the center. Defaults to None.</p>
+</dd>
+<dt>Returns:</dt><dd><p>pd.DataFrame: Dataframe containing center information.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="fitRadialCenters.RipleyRadial">
+<span class="sig-prename descclassname"><span class="pre">fitRadialCenters.</span></span><span class="sig-name descname"><span class="pre">RipleyRadial</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rAngle</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fitRadialCenters.RipleyRadial" title="Permalink to this definition">¶</a></dt>
+<dd><p>Measure the radial dike swarm angle “clumpiness” using the Ripley K function.</p>
+<dl class="simple">
+<dt>Parameters:</dt><dd><p>rAngle (np.array): Array of radial azimuthal angles.
+plot (bool, optional): Whether to plot the Ripley K function. Defaults to False.</p>
+</dd>
+<dt>Returns:</dt><dd><p>tuple: Ripley K function, K function standard error, and optional plot figure and axis.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="fitRadialCenters.writeCenterWKT">
+<span class="sig-prename descclassname"><span class="pre">fitRadialCenters.</span></span><span class="sig-name descname"><span class="pre">writeCenterWKT</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fitRadialCenters.writeCenterWKT" title="Permalink to this definition">¶</a></dt>
+<dd><p>Write center information to a WKT file.</p>
+<dl class="simple">
+<dt>Parameters:</dt><dd><p>df (pd.DataFrame): Dataframe containing center information.
+name (str): File name to save the WKT data.</p>
+</dd>
+<dt>Returns:</dt><dd><p>pd.DataFrame: Dataframe containing center information.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">LinkingLines</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2023, Allison Kubo.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 7.1.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.13</a>
+      
+      |
+      <a href="_sources/fitRadialCenters.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

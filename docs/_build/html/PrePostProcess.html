@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>PrePostProcess module &#8212; LinkingLines 0.2 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=4f649999" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=039e1c02" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js?v=d7c963c3"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=4825356b"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="module-PrePostProcess">
+<span id="prepostprocess-module"></span><h1>PrePostProcess module<a class="headerlink" href="#module-PrePostProcess" title="Permalink to this heading">¶</a></h1>
+<p>Created on Thu Jul  1 11:04:53 2021</p>
+<p>&#64;author: akh</p>
+<p>Contains various preprocessing data and post processing including reading in
+WKT files and exporting WKT files to use in GIS programs</p>
+<blockquote>
+<div><p>writeToQGIS makes the dataframe into a WKT (well known text) string and writes as CSV (comma seperated values)
+writeToQGISLong: writes to QGIS after examineMod/extendlines has been applied
+WKTtoArray processes from a WKT CSV to a pandas Dataframe with columns Xstart,Ystart,Xend,Yend,seg_length
+giveID gives a numeric ID to data
+midPoint: Finds the midpoint of a dataframe of line segments.
+giveHashID: assigns hash ID to a dataframe based on line endpoints.
+segLength: calculates segment length
+transformXstart: reorders dataframe so that Xstart is always &lt; Xend
+DikesetReprocess: Reprocesses a dataframe containing dike line data to ensure it has essential attributes and is properly formatted.
+LinesReprocess: Reprocesses a dataframe containing line data to ensure it has essential attributes and is properly formatted.
+CompletePreprocess:     Fully preprocesses a dataframe containing line data to ensure it has essential attributes and is properly formatted.
+whichForm: Returns the form of the dataframe column names
+MaskArea: Returns dataframe masked by bounds
+getCartLimits: Computes the Cartesian limits (x and y) of a set of lines.</p>
+</div></blockquote>
+<dl class="py function">
+<dt class="sig sig-object py" id="PrePostProcess.DikesetReProcess">
+<span class="sig-prename descclassname"><span class="pre">PrePostProcess.</span></span><span class="sig-name descname"><span class="pre">DikesetReProcess</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">HTredo</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">yc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#PrePostProcess.DikesetReProcess" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reprocesses a dataframe containing dike line data to ensure it has essential attributes and is properly formatted.</p>
+<dl class="simple">
+<dt>Parameters:</dt><dd><p>df (DataFrame): The input dataframe containing dike line data.
+HTredo (bool, optional): Whether to recalculate Hough Transform attributes (default is True).
+xc (float, optional): The x-coordinate of the center point for the Hough Transform (default is None).
+yc (float, optional): The y-coordinate of the center point for the Hough Transform (default is None).</p>
+</dd>
+<dt>Returns:</dt><dd><p>DataFrame: The processed dataframe with added or updated attributes.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="PrePostProcess.FilterLines">
+<span class="sig-prename descclassname"><span class="pre">PrePostProcess.</span></span><span class="sig-name descname"><span class="pre">FilterLines</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lines</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#PrePostProcess.FilterLines" title="Permalink to this definition">¶</a></dt>
+<dd><p>Filters lines based on a trust filter.</p>
+<dl class="simple">
+<dt>Parameters:</dt><dd><p>lines (DataFrame): The input dataframe containing line data.</p>
+</dd>
+<dt>Returns:</dt><dd><p>DataFrame: A filtered dataframe containing only the lines marked as trusted (TrustFilter == 1).</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="PrePostProcess.LinesReProcess">
+<span class="sig-prename descclassname"><span class="pre">PrePostProcess.</span></span><span class="sig-name descname"><span class="pre">LinesReProcess</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">HTredo</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#PrePostProcess.LinesReProcess" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reprocesses a dataframe containing line data to ensure it has essential attributes and is properly formatted.</p>
+<dl class="simple">
+<dt>Parameters:</dt><dd><p>df (DataFrame): The input dataframe containing line data.
+HTredo (bool, optional): Whether to recalculate Hough Transform attributes (default is True).</p>
+</dd>
+<dt>Returns:</dt><dd><p>DataFrame: The processed dataframe with added or updated attributes.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="PrePostProcess.MaskArea">
+<span class="sig-prename descclassname"><span class="pre">PrePostProcess.</span></span><span class="sig-name descname"><span class="pre">MaskArea</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bounds</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#PrePostProcess.MaskArea" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns dataframe masked by bounds
+Parameters</p>
+<blockquote>
+<div><p>df: pandas.dataframe with columns ‘Xstart’ and ‘YStart’
+bounds: X and Y bounds in form [x1, y1, x2, y2]
+x1&lt;x2 and y1&lt;y2</p>
+</div></blockquote>
+<dl class="simple">
+<dt>Returns:</dt><dd><p>df_masked: returns all values for dataframe within those area bounds</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="PrePostProcess.WKTtoArray">
+<span class="sig-prename descclassname"><span class="pre">PrePostProcess.</span></span><span class="sig-name descname"><span class="pre">WKTtoArray</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#PrePostProcess.WKTtoArray" title="Permalink to this definition">¶</a></dt>
+<dd><p>Processes a dataframe with columns Xstart,Ystart,Xend,Yend,seg_length to a pandas dataframe with columns Xstart,Ystart,Xend,Yend,seg_length</p>
+<dl class="simple">
+<dt>Parameters:</dt><dd><p>df: a pandas dataframe with a Linestring column containing WKT strings</p>
+</dd>
+<dt>Returns:</dt><dd><p>df: a pandas dataframe with columns Xstart,Ystart,Xend,Yend,seg_length</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="PrePostProcess.completePreProcess">
+<span class="sig-prename descclassname"><span class="pre">PrePostProcess.</span></span><span class="sig-name descname"><span class="pre">completePreProcess</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#PrePostProcess.completePreProcess" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fully preprocesses a dataframe containing line data to ensure it has essential attributes and is properly formatted.</p>
+<dl class="simple">
+<dt>Parameters:</dt><dd><p>df (DataFrame): The input dataframe containing line data.</p>
+</dd>
+<dt>Returns:</dt><dd><p>DataFrame: The fully processed dataframe with all required attributes.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="PrePostProcess.getCartLimits">
+<span class="sig-prename descclassname"><span class="pre">PrePostProcess.</span></span><span class="sig-name descname"><span class="pre">getCartLimits</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lines</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#PrePostProcess.getCartLimits" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the Cartesian limits (x and y) of a set of lines.</p>
+<dl class="simple">
+<dt>Parameters:</dt><dd><p>lines (DataFrame): The input dataframe containing line data.</p>
+</dd>
+<dt>Returns:</dt><dd><p>tuple: A tuple containing the x and y limits (xlim, ylim) as lists [min, max].</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="PrePostProcess.giveHashID">
+<span class="sig-prename descclassname"><span class="pre">PrePostProcess.</span></span><span class="sig-name descname"><span class="pre">giveHashID</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#PrePostProcess.giveHashID" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gives a hash ID to a dataframe based on line endpoints.</p>
+<dl class="simple">
+<dt>Parameters:</dt><dd><p>df: a pandas dataframe with columns Xstart,Ystart,Xend,Yend,seg_length</p>
+</dd>
+<dt>Returns:</dt><dd><p>df: a pandas dataframe with columns HashID</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="PrePostProcess.giveID">
+<span class="sig-prename descclassname"><span class="pre">PrePostProcess.</span></span><span class="sig-name descname"><span class="pre">giveID</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#PrePostProcess.giveID" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gives a numeric ID to a dataframe.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="PrePostProcess.midPoint">
+<span class="sig-prename descclassname"><span class="pre">PrePostProcess.</span></span><span class="sig-name descname"><span class="pre">midPoint</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#PrePostProcess.midPoint" title="Permalink to this definition">¶</a></dt>
+<dd><p>Finds the midpoint of a dataframe of line segments.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>df</strong> (<em>pandas.Dataframe</em>) – dataframe of the line segments
+must contain [“Xstart”, “Ystart”, “Xend”, “Yend”]</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>df</strong> (<em>pandas.Dataframe</em>)</p></li>
+<li><p><em>with new columns of [‘Xmid’, ‘Ymid’]</em></p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="PrePostProcess.transformXstart">
+<span class="sig-prename descclassname"><span class="pre">PrePostProcess.</span></span><span class="sig-name descname"><span class="pre">transformXstart</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dikeset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">HTredo</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#PrePostProcess.transformXstart" title="Permalink to this definition">¶</a></dt>
+<dd><p>Transforms the Xstart column of a dataframe of line segments.
+Sets the Start point as the smallest x value of the line segment.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>df</strong> (<em>pandas.Dataframe</em>) – dataframe of the line segments
+must contain [“Xstart”, “Ystart”, “Xend”, “Yend”]</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>df</strong> – dataframe of the line segments with transformed Xstart column</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>pandas.Dataframe</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="PrePostProcess.whichForm">
+<span class="sig-prename descclassname"><span class="pre">PrePostProcess.</span></span><span class="sig-name descname"><span class="pre">whichForm</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lines</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#PrePostProcess.whichForm" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the form of the dataframe column names</p>
+<dl class="simple">
+<dt>Parameters:</dt><dd><p>lines: a dataframe with columns containing theta, rho values</p>
+</dd>
+<dt>Returns:</dt><dd><p>form: a string with the form of the dataframe column names</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="PrePostProcess.writeToQGIS">
+<span class="sig-prename descclassname"><span class="pre">PrePostProcess.</span></span><span class="sig-name descname"><span class="pre">writeToQGIS</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">myProj</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#PrePostProcess.writeToQGIS" title="Permalink to this definition">¶</a></dt>
+<dd><p>Writes a dataframe to a CSV file in the format of a QGIS layer.
+Uses well known text (WKT) to write the data as readable line vectors in QGIS.
+Uses the WKTtoArray function to process the dataframe.</p>
+<dl>
+<dt>Parameters:</dt><dd><p>df: a pandas dataframe with columns Xstart,Ystart,Xend,Yend,seg_length
+name: the name of the file to be written
+myProj: the projection of the dataframe. If none is given, the projection is set to WGS84
+Returns:</p>
+<blockquote>
+<div><p>A CSV file with the dataframe in the format of a QGIS layer</p>
+</div></blockquote>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="PrePostProcess.writeToQGISLong">
+<span class="sig-prename descclassname"><span class="pre">PrePostProcess.</span></span><span class="sig-name descname"><span class="pre">writeToQGISLong</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">myProj</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#PrePostProcess.writeToQGISLong" title="Permalink to this definition">¶</a></dt>
+<dd><p>Writes a dataframe to a CSV file in the format of a QGIS layer.
+with the lines extended by examineMod/extendLines
+Uses well known text (WKT) to write the data as readable line vectors in QGIS.</p>
+<dl>
+<dt>Parameters:</dt><dd><p>df: a pandas dataframe with columns Xstart,Ystart,Xend,Yend,seg_length</p>
+<p>name: the name of the file to be written</p>
+<p>myProj: the projection of the dataframe. If none is given, the projection is set to WGS84</p>
+</dd>
+<dt>Returns:</dt><dd><p>A CSV file with the dataframe in the format of a QGIS layer</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">LinkingLines</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2023, Allison Kubo.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 7.1.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.13</a>
+      
+      |
+      <a href="_sources/PrePostProcess.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
