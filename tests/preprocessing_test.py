@@ -227,7 +227,7 @@ class TestPreProcessingFunctions():
         #Rotate by 90
         dataRotated=rotateData(data,90)
         
-        
+        assert isinstance(dataRotated, pd.DataFrame)
         assert len(data)==len(dataRotated)
         theta_true = np.array([-90., -90., -90., -90.])
         assert all([np.isclose(a, b) for a, b in zip(dataRotated['theta'].values, theta_true)])
@@ -256,7 +256,7 @@ class TestSynthetic:
         rho_true=np.array([1., 1., 1., 1.])
         l=5
         df=fromHT(theta_true, rho_true, length=l, scale=1)
-        
+        assert isinstance(df, pd.DataFrame)
         assert len(theta_true)==len(df)
         
         assert all([np.isclose(l,a) for a in df['seg_length'].values])
@@ -275,5 +275,90 @@ class TestSynthetic:
         assert np.allclose(df['theta'].values, theta_true, atol=1e-7)
         assert np.allclose(df['rho'].values, rho_true, rtol=1e-2)
         
+    @staticmethod
+    def testFragment():
+        theta=np.array([-75, -30, 5, 45, 60, 90])
+        rho = np.random.uniform(low=-10, high=10, size=6)
+        synthetic_dikeset = fromHT(theta, rho, scale=1)
         
+        df2=fragmentDikes(synthetic_dikeset)
+        assert len(df2)==30 
+        assert isinstance(df2, pd.DataFrame)
+        df2=fragmentDikes(synthetic_dikeset, nSegments=2)
+        assert len(df2)==12
+        assert isinstance(df2, pd.DataFrame)
+        df2=fragmentDikes(synthetic_dikeset, nSegments=3)
+        assert len(df2)==18
+        assert isinstance(df2, pd.DataFrame)
+        
+        
+        
+class TestWKTToArray:
+    # Test case 1: Test with an empty DataFrame
+    def test_empty_dataframe(self):
+        empty_df = pd.DataFrame(columns=['WKT'])
+        with pytest.raises(ValueError):
+            result_df = WKTtoArray(empty_df)
+
+    # Test case 2: Test with a DataFrame containing valid WKT strings
+    def test_valid_wkt_strings(self):
+        # Create a sample DataFrame with valid WKT strings
+        data = pd.DataFrame({
+            'WKT': ['LINESTRING ((0 0, 1 1))', 'LINESTRING ((1 1, 2 2))', 'LINESTRING ((2 2, 3 3))']
+        })
+        
+        result_df = WKTtoArray(data, plot=False)
+        assert isinstance(result_df, pd.DataFrame)
+        # Assert that the resulting DataFrame has the expected columns
+        assert 'Xstart' in result_df.columns
+        assert 'Ystart' in result_df.columns
+        assert 'Xend' in result_df.columns
+        assert 'Yend' in result_df.columns
+        assert 'seg_length' in result_df.columns
+
+        #Assert dataframe has expected length 
+        assert len(data)==len(result_df)
+        
+        #Assert it has expected values 
+        assert result_df['Xstart'].iloc[0]==0
+        assert result_df['Xstart'].iloc[2]==2
+        
+        assert result_df['Xend'].iloc[1]==2
+        assert result_df['Xend'].iloc[2]==3
+        
+        assert result_df['Ystart'].iloc[0]==0
+        assert result_df['Ystart'].iloc[2]==2
+        
+        assert result_df['Yend'].iloc[1]==2
+        
+
+    # Test case 3: Test with a DataFrame containing invalid WKT strings
+    def test_invalid_wkt_strings(self):
+        # Create a sample DataFrame with invalid WKT strings
+        data = pd.DataFrame({
+            'WKT': ['INVALID_WKT_STRING', 'LINESTRING ((0 0, 1 1))', 'EMPTY', 'LINESTRING ((1 1, 2 2))']
+        })
+        
+        with pytest.raises(IndexError):
+            result_df = WKTtoArray(data, plot=False)
+
+    def test_nonlinear_segments(self):
+        # Create a sample DataFrame with valid WKT strings
+        data = pd.DataFrame({
+            'WKT': ['LINESTRING ((0 0, 50 50, 10,-20))', 'LINESTRING ((1 1, 2 2))', 'LINESTRING ((2 2, 3 3))']
+        })
+        
+        result_df = WKTtoArray(data, plot=True)
+        
+        # Assert that the resulting DataFrame has the expected columns
+        assert 'Xstart' in result_df.columns
+        assert 'Ystart' in result_df.columns
+        assert 'Xend' in result_df.columns
+        assert 'Yend' in result_df.columns
+        assert 'seg_length' in result_df.columns
+
+        #Assert dataframe has expected length 
+        assert len(data)-1==len(result_df)
+
+            
         

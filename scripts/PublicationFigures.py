@@ -9,8 +9,7 @@ Created on Thu Oct 20 16:42:50 2022
 from PrePostProcess import * 
 import pandas as pd 
 import numpy as np 
-from htMOD import AKH_HT as HT 
-from htMOD import HT_center, MidtoPerpDistance, moveHTcenter
+from htMOD import HoughTransform, HT_center, moveHTcenter
 from plotmod import *
 import matplotlib.pyplot as plt 
 from clusterMod import HT_AGG_custom
@@ -30,22 +29,111 @@ from synthetic import fromHT, makeLinear2, makeRadialSwarmdf
 
 import seaborn as sns
 
-# def WriteSIfiles():
-#     datasets=['/home/akh/myprojects/Linking-and-Clustering-Dikes/dikedata/spanish peaks/SpanishPeaks_Complete_euc_3_2013.csv',
-#               'dikedata/deccandata/AllDeccanLinked_euc_18_10_2022.csv',
-#               '/home/akh/myprojects/Linking-and-Clustering-Dikes/dikedata/crb/AllCRBLinked_euc_18_10_2022.csv']
+        
+def TopHTSection(lines, dikeset, rstep, tstep,n=1):
+    fig,ax=plt.subplots(1,2)
+    fig.set_size_inches((190/25.4, 60/25.4))
+    fig,ax[0],img=HThist(dikeset, rstep, tstep, ax=ax[0], fig=fig)
+    h=img[0]
     
-#             'Xstart', 'Ystart', 'Xend', 'Yend', 'X0', 'Y0', 'AvgRho',
-#            'AvgTheta', 'AvgSlope', 'AvgIntercept', 'RhoRange', 'Aspect', 'Xmid',
-#            'Ymid', 'ThetaRange', 'StdRho',
-#            'StdTheta', 'Size', 'R_error', 'Linked',
-#            'SegmentLSum', 'ClusterHash', 'ClusterCrossesZero',
-#            'EnEchelonAngleDiff', 'Overlap', 'nOverlapingSegments', 'EEPvalue',
-#            'MaxSegNNDist', 'MedianSegNNDist', 'MinSegNNDist', 'TrustFilter',
-#            'Date_Changed', 'Rho_Threshold', 'Theta_Threshold',
-#            'Dike Cluster Width (m)', 'Dike Cluster Length (km)', 'Average Rho (m)',
-#            'Average Theta ($^\circ$)', 'SwarmID', 'HashID',
-#            'yc', 'xc'
+    xedges=img[1]
+    yedges=img[2]
+    xc,yc=HT_center(dikeset)
+
+    plotlines(lines, 'k', ax[1])
+    toplines=pd.DataFrame()
+    top=np.sort(h, axis=None)[-n:]
+    reds = cm.get_cmap('Reds', n*2)
+    level=n
+    ylevel=.85
+    for t in top:
+        im,jm=np.where(h==t)
+        for i,j in zip(im,jm):
+            xe=[xedges[i],xedges[i+1]]
+            ye=[yedges[j],yedges[j+1]]
+            c=reds(2*level)
+            maskTheta=(lines['AvgTheta'] > xe[0]) & (lines['AvgTheta'] < xe[1])
+            maskRho=(lines['AvgRho']/1000 > ye[0]) & (lines['AvgRho']/1000 < ye[1])
+            mask=(maskTheta ==True) & (maskRho==True)
+            toplines2=lines[mask]
+            toplines2=toplines2.assign(Level=level)
+            ax[0].plot( [xe[0], xe[0], xe[1], xe[1], xe[0]], [ye[0], ye[1], ye[1], ye[0], ye[0]],color=c)
+            toplines=pd.concat((toplines,toplines2), ignore_index=True)
+            nlines=len(toplines2)
+            ann=r'\theta :'+str(np.ceil(np.mean(xe)))+ r' \rho :'+str(np.ceil(np.mean(ye)))+ " n="+str(int(t))+"/"+str(nlines)
+            #ax[0].text(0.1,ylevel, ann, color=c,transform=ax[0].transAxes)
+            w,l,r,Xe, Ye, Xmid, Ymid=fit_Rec(toplines2, xc, yc)
+            #plotlines(toplines2, c, ax[1], SpeedUp=False)
+            level=level-1
+            ylevel=ylevel-0.05
+            
+            print('Level', level)
+            print('Counts', t, "Counts %:", t/len(dikeset)*100)
+            print("Theta Range", xe[0], "-", xe[1])
+            print("Rho Range", ye[0], "-", ye[1])
+            print('Width of Linear Swarm:', w)
+            print('Length of Linear Swarm:', l)
+            print("Std Theta:", toplines2['AvgTheta'].std())
+            
+    print("Top 3 cells")
+    w,l,r,Xe, Ye, Xmid, Ymid=fit_Rec(toplines, xc, yc)
+    print('Width of Linear Swarm:', w)
+    print('Length of Linear Swarm:', l)
+    print("Range Theta:", np.ptp(toplines['AvgTheta'].values))
+    print("Range Rho:", np.ptp(toplines['AvgRho'].values))
+    
+    pltRec(toplines, xc, yc)
+            
+    plotlines(toplines, 'k', ax[1], SpeedUp=False, ColorBy='Level', cmap=reds, alpha=0.4)
+    # off axis linear swarm 
+    medianTheta=dikeset['theta'].median()
+    offAxisBy=50
+    t1=medianTheta+offAxisBy
+    t2=medianTheta+2*offAxisBy
+    
+    if abs(t1)>90:
+        t1=t1%90*np.sign(t1)*-1
+    if abs(t2)>90:
+        t2=t2%90*np.sign(t2)*-1
+        
+    if t1>t2:
+        xloc=np.where( np.logical_or((xedges[:-1]>t1),(xedges[:-1]<t2)))
+    else:
+        xloc=np.where( np.logical_and((xedges[:-1]>t1),(xedges[:-1]<t2)))
+    print(medianTheta)
+
+    print(t1, t2)
+
+    offAxisMax=np.max(h[xloc,:], axis=None)
+    im,jm=np.where(h==offAxisMax)
+    print(offAxisMax)
+    i,j=im[0], jm[0]
+    xe=[xedges[i],xedges[i+1]]
+    ye=[yedges[j],yedges[j+1]]
+    c='g'
+    maskTheta=(lines['AvgTheta'] > xe[0]) & (lines['AvgTheta'] < xe[1])
+    maskRho=(lines['AvgRho']/1000 > ye[0]) & (lines['AvgRho']/1000 < ye[1])
+    mask=(maskTheta ==True) & (maskRho==True)
+    toplines2=lines[mask]
+    toplines2=toplines2.assign(Level=-1)
+    ax[0].plot( [xe[0], xe[0], xe[1], xe[1], xe[0]], [ye[0], ye[1], ye[1], ye[0], ye[0]],color=c)
+    toplines=pd.concat((toplines,toplines2), ignore_index=True)
+    plotlines(toplines2, 'g', ax[1], SpeedUp=False)
+    ann=r"theta :"+str(np.ceil(np.mean(xe)))+ r"rho:"+str(np.ceil(np.mean(ye)))+ " n="+str(int(t))+"/"+str(nlines)
+   # ax[0].text(0.1,ylevel, ann, color=c,transform=ax[0].transAxes)
+    t=offAxisMax
+    print('Level', -1)
+    print('Counts', t, "Counts %:", t/len(dikeset)*100)
+    print("Theta Range", xe[0], "-", xe[1])
+    print("Rho Range", ye[0], "-", ye[1])
+    print('Width of Linear Swarm:', w)
+    print('Length of Linear Swarm:', l)
+    print("Std Theta:", toplines2['AvgTheta'].std())
+            
+            
+    plt.tight_layout()
+    
+    return toplines, fig, ax, reds
 
 def HTFigure1():
     SMALL_SIZE = 8
@@ -74,7 +162,7 @@ def HTFigure1():
         temp=dikeset[dikeset['Region']==p]
         if p=='Deccan':
             temp=pd.read_csv('/home/akh/myprojects/Linking-and-Clustering-Dikes/dikedata/deccandata/AllDeccan_PreProcessed.csv')
-        theta,rho, x, y=HT(temp)
+        theta,rho, x, y=HoughTransform(temp)
         temp=temp.assign(theta=theta, rho=rho, abstheta=abs(theta))
 
         ax[i].set_xlabel('Theta ($^\circ$)')
@@ -101,7 +189,7 @@ def HTFigure1():
         temp=dikeset[dikeset['Region']==p]
         if p=='Deccan':
             temp=pd.read_csv('/home/akh/myprojects/Linking-and-Clustering-Dikes/dikedata/deccandata/AllDeccan_PreProcessed.csv')
-        theta,rho, x, y=HT(temp)
+        theta,rho, x, y=HoughTransform(temp)
         temp=temp.assign(theta=theta, rho=rho, abstheta=abs(theta))
         ax[i].set_xlabel('Theta ($^\circ$)')
         ax[i].set_ylabel('Rho (km)')
@@ -310,21 +398,6 @@ def PubTwistOverlap(df, partial=True, return_EE=False, tol=.10):
             
     labelSubplots([ax_main, ax_xDist, ax_yDist], fontsize=12, labels=['d','e','f'])
     
-    
-    #ax.set_xscale('log')
-
-    # calculated_overlap=dfAll['SegmentLSum'].values/dfAll['Size']-dfAll['StdRho'].values/2
-    # fig, ax=plt.subplots()
-    # sns.scatterplot(data=dfAll, x=dfAll['Overlap'].values*dfAll['SegmentLSum'].values, y=calculated_overlap, hue='TwistAngle', ax=ax)
-    # ax.plot(calculated_overlap,calculated_overlap, 'r-.', label='1:1')
-    # ax.set_xscale('log')
-    # ax.set_yscale('log')
-    # ax.set_ylim((min(dfAll['Overlap'].values*dfAll['SegmentLSum'].values), max(dfAll['Overlap'].values*dfAll['SegmentLSum'].values)))
-    # ax.set_xlim((min(dfAll['Overlap'].values*dfAll['SegmentLSum'].values), max(dfAll['Overlap'].values*dfAll['SegmentLSum'].values)))
-    # ax.legend()
-    # ax.set_xlabel('Observed Overlap')
-    # ax.set_ylabel('Calculated Overlap (Pollard 1987)')
-    
     if return_EE:
         return fig, [ax_main, ax_xDist, ax_yDist], close
     else:
@@ -380,6 +453,7 @@ def ExampleClusters():
     plt.tight_layout()
     
     fig.savefig("/home/akh/myprojects/Linking-and-Clustering-Dikes/dikedata/ThreeExampleClusters.pdf", dpi=600)
+
 
 def DilationPlots():
     dfs=['/home/akh/myprojects/Linking-and-Clustering-Dikes/dikedata/crb/allCRB_dikes_PreProcessed.csv', 
@@ -897,28 +971,8 @@ def comparisonFig():
         area.add_patch(rect)
     
         seglength=np.median(df['seg_length'])
-        
-        # Xedges=np.array([offset, offset, offset+w, offset+w, offset])
-        # Yedges=np.array([l, 0, 0, l, l])
-        
-        # theta=np.random.randint(1,90, int(nsegs))
-        # a=np.array([1,-1])
-        # c=np.random.choice(a, int(nsegs))
-        # theta=theta*c
-        
-        # rho=np.random.randint(5,20, int(nsegs))
-        # segDf=fromHT(theta,rho, length=10, scale=10, xc=0, yc=offset3)
-        
-        #plotlines(segDf, color, seg, equal=False)
+
         length.plot( Xedges, Yedges, color, linewidth=2, alpha=0.5, label=label)
-        
-        
-        # rect1=Rectangle( (0, 0), 50, len(df)  ,facecolor=color, alpha=0.3, label=label)
-        # rect2=Rectangle( (100, 0), 50, dikes,facecolor=color, alpha=0.3, label=label)
-        # axSeg[i].add_patch(rect1)
-        # axSeg[i].add_patch(rect2)
-        # axSeg[i].autoscale_view()
-        # axSeg[i].set_ylim((0,25000))
         
         axSeg.scatter( dikes, volume, color=color, marker="p")
         axSeg.scatter( len(df), volume, color=color, marker="*")
