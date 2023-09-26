@@ -131,11 +131,9 @@ def addSwarms(dflist):
         DataFrame: A combined DataFrame containing swarm dike data.
     """
 
-    dfSwarm=pd.DataFrame()
-    
     for i, b in zip(dflist, range(len(dflist))):
         i['Label']=[b]*len(i)
-        dfSwarm=dfSwarm.append(i)
+    dfSwarm=pd.concat(dflist)
 
     return dfSwarm
 
@@ -314,14 +312,14 @@ def fromHT(angles, rhos, scale=10000, length=10000, xc=0, yc=0, CartRange=100000
     
     l=np.sqrt( (Xstart-Xend)**2 + (Ystart-Yend)**2)
     
-    df=pd.DataFrame({'Xstart':Xstart, 'Xend': Xend, 'Ystart': Ystart, 'Yend':Yend})
+    df=pd.DataFrame({'Xstart':Xstart, 'Xend': Xend, 'Ystart': Ystart, 'Yend':Yend, 'Label': labels})
     
     df=DikesetReProcess(df, xc=xc, yc=yc)
 
     
     return df 
 
-def fragmentDikes(df):
+def fragmentDikes(df, nSegments=5):
     """
     Fragment dike segments into smaller segments.
 
@@ -338,7 +336,6 @@ def fragmentDikes(df):
     dfFrag=pd.DataFrame()
     print(len(m), len(bint))
     for i in range(len(df)):
-        nSegments=5 #np.random.randint(2,7)
         high=max(df['Xend'].iloc[i], df['Xstart'].iloc[i])
         low=min(df['Xend'].iloc[i], df['Xstart'].iloc[i])
         xrange1=np.random.randint(low,high, size=nSegments)
@@ -349,11 +346,12 @@ def fragmentDikes(df):
         yrange2=m2*xrange2+bint[i]
         L=np.sqrt((xrange1-xrange2)**2+(yrange1-yrange2)**2)
 
-        dfFrag=dfFrag.append(pd.DataFrame({'Xstart':xrange1, 'Xend': xrange2, 
+        dfFrag=pd.concat( [dfFrag, (pd.DataFrame({'Xstart':xrange1, 'Xend': xrange2, 
                                            'Ystart': yrange1, 'Yend':yrange2,
                                            'seg_length':L, 'Xmid': (xrange1+xrange2)/2, 'Ymid': (yrange1+yrange2)/2 ,
                                            'Label': np.ones(nSegments)*i, 
                                            'Original Label':np.ones(nSegments)*df['Label'].iloc[i]
-                                               }), ignore_index=True)
+                                               }))], ignore_index=True)
+                         
     return dfFrag
 

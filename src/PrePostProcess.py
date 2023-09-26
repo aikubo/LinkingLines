@@ -126,9 +126,12 @@ def WKTtoArray(df, plot=False):
     Returns:
         df: a pandas dataframe with columns Xstart,Ystart,Xend,Yend,seg_length
     '''
-    #import matplotlib.pyplot as plt
+    if not isinstance(df, pd.DataFrame):
+        raise ValueError("Input 'data' must be a pandas DataFrame.")
 
-            
+    if len(df) < 1:
+        raise ValueError("DataFrame is empty")
+        
     xstart=[]
     ystart=[]
     
@@ -143,7 +146,7 @@ def WKTtoArray(df, plot=False):
         t1=temp[0]
         
         #print("dike #:",i)
-        #print(temp)
+        print(temp)
         if 'EMPTY' in temp[0]: 
             drop.append(i)
             continue
@@ -156,16 +159,9 @@ def WKTtoArray(df, plot=False):
             tempx=np.array(temp[::2]).astype(float)
             tempy=np.array(temp[1::2]).astype(float)
                
-        # #print(tempx, tempy)
-        # if interp: 
-        #     xvals=np.linspace(min(tempx), max(tempx), 50)
-        #     yvals=np.interp(xvals, tempx, tempy)
-            
-        #     tempx=xvals
-        #     tempy=yvals
-
-        
+        print(tempx, tempy)
         slope, intercept, r_value, p_value, std_err = stats.linregress(tempx, tempy)
+        print(p_value)
         #for x,y in zip(tempx, tempy):
         if any(np.isnan( [slope, intercept])):
             drop.append(i)
@@ -173,7 +169,7 @@ def WKTtoArray(df, plot=False):
         
         
         
-        if p_value > 0.05 and len(tempx)>3: 
+        if p_value > 0.05 and len(tempx)>=3: 
             if plot:
                 ax.plot(tempx, tempy)
             drop.append(i)

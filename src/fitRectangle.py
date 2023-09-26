@@ -47,7 +47,7 @@ The module includes utility functions for various operations related to line seg
 
 """
 
-import numpy as np 
+import numpy as np
 import matplotlib.pyplot as plt
 
 
@@ -82,7 +82,7 @@ def rotateXYShift(ang,x,y,h,k):
   - The function rotates the point (x, y) counterclockwise by 'ang' radians around the center point (h, k).
   - It returns the new coordinates (xp, yp) after the transformation.
   """
-    
+
     xp= (x-h)*np.cos(ang)-(y-k)*np.sin(ang)
     yp= (x-h)*np.sin(ang)+(y-k)*np.cos(ang)
     return xp, yp
@@ -134,7 +134,7 @@ def inRectangle(a,b,xp,yp):
         insideX=False
     if any(abs(yp) > ytop):
         insideY=False
-        
+
     return insideX, insideY
 
 
@@ -160,18 +160,18 @@ def endpoints(lines):
     """
     xlist = np.array([])
     ylist = np.array([])
-    
+
     for i in range(0, len(lines)):
         x1 = lines['Xstart'].iloc[i]
         y1 = lines['Ystart'].iloc[i]
         y2 = lines['Yend'].iloc[i]
         x2 = lines['Xend'].iloc[i]
-        
+
         xlist = np.append(xlist, x1)
         xlist = np.append(xlist, x2)
         ylist = np.append(ylist, y1)
         ylist = np.append(ylist, y2)
-    
+
     return xlist, ylist
 
 def midpoint(lines):
@@ -201,14 +201,14 @@ def midpoint(lines):
     yend=lines['Yend'].to_numpy()
     xlist=np.array([])
     ylist=np.array([])
-    
+
     for i in range(len(xstart)):
         xs=np.mean([xstart[i], xend[i]])
         ys=np.mean([ystart[i], yend[i]])
-    
+
         xlist=np.append(xlist, xs)
         ylist=np.append(ylist, ys)
-    
+
     return xlist,ylist
 
 def allpoints(lines):
@@ -238,17 +238,17 @@ def allpoints(lines):
     yend=lines['Yend'].to_numpy()
     xlist=np.array([])
     ylist=np.array([])
-    
+
     for i in range(len(xstart)):
         xs=np.linspace(xstart[i], xend[i])
         ys=np.linspace(ystart[i], yend[i])
-    
+
         xlist=np.append(xlist, xs)
         ylist=np.append(ylist, ys)
-    
+
     return xlist,ylist
 
-    
+
 
 def fit_Rec(lines, xc, yc):
     """
@@ -279,23 +279,23 @@ def fit_Rec(lines, xc, yc):
     - It returns the width, length, correlation coefficient, and coordinates of the rectangle.
     """
 
-    col=lines.columns 
-    
+    col=lines.columns
+
     post=['Theta', 'AvgTheta', 'theta']
     posr=['Rho', 'AvgRho', 'rho']
 
-    for p in post: 
+    for p in post:
         if p in col:
-            t=p 
-    
-    for p in posr: 
+            t=p
+
+    for p in posr:
         if p in col:
             r=p
-            
+
     if 'Average Rho (m)' in col:
         r='Average Rho (m)'
         t='Average Theta ($^\circ$)'
-        
+
     if t=='AvgTheta' or t=='Average Theta ($^\circ$)':
         segl='R_Length'
     else:
@@ -304,13 +304,13 @@ def fit_Rec(lines, xc, yc):
     xi,yi=endpoints(lines)
     if len(lines) == 1:
         return 0, lines[segl], 0, xi,yi, lines['Xmid'], lines['Ymid']
-    
+
     x0=xc
     y0=yc
 
     size=len(lines)
-    
-    if abs(np.sum(np.sign(lines[t].values))) < size: 
+
+    if abs(np.sum(np.sign(lines[t].values))) < size:
         crossZero=True
         ang=np.mean(abs(lines[t].values))
         tol=6
@@ -318,31 +318,31 @@ def fit_Rec(lines, xc, yc):
             ang=np.mean((lines[t].values))
     else:
         crossZero=False
-        
+
         ang=np.mean((lines[t].values))
 
 
-    
+
     xp, yp= rotateXYShift(np.deg2rad(-1*ang), xi,yi, x0,y0)
     #plotlines(lines, 'k.-', a)
-    
+
     width=np.ptp(xp.flatten())
     length=np.ptp(yp.flatten())
-    
+
     # if width>length :
     #     length=width
     #     width=length
     xc=(max(xp)-min(xp))/2 + min(xp)
     yc=(max(yp)-min(yp))/2 + min(yp)
-    
+
     xr=xc+width/2
     xl=xc-width/2
     yu=yc+length/2
     yd=yc-length/2
     xs=np.append(xr,xl)
     ys=np.append(yu,yd)
-    
-    
+
+
     xpi, ypi=unrotate(np.deg2rad(-1*ang), xp, yp, x0, y0)
 
     Xedges=np.array([xs[0], xs[0], xs[1], xs[1], xs[0]])
@@ -350,18 +350,18 @@ def fit_Rec(lines, xc, yc):
     # a.plot(Xedges, Yedges, 'r.-')
     Xmid=(np.max(xs)+np.min(xs))/2
     Ymid=(np.max(ys)+np.min(ys))/2
-    
+
     xs,ys=unrotate(np.deg2rad(-1*ang),Xedges,Yedges,x0,y0)
     Xmid, Ymid=unrotate(np.deg2rad(-1*ang), Xmid, Ymid, x0, y0)
-    
 
-   
+
+
     #xstart, xend, ystart, yend=clustered_lines(xi, yi, np.mean(lines['theta'].values), length)
-    
+
 
     r=np.sum((yc-yp)**2)/lines[segl].sum() #len(lines)
-    
-    
+
+
     return width, length, r, xs, ys, Xmid, Ymid
 
 def RecEdges(xi, yi, avgtheta, x0, y0):
@@ -396,36 +396,36 @@ def RecEdges(xi, yi, avgtheta, x0, y0):
     """
 
     ang=-1*np.deg2rad(avgtheta)
-    
+
     xp, yp= rotateXYShift(ang, xi,yi, x0,y0)
     #plotlines(lines, 'k.-', a)
-    
+
     width=np.ptp(xp)
     length=np.ptp(yp)
-    
+
     # if width>length :
     #     length=width
     #     width=length
     xc=(max(xp)-min(xp))/2 + min(xp)
     yc=(max(yp)-min(yp))/2 + min(yp)
-    
+
     xr=xc+width/2
     xl=xc-width/2
     yu=yc+length/2
     yd=yc-length/2
     xs=np.append(xr,xl)
     ys=np.append(yu,yd)
-    
-    
+
+
     xpi, ypi=unrotate(ang, xp, yp, x0, y0)
 
     Xedges=np.array([xs[0], xs[0], xs[1], xs[1], xs[0]])
     Yedges=np.array([ys[1], ys[0], ys[0], ys[1], ys[1]])
     # a.plot(Xedges, Yedges, 'r.-')
-    
+
     xs,ys=unrotate(ang,Xedges,Yedges,x0,y0)
-  
-    
+
+
     return xs, ys
 
 
@@ -459,12 +459,12 @@ def pltLine(lines, xc, yc, ax):
     avgtheta=np.deg2rad(np.average(lines['theta']))
     avgrho=np.average(lines['rho'])
     xs,ys=allpoints(lines)
-    
+
     m=-np.cos(avgtheta)/np.sin(avgtheta)
     b=avgrho/np.sin(avgtheta)
-    
+
     ax.plot( [min(xs), max(xs)], [m*min(xs-xc)+b+yc, m*max(xs-xc)+b+yc], 'orange', '..')
-    
+
 
 def W_L(Clusters):
     """
@@ -487,7 +487,7 @@ def W_L(Clusters):
 
     width=np.array([])
     length=np.array([])
-    
+
     labels=np.unique(Clusters['Labels'])
     for i in labels:
         mask=(Clusters['Labels']==i)
@@ -523,17 +523,17 @@ def squaresError(lines, xc, yc):
     - This function calculates the sum of squared errors for a cluster of lines fitted to a rectangle.
     """
 
-    
+
     avgtheta=np.deg2rad(np.average(lines['theta']))
     #print(avgtheta)
     avgrho=np.average(lines['rho'])
     xs,ys=midpoint(lines)
-    
+
     m=-np.cos(avgtheta)/np.sin(avgtheta)
     b=avgrho/np.sin(avgtheta)
-    
+
     r=np.sum((ys-(m*(xs-xc)+b+yc))**2)/lines['seg_length'].sum() #len(lines)
-    
-    # just do b? 
-    
+
+    # just do b?
+
     return r

@@ -37,8 +37,7 @@ from scipy.spatial.distance import pdist, squareform
 import matplotlib.pyplot as plt
 from PrePostProcess import whichForm, writeToQGIS
 from plotmod import plotlines, DotsLines
-from clusterMod import CyclicAngleDist
-from htMOD import HT_center
+from htMOD import HT_center, CyclicAngleDist
 
 def CenterFunc(theta, xr, yr, xc, yc):
     """
