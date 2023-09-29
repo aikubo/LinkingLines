@@ -8,6 +8,6 @@ scipy==1.11.2
 seaborn==0.12.2
 statsmodels==0.14.0
 ipykernel
-nbsphinx
-notebooks 
-jupyterlab
+nbsphinx==0.9.3
+notebooks==7.0.4
+jupyter==4.0.6
