@@ -9,3 +9,5 @@ seaborn==0.12.2
 statsmodels==0.14.0
 ipykernel
 nbsphinx
+notebooks 
+jupyterlab

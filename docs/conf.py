@@ -21,10 +21,11 @@ release = '0.2'
 extensions = ['sphinx.ext.autodoc',
               'sphinx.ext.mathjax',
               'sphinx.ext.napoleon',
-              'sphinx.ext.intersphinx', ]
+              'sphinx.ext.intersphinx',
+              "nbsphinx",]
 
 templates_path = ['_templates']
-exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
+exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store', '**.ipynb_checkpoints']
 napoleon_google_docstring = False
 napoleon_numpy_docstring = True
 
