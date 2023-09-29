@@ -10,7 +10,7 @@ Welcome to LinkingLines's documentation!
    :maxdepth: 2
    :caption: Contents:
 
-   notebooks/DemoLinkingLines
+   DemoLinkingLines
 
 
 Indices and tables
