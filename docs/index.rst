@@ -10,7 +10,13 @@ Welcome to LinkingLines's documentation!
    :maxdepth: 2
    :caption: Contents:
 
+   intro.md
    DemoLinkingLines
+
+Introduction
+=================
+
+.. mdinclude:: /intro.md
 
 
 Indices and tables
