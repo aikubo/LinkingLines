@@ -2,7 +2,7 @@
 
 # LinkingLines Python Module
 
-*Introduction*
+# 1. Introduction#
 Welcome to the documentation for our Python module that performs the Hough
 Transform on line data from a CSV, clusters it using Agglomerative Clustering,
 and provides functionality to export the results into a CSV file.
@@ -25,7 +25,7 @@ your data, making it easier to identify patterns and anomalies.
 perform further analysis, such as linear or radial type features.
 
 
-## Installation
+## 2. Installation
 To use this module, make sure you have Python installed (preferably Python 3.x).
 You can install the required packages using pip:
 
@@ -33,7 +33,7 @@ You can install the required packages using pip:
 pip install linkinglines
 ```
 
-## 2. Quick Start
+## 3. Quick Start
 
 ```python
 import pandas as pd
@@ -55,7 +55,7 @@ fig,ax=DotsLines(lines, ColorBy='AvgTheta')
 
 ```
 
-Follow this indepth [tutorial]() to get started!
+Follow this indepth [tutorial](DemoLinkingLines.md) to get started!
 
 You are now ready to utilize the power of Hough Line Transform, Agglomerative Clustering, and custom plotting in your data analysis projects. If you have any questions or need further assistance, please refer to the detailed documentation or contact our support team.
 
