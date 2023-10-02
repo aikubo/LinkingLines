@@ -12,7 +12,7 @@
 ```
 
 
-## 1. Introduction#
+## 1. Introduction
 Welcome to the documentation for our Python module that performs the Hough
 Transform on line data from a CSV, clusters it using Agglomerative Clustering,
 and provides functionality to export the results into a CSV file.

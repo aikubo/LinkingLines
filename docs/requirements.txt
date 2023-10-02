@@ -12,4 +12,4 @@ nbsphinx==0.9.3
 notebook==7.0.4
 jupyterlab==4.0.6
 myst-parser
-
+myst-nb==0.17.2

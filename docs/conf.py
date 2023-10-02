@@ -23,7 +23,8 @@ extensions = ['sphinx.ext.autodoc',
               'sphinx.ext.napoleon',
               'sphinx.ext.intersphinx',
               "nbsphinx",
-              'myst_parser']
+              'myst_parser',
+             ]
 
 templates_path = ['_templates']
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store', '**.ipynb_checkpoints']
@@ -36,3 +37,7 @@ napoleon_numpy_docstring = True
 
 html_theme = 'alabaster'
 html_static_path = ['_static']
+html_theme_options = {
+    'github_user': 'aikubo',
+    'github_repo': 'Linking-and-Clustering-Dikes',
+    'codecov_button': 'true'}
