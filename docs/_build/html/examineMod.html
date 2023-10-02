@@ -222,10 +222,10 @@ plt.show()</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="examineMod.checkoutClusterCart">
-<span class="sig-prename descclassname"><span class="pre">examineMod.</span></span><span class="sig-name descname"><span class="pre">checkoutClusterCart</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dikeset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lines</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fig</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ax</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#examineMod.checkoutClusterCart" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">examineMod.</span></span><span class="sig-name descname"><span class="pre">checkoutClusterCart</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dikeset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fig</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ax</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#examineMod.checkoutClusterCart" title="Permalink to this definition">¶</a></dt>
 <dd><p>Visualize and annotate cluster information in a Cartesian coordinate system.</p>
 <dl class="simple">
-<dt>Parameters:</dt><dd><p>dikeset (DataFrame): A DataFrame containing line data with columns ‘xc’, ‘yc’, ‘Labels’, ‘theta’, and ‘rho’
+<dt>Parameters:</dt><dd><p>dikeset (DataFrame): A DataFrame containing line data with columns ‘xc’, ‘yc’, ‘Labels’, ‘theta’, and ‘rho’.
 label (int): The label of the cluster to be analyzed.
 fig (Figure): The Figure object for plotting.
 ax (Axes): The Axes object for plotting.</p>
@@ -240,7 +240,7 @@ based on the cluster’s orientation.</p>
 <p>The function also prints the cluster’s angle mean, rho mean, length, and width for reference.</p>
 <p>Example usage:
 fig, ax = plt.subplots()
-ax = checkoutClusterCart(dikeset, 2, fig, ax)
+ax = checkoutClusterCart(line_data, 2, fig, ax)
 plt.show()</p>
 </dd></dl>
 
