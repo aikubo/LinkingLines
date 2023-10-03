@@ -71,14 +71,3 @@ You are now ready to utilize the power of Hough Line Transform, Agglomerative Cl
 
 Happy coding!
 
-
-
-
-
-
-
-### Indices and tables
-
-- {ref}`genindex`
-- {ref}`modindex`
-- {ref}`search`
