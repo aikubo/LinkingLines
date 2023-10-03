@@ -24,8 +24,8 @@ from pyproj import Proj
 from matplotlib.colors import ListedColormap, LinearSegmentedColormap, Normalize
 import seaborn as sns
 import matplotlib.colors as mcolors
-from htMOD import HT_center
-from fitRectangle import *
+from HT import HT_center
+from FitRectangle import *
 from PrePostProcess import whichForm, FilterLines, getCartLimits
 import scipy.cluster.hierarchy as sch
 import labellines
