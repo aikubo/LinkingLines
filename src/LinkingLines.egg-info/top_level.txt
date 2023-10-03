@@ -1,4 +1,6 @@
 PrePostProcess
+__init__
+__main__
 clusterMod
 dilationCalculation
 examineMod

@@ -40,8 +40,8 @@ def main():
         For detailed usage instructions and examples, refer to the documentation.
 
     Author:
-        Your Name
-        Your Email
+        aikubo
+        akubo@uoregon.edu
     """
     # Your main script logic goes here
     print(main.__doc__)

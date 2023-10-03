@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: LinkingLines
-Version: 0.0.2
+Version: 2.0.0
 Summary: Uses Hough Transform and clustering to link line segments into longer lines
 Author-email: Allison Kubo <akubo@uoregon.edu>
 Project-URL: Homepage, https://github.com/aikubo/Linking-and-Clustering-Dikes
@@ -12,6 +12,15 @@ Requires-Python: >=3.7
 Description-Content-Type: text/markdown
 License-File: LICENSE
 License-File: AUTHORS
+Requires-Dist: matplotlib>=3.7.2
+Requires-Dist: matplotlib_label_lines>=0.6.0
+Requires-Dist: numpy>=1.25.2
+Requires-Dist: pandas>=2.0.3
+Requires-Dist: pyproj>=3.6.0
+Requires-Dist: scikit_learn>=1.3.0
+Requires-Dist: scipy>=1.11.2
+Requires-Dist: seaborn>=0.12.2
+Requires-Dist: statsmodels>=0.14.0
 
 
 Linking and Clustering Dikes

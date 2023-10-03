@@ -1,8 +1,12 @@
 AUTHORS
 LICENSE
+MANIFEST.in
 README.md
 pyproject.toml
+scripts/DemoLinkingLines.ipynb
 src/PrePostProcess.py
+src/__init__.py
+src/__main__.py
 src/clusterMod.py
 src/dilationCalculation.py
 src/examineMod.py
@@ -14,6 +18,7 @@ src/syntheticMod.py
 src/LinkingLines.egg-info/PKG-INFO
 src/LinkingLines.egg-info/SOURCES.txt
 src/LinkingLines.egg-info/dependency_links.txt
+src/LinkingLines.egg-info/requires.txt
 src/LinkingLines.egg-info/top_level.txt
 tests/test.py
 tests/testClustering.py

@@ -1,0 +1,4 @@
+# MANIFEST.in
+
+include scripts/DemoLinkingLines.ipynb
+include data/SpanishPeaks_38888888857.csv

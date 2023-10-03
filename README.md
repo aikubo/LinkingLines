@@ -1,66 +1,88 @@
 
-Linking and Clustering Dikes
-===========================================================
-
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+# Welcome to LinkingLines!
 
 [![DOI](https://zenodo.org/badge/272334230.svg)](https://zenodo.org/badge/latestdoi/272334230)
 
-
-About
------
-
-Linking and clustering Dike segments uses the Hough Transform and Agglomerative clustering to link together line segments spread over Cartesian space in slope and intercept space. This software was designed to link dissected segments of dikes in Large Igneous Provinces mainly the Columbia River Basalt Group and the Deccan Traps. However, any type of line segment can be linked and clustered and this software has applications in geosciences and planetary sciences. 
-
-
-Installation instructions
--------------------------
-
-This software uses the conda system to manage python packages. You must have conda, mamba or another env manager before you can run these files. We prefer mamba, see documentation [here](https://mamba.readthedocs.io/en/latest/user_guide/mamba.html).
-Download the github repository using the web interface or commandline. Then make the python environment in the repository directory using the command line command: 
-
-```
-mamba create dikes_linking --file dikes_linking.yaml
+```{image} https://img.shields.io/pypi/v/LinkingLines.svg
+:alt: Package on PyPI
+:target: https://pypi.org/project/LinkingLines/
 ```
 
-Running and extending Linking and Clustering Dikes
----------------------------------------
+```{image} https://readthedocs.org/projects/LinkingLines/badge/
+:alt: Documentation Status
+:target: https://linkinglines.readthedocs.io/
+```
 
-You can start to use this code using the demostration file "DemoFile_DikeLinking.py". We recommend using a tool such as Spyder or VSCode to interact with this software, Spyder was installed with the command to create the environment. 
-
-The demo file shows the entire algorithm from start to finish. 
-
-  1. Preprocess dike segments map from CSV file
-  2. Apply the Hough Transform
-  3. Cluster based on Hough Transform results. You can add your own clustering parameters here such as distance and linkage.
-  4. Evaluate clusters and create clustered lines
-  5. Find and plot radial centers
-  6. Save labeled lines to a CSV with WKT 
-
-New projects should begin by placing a copy of this repository into your project repository and modifying the contents of each file as appropriate.
+```{image} https://img.shields.io/badge/License-MIT-yellow.svg
+:alt: MIT
+:target: https://opensource.org/licenses/MIT
+```
 
 
-Citing Linking and Clustering Dikes
-------------------------
-This code was used to create the results of [Kubo Hutchison et al., 2023]() published in G Cubed. Please refer to the paper for the interpretation of dike linking and application to Large Igneous Provinces. 
+## 1. Introduction
+Welcome to the documentation for our Python module that performs the Hough
+Transform on line data from a CSV, clusters it using Agglomerative Clustering,
+and provides functionality to export the results into a CSV file.
+This module also includes custom plotting scripts and feature extraction
+methods to help you analyze and visualize your data effectively.
 
-Linking and Clustering Dikes is free to use and does not require citation or acknowledgement.
+This code was used to create the results published in
+[Kubo Hutchison et al., 2023](https://agupubs.onlinelibrary.wiley.com/doi/full/10.1029/2022GC010842).
+Initially, it was designed to link together mapped dike segments in Cartesian space
+to find their true lengths. This code can be applied to any linear features including
+roads, fractures, and other types of linear data.
 
-Contributing to our software
-----------------------
+- **Data Clustering**: Apply Agglomerative Clustering to group similar data points, this
+can be used for data reduction, analysis, and mapping .
 
-Linking and Clustering Dikes is a community project that lives by the participation of its
-members — i.e., including you!
+- **Data Visualization**: Custom plotting scripts help you visualize and analyze
+your data, making it easier to identify patterns and anomalies.
 
-Feedback and support
-----------------------
+- **Feature Extraction**: Extract meaningful features from clustered data to
+perform further analysis, such as linear or radial type features.
 
-For support, please make a comment on the repository or email me at akubo@uoregon.edu
 
-To contribute to this project, see [CONTRIBUTING.md](CONTRIBUTING.md).
+Full documentation can be found on [ReadTheDocs](https://linkinglines.readthedocs.io/en/latest/)
 
-License
--------
-This work is licensed under the MIT License, see LICENSE for details.
+## 2. Installation
+To use this module, make sure you have Python installed (preferably Python 3.x).
+You can install the required packages using pip:
 
-This SOFTWARE_TEMPLATE is published under the [MIT license](LICENSE).
+```bash
+pip install linkinglines
+```
+
+## 3. Quick Start
+
+```python
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import linkinglines as ll
+
+data=pd.read_csv('path/to/data')
+theta,rho,xc,yc=ll.HoughTransform(data)
+data['theta']=theta
+data['rho']=rho
+
+dtheta=2 #degrees
+drho=500 #meters
+
+dikeset, Z=ll.AggCluster(data)
+lines,evaluation=examineCluster(data)
+fig,ax=DotsLines(lines, ColorBy='AvgTheta')
+
+```
+
+Follow this indepth [tutorial](DemoLinkingLines.md) to get started!
+
+You are now ready to utilize the power of Hough Line Transform, Agglomerative Clustering, and custom plotting in your data analysis projects. If you have any questions or need further assistance, please refer to the detailed documentation or contact our support team.
+
+Happy coding!
+
+
+### Indices and tables
+
+- {ref}`genindex`
+- {ref}`modindex`
+- {ref}`search`
