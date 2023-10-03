@@ -3,20 +3,11 @@
 
 [![DOI](https://zenodo.org/badge/272334230.svg)](https://zenodo.org/badge/latestdoi/272334230)
 
-```{image} https://img.shields.io/pypi/v/LinkingLines.svg
-:alt: Package on PyPI
-:target: https://pypi.org/project/LinkingLines/
-```
+[![PyPI](https://img.shields.io/pypi/v/LinkingLines.svg)](https://pypi.org/project/LinkingLines/)
 
-```{image} https://readthedocs.org/projects/LinkingLines/badge/
-:alt: Documentation Status
-:target: https://linkinglines.readthedocs.io/
-```
+[![ReadtheDocs](https://readthedocs.org/projects/LinkingLines/badge/)](https://linkinglines.readthedocs.io/)
 
-```{image} https://img.shields.io/badge/License-MIT-yellow.svg
-:alt: MIT
-:target: https://opensource.org/licenses/MIT
-```
+[![License](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 
 ## 1. Introduction
@@ -79,6 +70,11 @@ Follow this indepth [tutorial](DemoLinkingLines.md) to get started!
 You are now ready to utilize the power of Hough Line Transform, Agglomerative Clustering, and custom plotting in your data analysis projects. If you have any questions or need further assistance, please refer to the detailed documentation or contact our support team.
 
 Happy coding!
+
+
+
+
+
 
 
 ### Indices and tables
