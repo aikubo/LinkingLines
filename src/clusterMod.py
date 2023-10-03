@@ -1,3 +1,6 @@
+# LinkingLines Package 
+ # Written by aikubo 
+ # Version: 2.0.0
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
