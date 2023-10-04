@@ -1,0 +1,400 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+
+    <title>src.ProcessingUtils.FitRectangle module &#8212; LinkingLines 2.1.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css" />
+    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/sphinx_highlight.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="module-src.ProcessingUtils.FitRectangle">
+<span id="src-processingutils-fitrectangle-module"></span><h1>src.ProcessingUtils.FitRectangle module<a class="headerlink" href="#module-src.ProcessingUtils.FitRectangle" title="Permalink to this heading">¶</a></h1>
+<p>Created on Wed Feb 10 13:30:34 2021</p>
+<p>&#64;author: akh</p>
+<p>fitRectangle: A Module for Fitting Rectangles to Rotated Line Segments</p>
+<p>The ‘fitRectangle’ module provides functions for rotating line segments and fitting rectangles around them.
+It includes utilities for calculating rectangle properties and performing operations on line segments.</p>
+<p>Functions:
+- <cite>rotateXYShift(ang, x, y, h, k)</cite>: Rotate and shift coordinates (x, y) about a center point (h, k) by an angle ‘ang’.
+- <cite>unrotate(ang, x, y, h, k)</cite>: Reverse the rotation and shift of coordinates (x, y) about a center point (h, k) by an angle ‘ang’.
+- <cite>endpoints(lines)</cite>: Extract and return the x and y coordinates of endpoints from a DataFrame of line segments.
+- <cite>midpoint(lines)</cite>: Calculate and return the x and y coordinates of midpoints for line segments in a DataFrame.
+- <cite>allpoints(lines)</cite>: Calculate and return all the x and y coordinates along the line segments in a DataFrame.
+- <cite>fit_Rec(lines, xc, yc)</cite>: Fit a rectangle to a cluster of lines and return its width, length, correlation coefficient, and coordinates.
+- <cite>RecEdges(xi, yi, avgtheta, x0, y0)</cite>: Calculate the coordinates of the edges of a rectangle based on parameters.
+- <cite>pltLine(lines, xc, yc, ax)</cite>: Plot a line representing the fitted rectangle on a specified matplotlib axis.
+- <cite>W_L(Clusters)</cite>: Calculate the widths and lengths of rectangles fitted to clusters of lines.
+- <cite>squaresError(lines, xc, yc)</cite>: Calculate the sum of squared errors for a cluster of lines fitted to a rectangle.</p>
+<p>Usage:
+Import the ‘fitRectangle’ module and use its functions to perform operations on line segments, including rotating, fitting rectangles, and calculating rectangle properties.</p>
+<p>Example:
+<a href="#id1"><span class="problematic" id="id2">``</span></a><a href="#id3"><span class="problematic" id="id4">`</span></a>python
+import fitRectangle</p>
+<p># Rotate line segments
+x, y = fitRectangle.rotateXYShift(angle, x, y, center_x, center_y)</p>
+<p># Fit rectangles to clusters of lines
+width, length, corr_coef, x_edges, y_edges, X_mid, Y_mid = fitRectangle.fit_Rec(lines, xc, yc)</p>
+<p># Calculate the sum of squared errors for fitted rectangles
+error = fitRectangle.squaresError(lines, xc, yc)</p>
+<p>Notes:</p>
+<p>This module is designed for working with line segments represented as DataFrames with specific column names.
+It provides functions for fitting rectangles to clusters of lines based on their angles and distances from the origin.
+The module includes utility functions for various operations related to line segments and rectangles.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="src.ProcessingUtils.FitRectangle.RecEdges">
+<span class="sig-prename descclassname"><span class="pre">src.ProcessingUtils.FitRectangle.</span></span><span class="sig-name descname"><span class="pre">RecEdges</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">xi</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">yi</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">avgtheta</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.ProcessingUtils.FitRectangle.RecEdges" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates the coordinates of the edges of a rectangle based on parameters.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>xi</strong> (<em>numpy.ndarray</em>) – Array of x-coordinates of line endpoints.</p></li>
+<li><p><strong>yi</strong> (<em>numpy.ndarray</em>) – Array of y-coordinates of line endpoints.</p></li>
+<li><p><strong>avgtheta</strong> (<em>float</em>) – The average angle of the lines.</p></li>
+<li><p><strong>x0</strong> (<em>float</em>) – x-coordinate of the rectangle’s center.</p></li>
+<li><p><strong>y0</strong> (<em>float</em>) – y-coordinate of the rectangle’s center.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Arrays containing x and y coordinates of the rectangle’s edges.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>numpy.ndarray, numpy.ndarray</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<ul class="simple">
+<li><p>This function calculates the coordinates of the edges of a rectangle based on specified parameters.</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.ProcessingUtils.FitRectangle.W_L">
+<span class="sig-prename descclassname"><span class="pre">src.ProcessingUtils.FitRectangle.</span></span><span class="sig-name descname"><span class="pre">W_L</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Clusters</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.ProcessingUtils.FitRectangle.W_L" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates the widths and lengths of rectangles fitted to clusters of lines.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>Clusters</strong> (<em>pandas.DataFrame</em>) – A DataFrame containing clusters of lines with columns [‘Labels’, ‘theta’, ‘rho’, ‘seg_length’].</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Arrays containing widths and lengths of fitted rectangles for each cluster.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>numpy.ndarray, numpy.ndarray</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<ul class="simple">
+<li><p>This function calculates the widths and lengths of rectangles fitted to clusters of lines in the DataFrame ‘Clusters’.</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.ProcessingUtils.FitRectangle.allpoints">
+<span class="sig-prename descclassname"><span class="pre">src.ProcessingUtils.FitRectangle.</span></span><span class="sig-name descname"><span class="pre">allpoints</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lines</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.ProcessingUtils.FitRectangle.allpoints" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate and return all the x and y coordinates along the line segments in a DataFrame.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>lines</strong> (<em>pandas.DataFrame</em>) – A DataFrame containing line segments with columns [‘Xstart’, ‘Ystart’, ‘Xend’, ‘Yend’].</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Two NumPy arrays containing all the x and y coordinates along the line segments, respectively.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>numpy.ndarray, numpy.ndarray</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<ul class="simple">
+<li><p>This function calculates all the x and y coordinates that lie along the line segments in the DataFrame ‘lines’.</p></li>
+<li><p>It evenly samples points along each line segment using linear interpolation.</p></li>
+<li><p>The resulting x and y coordinates are stored in separate NumPy arrays and returned.</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.ProcessingUtils.FitRectangle.endpoints">
+<span class="sig-prename descclassname"><span class="pre">src.ProcessingUtils.FitRectangle.</span></span><span class="sig-name descname"><span class="pre">endpoints</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lines</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.ProcessingUtils.FitRectangle.endpoints" title="Permalink to this definition">¶</a></dt>
+<dd><p>Extracts and returns the x and y coordinates of endpoints from a DataFrame of line segments.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>lines</strong> (<em>pandas.DataFrame</em>) – A DataFrame containing line segments with columns [‘Xstart’, ‘Ystart’, ‘Xend’, ‘Yend’].</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Two NumPy arrays containing the x and y coordinates of endpoints, respectively.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>numpy.ndarray, numpy.ndarray</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<ul class="simple">
+<li><p>This function extracts the endpoint coordinates from the DataFrame ‘lines’.</p></li>
+<li><p>The DataFrame ‘lines’ should have columns ‘Xstart’, ‘Ystart’, ‘Xend’, and ‘Yend’ to represent line segments.</p></li>
+<li><p>The x and y coordinates of all endpoints are stored in separate NumPy arrays and returned.</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.ProcessingUtils.FitRectangle.fit_Rec">
+<span class="sig-prename descclassname"><span class="pre">src.ProcessingUtils.FitRectangle.</span></span><span class="sig-name descname"><span class="pre">fit_Rec</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lines</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">yc</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.ProcessingUtils.FitRectangle.fit_Rec" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fits a rectangle to a cluster of lines and returns its width, length, correlation coefficient, and coordinates.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>lines</strong> (<em>pandas.DataFrame</em>) – A DataFrame containing line segments with columns [‘Xstart’, ‘Ystart’, ‘Xend’, ‘Yend’, ‘theta’, ‘rho’].</p></li>
+<li><p><strong>xc</strong> (<em>float</em>) – x-coordinate of the center of the rectangle.</p></li>
+<li><p><strong>yc</strong> (<em>float</em>) – y-coordinate of the center of the rectangle.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p>The width and length of the fitted rectangle.</p></li>
+<li><p>The correlation coefficient.</p></li>
+<li><p>NumPy arrays containing x and y coordinates of rectangle edges.</p></li>
+<li><p>Coordinates of the rectangle’s center (Xmid, Ymid).</p></li>
+</ul>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float, float, float, numpy.ndarray, numpy.ndarray, float, float</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<ul class="simple">
+<li><p>This function fits a rectangle to a cluster of lines based on their angles and distances from the origin.</p></li>
+<li><p>It returns the width, length, correlation coefficient, and coordinates of the rectangle.</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.ProcessingUtils.FitRectangle.inRectangle">
+<span class="sig-prename descclassname"><span class="pre">src.ProcessingUtils.FitRectangle.</span></span><span class="sig-name descname"><span class="pre">inRectangle</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">yp</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.ProcessingUtils.FitRectangle.inRectangle" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.ProcessingUtils.FitRectangle.midpoint">
+<span class="sig-prename descclassname"><span class="pre">src.ProcessingUtils.FitRectangle.</span></span><span class="sig-name descname"><span class="pre">midpoint</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lines</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.ProcessingUtils.FitRectangle.midpoint" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate and return the x and y coordinates of midpoints for line segments in a DataFrame.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>lines</strong> (<em>pandas.DataFrame</em>) – A DataFrame containing line segments with columns [‘Xstart’, ‘Ystart’, ‘Xend’, ‘Yend’].</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Two NumPy arrays containing the x and y coordinates of midpoints, respectively.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>numpy.ndarray, numpy.ndarray</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<ul class="simple">
+<li><p>This function calculates the midpoint coordinates of each line segment in the DataFrame ‘lines’.</p></li>
+<li><p>The midpoint of a line is computed as the average of the x and y coordinates of its endpoints.</p></li>
+<li><p>The resulting x and y coordinates are stored in separate NumPy arrays and returned.</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.ProcessingUtils.FitRectangle.pltLine">
+<span class="sig-prename descclassname"><span class="pre">src.ProcessingUtils.FitRectangle.</span></span><span class="sig-name descname"><span class="pre">pltLine</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lines</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">yc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ax</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.ProcessingUtils.FitRectangle.pltLine" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plots a line representing the fitted rectangle on an existing matplotlib axis.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>lines</strong> (<em>pandas.DataFrame</em>) – A DataFrame containing line segments with columns [‘Xstart’, ‘Ystart’, ‘Xend’, ‘Yend’, ‘theta’, ‘rho’].</p></li>
+<li><p><strong>xc</strong> (<em>float</em>) – x-coordinate of the center of the rectangle.</p></li>
+<li><p><strong>yc</strong> (<em>float</em>) – y-coordinate of the center of the rectangle.</p></li>
+<li><p><strong>ax</strong> (<em>matplotlib.axes.Axes</em>) – The axis on which the line will be plotted.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<ul class="simple">
+<li><p>This function plots a line representing the fitted rectangle on a specified matplotlib axis ‘ax’.</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.ProcessingUtils.FitRectangle.rotateXYShift">
+<span class="sig-prename descclassname"><span class="pre">src.ProcessingUtils.FitRectangle.</span></span><span class="sig-name descname"><span class="pre">rotateXYShift</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ang</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">h</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.ProcessingUtils.FitRectangle.rotateXYShift" title="Permalink to this definition">¶</a></dt>
+<dd><p>Rotate and shift coordinates (x, y) about a center point (h, k) by an angle ‘ang’ (in radians).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ang</strong> (<em>float</em>) – The angle in radians by which to rotate the coordinates.</p></li>
+<li><p><strong>x</strong> (<em>float</em><em> or </em><em>numpy array</em>) – The x-coordinate of the point to be transformed.</p></li>
+<li><p><strong>y</strong> (<em>float</em><em> or </em><em>numpy array</em>) – The y-coordinate of the point to be transformed.</p></li>
+<li><p><strong>h</strong> (<em>float</em>) – The x-coordinate of the center point about which the rotation and shift will be performed.</p></li>
+<li><p><strong>k</strong> (<em>float</em>) – The y-coordinate of the center point about which the rotation and shift will be performed.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The transformed coordinates (xp, yp) after rotating and shifting (x, y) about (h, k).</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float, float or numpy array, numpy array</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<ul class="simple">
+<li><p>The function rotates the point (x, y) counterclockwise by ‘ang’ radians around the center point (h, k).</p></li>
+<li><p>It returns the new coordinates (xp, yp) after the transformation.</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.ProcessingUtils.FitRectangle.squaresError">
+<span class="sig-prename descclassname"><span class="pre">src.ProcessingUtils.FitRectangle.</span></span><span class="sig-name descname"><span class="pre">squaresError</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lines</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">yc</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.ProcessingUtils.FitRectangle.squaresError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates the sum of squared errors for a cluster of lines fitted to a rectangle.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>lines</strong> (<em>pandas.DataFrame</em>) – A DataFrame containing line segments with columns [‘Xstart’, ‘Ystart’, ‘Xend’, ‘Yend’, ‘theta’, ‘seg_length’].</p></li>
+<li><p><strong>xc</strong> (<em>float</em>) – x-coordinate of the center of the rectangle.</p></li>
+<li><p><strong>yc</strong> (<em>float</em>) – y-coordinate of the center of the rectangle.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The sum of squared errors.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<ul class="simple">
+<li><p>This function calculates the sum of squared errors for a cluster of lines fitted to a rectangle.</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.ProcessingUtils.FitRectangle.unrotate">
+<span class="sig-prename descclassname"><span class="pre">src.ProcessingUtils.FitRectangle.</span></span><span class="sig-name descname"><span class="pre">unrotate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ang</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">h</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.ProcessingUtils.FitRectangle.unrotate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reverse the rotation and shift of coordinates (x, y) about a center point (h, k) by an angle ‘ang’ (in radians).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ang</strong> (<em>float</em>) – The angle in radians by which the coordinates were previously rotated.</p></li>
+<li><p><strong>x</strong> (<em>float</em><em> or </em><em>numpy array</em>) – The x-coordinate of the transformed point.</p></li>
+<li><p><strong>y</strong> (<em>float</em><em> or </em><em>numpy array</em>) – The y-coordinate of the transformed point.</p></li>
+<li><p><strong>h</strong> (<em>float</em>) – The x-coordinate of the center point about which the reverse rotation and shift will be performed.</p></li>
+<li><p><strong>k</strong> (<em>float</em>) – The y-coordinate of the center point about which the reverse rotation and shift will be performed.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The original coordinates (xr, yr) before the rotation and shift were applied.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float, float or numpy array, numpy array</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<ul class="simple">
+<li><p>The function reverses the rotation and shift applied to the point (x, y) by ‘ang’ radians around the center point (h, k).</p></li>
+<li><p>It returns the original coordinates (xr, yr) before the transformation.</p></li>
+</ul>
+</dd></dl>
+
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">LinkingLines</a></h1>
+
+
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=aikubo&repo=Linking-and-Clustering-Dikes&type=watch&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+<h3>Navigation</h3>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2023, Allison Kubo.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 6.2.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.13</a>
+      
+      |
+      <a href="../../_sources/linkinglines/ProcessingUtils/FitRectangle.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+    <a href="https://github.com/aikubo/Linking-and-Clustering-Dikes" class="github">
+        <img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub"  class="github"/>
+    </a>
+    
+
+    
+  </body>
+</html>

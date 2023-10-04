@@ -3,12 +3,15 @@ import sys
 sys.path.insert(0, os.path.abspath('../../'))
 sys.path.insert(0, os.path.abspath('../../src/'))
 
-sys.path.insert(0, os.path.abspath('../../src/linkinglines/'))
-sys.path.insert(0, os.path.abspath('../../src/linkinglines/HT'))
-sys.path.insert(0, os.path.abspath('../../src/linkinglines/ProcessingUtils'))
-sys.path.insert(0, os.path.abspath('../../src/linkinglines/FeatureExtraction'))
-sys.path.insert(0, os.path.abspath('../../src/linkinglines/PlotUtils'))
-sys.path.insert(0, os.path.abspath('../../src/linkinglines/ClusterLines'))
+sys.path.insert(0, os.path.abspath('../../src/HT'))
+sys.path.insert(0, os.path.abspath('../../src/ProcessingUtils'))
+sys.path.insert(0, os.path.abspath('../../src/FeatureExtraction'))
+sys.path.insert(0, os.path.abspath('../../src/PlotUtils'))
+sys.path.insert(0, os.path.abspath('../../src/ClusterLines'))
+
+sys.path.insert(0, os.path.abspath('./linkinglines'))
+sys.path.insert(0, os.path.abspath('./linkinglines/FeatureExtraction'))
+
 
 
 import linkinglines
