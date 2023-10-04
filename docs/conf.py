@@ -1,6 +1,15 @@
 import os
 import sys
-sys.path.insert(0, os.path.abspath('../src'))
+sys.path.insert(0, os.path.abspath('../linkinglines'))
+sys.path.insert(0, os.path.abspath('../linkinglines/HT'))
+sys.path.insert(0, os.path.abspath('../linkinglines/ProcessingUtils'))
+sys.path.insert(0, os.path.abspath('../linkinglines/FeatureExtraction'))
+sys.path.insert(0, os.path.abspath('../linkinglines/PlotUtils'))
+sys.path.insert(0, os.path.abspath('../linkinglines/ClusterLines'))
+
+
+
+
 
 # Configuration file for the Sphinx documentation builder.
 #
@@ -22,7 +31,6 @@ extensions = ['sphinx.ext.autodoc',
               'sphinx.ext.mathjax',
               'sphinx.ext.napoleon',
               'sphinx.ext.intersphinx',
-              "nbsphinx",
               'myst_parser',
              ]
 
