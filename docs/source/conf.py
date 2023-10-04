@@ -1,15 +1,17 @@
 import os
 import sys
 sys.path.insert(0, os.path.abspath('../../'))
-sys.path.insert(0, os.path.abspath('../../linkinglines'))
-sys.path.insert(0, os.path.abspath('../../linkinglines/HT'))
-sys.path.insert(0, os.path.abspath('../../linkinglines/ProcessingUtils'))
-sys.path.insert(0, os.path.abspath('../../linkinglines/FeatureExtraction'))
-sys.path.insert(0, os.path.abspath('../../linkinglines/PlotUtils'))
-sys.path.insert(0, os.path.abspath('../../linkinglines/ClusterLines'))
+sys.path.insert(0, os.path.abspath('../../src/'))
+
+sys.path.insert(0, os.path.abspath('../../src/linkinglines/'))
+sys.path.insert(0, os.path.abspath('../../src/linkinglines/HT'))
+sys.path.insert(0, os.path.abspath('../../src/linkinglines/ProcessingUtils'))
+sys.path.insert(0, os.path.abspath('../../src/linkinglines/FeatureExtraction'))
+sys.path.insert(0, os.path.abspath('../../src/linkinglines/PlotUtils'))
+sys.path.insert(0, os.path.abspath('../../src/linkinglines/ClusterLines'))
 
 
-#import linkinglines
+import linkinglines
 
 
 # Configuration file for the Sphinx documentation builder.
