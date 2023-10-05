@@ -13,16 +13,16 @@ and modeling purposes.
 @author: akh
 """
 import pandas as pd
-from HT import HoughTransform
+from .HT import HoughTransform
 from sklearn.preprocessing import scale
 import numpy as np
-from ClusterLines import *
+from .ClusterLines import *
 import matplotlib.pyplot as plt
-from plotmod import plotlines, labelcolors, BA_HT, HThist, DotsLines, labelSubplots
-from ExamineLines import examineClusters
+from .PlotUtils import plotlines, labelcolors, BA_HT, HThist, DotsLines, labelSubplots
+from .ExamineClusters import examineClusters
 import seaborn as sns
 from matplotlib import cm
-from PrePostProcess import transformXstart, DikesetReProcess
+from .PrePostProcess import transformXstart, DikesetReProcess
 
 
 

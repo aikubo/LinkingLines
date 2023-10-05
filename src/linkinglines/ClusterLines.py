@@ -12,9 +12,9 @@ Created on Thu Apr  1 13:12:50 2021
 import numpy as np
 import pandas as pd
 from scipy.cluster.hierarchy import dendrogram
-from HT import rotateData
+from .HT import rotateData
 #from examineMod import *
-from PrePostProcess import whichForm
+from .PrePostProcess import whichForm
 from scipy.spatial.distance import pdist, squareform
 import scipy.cluster.hierarchy as sch
 import matplotlib.pyplot as plt

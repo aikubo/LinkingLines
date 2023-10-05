@@ -41,17 +41,16 @@ Dependences:
 
 import numpy as np
 import pandas as pd
-from fitRectangle import *
-from htMOD import HT_center
-from plotmod import HThist, plotlines, DotsHT, FixAxisAspect, clustered_lines, pltRec, FixCartesianLabels
+from .FitRectangle import *
+from .PlotUtils import HThist, plotlines, DotsHT, FixAxisAspect, clustered_lines, pltRec, FixCartesianLabels
 
-from PrePostProcess import *
-from htMOD import rotateData, CyclicAngleDist
-from clusterMod import *
+
+from .HT import rotateData, CyclicAngleDist, HT_center
+from .ClusterLines import *
 import statsmodels.api as sm
 from matplotlib.colors import ListedColormap, LinearSegmentedColormap
 
-from PrePostProcess import completePreProcess, whichForm, midPoint
+from .PrePostProcess import completePreProcess, whichForm, midPoint
 
 from sklearn.neighbors import NearestNeighbors
 import matplotlib.pyplot as plt
@@ -143,7 +142,7 @@ def checkoutCluster(dikeset, label):
     ax2.set_ylim([ylim1+9.5, ylim2-9.5])
     ax2.set_xlim([xlim1+1.5, xlim2-1.5])
 
-    ax[0].set_xlabel('Theta ($^\circ$)')
+    ax[0].set_xlabel(r'Theta ($^\circ$)')
     ax[0].set_ylabel('Rho (km)')
 
     fig,ax[1], l,w=pltRec(lines, xc,yc, fig=fig, ax=ax[1])
@@ -183,12 +182,12 @@ def checkoutCluster(dikeset, label):
         tlocy=0.25
 
 
-    t=ax[0].text(tlocx2,tlocy-0.10,'Angle Mean $(^\circ)$: '+str( round(ang, 2)), transform=ax[0].transAxes)
+    t=ax[0].text(tlocx2,tlocy-0.10,r'Angle Mean $(^\circ)$: '+str( round(ang, 2)), transform=ax[0].transAxes)
 
     t=ax[0].text(tlocx2,tlocy-0.05,'Rho Mean (km): '+str(round(lines['rho'].mean()/1000,1)), transform=ax[0].transAxes)
 
 
-    t=ax[0].text(tlocx2,tlocy-0.20,'Angle Range $(^\circ)$: '+str( round(np.ptp(lines['theta']), 2)), transform=ax[0].transAxes)
+    t=ax[0].text(tlocx2,tlocy-0.20,r'Angle Range $(^\circ)$: '+str( round(np.ptp(lines['theta']), 2)), transform=ax[0].transAxes)
 
     t=ax[0].text(tlocx2,tlocy-0.15,'Rho Range (km): '+str(round(np.ptp(lines['rho'])/1000,1)), transform=ax[0].transAxes)
 
@@ -292,7 +291,7 @@ def checkoutClusterCart(dikeset, label, fig, ax):
         tlocy=0.25
 
 
-    t=ax.text(tlocx2,tlocy,'Angle Mean $(^\circ)$: '+str( round(ang, 2)), transform=ax.transAxes)
+    t=ax.text(tlocx2,tlocy,r'Angle Mean $(^\circ)$: '+str( round(ang, 2)), transform=ax.transAxes)
     ax.text(tlocx2,tlocy-0.05,'Length (km): '+str(round(l/1000,1)), transform=ax.transAxes)
     ax.text(tlocx2,tlocy-0.10,'Width (m): '+str(round(w,1)), transform=ax.transAxes)
     ax.text(tlocx2,tlocy-0.15,'Size: '+str(len(lines)), transform=ax.transAxes)

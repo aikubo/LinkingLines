@@ -30,8 +30,8 @@ WKT files and exporting WKT files to use in GIS programs
 """
 import pandas as pd
 import numpy as np
-from HT import MidtoPerpDistance, HT_center
-from HT import HoughTransform, segLength
+from .HT import MidtoPerpDistance, HT_center
+from .HT import HoughTransform, segLength
 from datetime import datetime
 import re
 from scipy import stats
@@ -485,7 +485,7 @@ def whichForm(lines):
 
     if 'Average Rho (m)' in col:
         r='Average Rho (m)'
-        t='Average Theta ($^\circ$)'
+        t=r'Average Theta ($^\circ$)'
 
     return t,r
 

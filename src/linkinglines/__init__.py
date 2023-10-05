@@ -6,13 +6,14 @@ PACKAGE_VERSION = "2.1.0"
 
 # Import modules or submodules to make them accessible
 from .HT import *
-from .PlotUtil import *
+from .PlotUtils import *
 from .ClusterLines import *
-from .DilationCalculation import *
+from .DilationCalculations import *
 from .FitRectangle import *
+from .FitRadialCenters import *
 from .PrePostProcess import *
 from .SyntheticLines import *
-from .ExamineCluster import *
+from .ExamineClusters import *
 
 # You can also import subpackages if needed
 #from .FeatureExtraction import *

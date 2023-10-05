@@ -9,9 +9,9 @@ Created on Thu Jul  7 14:45:57 2022
 @author: akh
 """
 
-from PlotUtils import DotsLines, whichForm
+from .PlotUtils import DotsLines, whichForm
 import numpy as np
-from PrePostProcess import transformXstart
+from .PrePostProcess import transformXstart
 import matplotlib.pyplot as plt
 
 

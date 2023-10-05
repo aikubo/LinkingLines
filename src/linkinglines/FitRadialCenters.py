@@ -38,9 +38,9 @@ import pandas as pd
 from scipy.optimize import curve_fit
 from scipy.spatial.distance import pdist, squareform
 import matplotlib.pyplot as plt
-from PrePostProcess import whichForm, writeToQGIS
-from plotmod import plotlines, DotsLines
-from htMOD import HT_center, CyclicAngleDist
+from .PrePostProcess import whichForm, writeToQGIS
+from .PlotUtils import plotlines, DotsLines
+from .HT import HT_center, CyclicAngleDist
 
 def CenterFunc(theta, xr, yr, xc, yc):
     """

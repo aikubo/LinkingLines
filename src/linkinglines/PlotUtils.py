@@ -24,9 +24,9 @@ from pyproj import Proj
 from matplotlib.colors import ListedColormap, LinearSegmentedColormap, Normalize
 import seaborn as sns
 import matplotlib.colors as mcolors
-from HT import HT_center
-from FitRectangle import *
-from PrePostProcess import whichForm, FilterLines, getCartLimits
+from .HT import HT_center
+from .FitRectangle import *
+from .PrePostProcess import whichForm, FilterLines, getCartLimits
 import scipy.cluster.hierarchy as sch
 import labellines
 import matplotlib.gridspec as gridspec
@@ -716,9 +716,9 @@ def pltRec(lines, xc, yc, fig=None, ax=None):
 
     if 'Average Rho (m)' in col:
         r = 'Average Rho (m)'
-        t = 'Average Theta ($^\circ$)'
+        t = r'Average Theta ($^\circ$)'
 
-    if t == 'AvgTheta' or t == 'Average Theta ($^\circ$)':
+    if t == 'AvgTheta' or t == r'Average Theta ($^\circ$)':
         segl = 'R_Length'
     else:
         segl = 'seg_length'
@@ -959,7 +959,7 @@ def HThist(lines, rstep, tstep, weights=None,fig=None, ax=None, rbins=None, tbin
         tbins=np.arange(-90, 90, tstep)
     h,xe,ye, c=ax.hist2d(lines[t], lines[r]/1000, bins=[tbins, rbins], weights=weights, cmap=cmap, norm=mcolors.PowerNorm(gamma))
     fig.colorbar(c, label='Counts', ax=ax)
-    ax.set_xlabel('Theta ($^\circ$)')
+    ax.set_xlabel(r'Theta ($^\circ$)')
     ax.set_ylabel('Rho (km)')
     #ax.set_title("HT histogram")
 
@@ -1023,7 +1023,7 @@ def BA_HT(dikeset,lines,rstep=5000):
     ax[2].set_xlabel('Theta (degrees)')
     ax[0].set_ylabel('Rho (m)')
     #ax[1], h2=HThist(lines['Average Rho (m)'], lines['Average Theta ($^\circ$)'], rstep, tstep, weights=lines['Dike Cluster Length (km)'], ax=ax[1],rbins=rbins)
-    ax[1], h2=HThist(lines['Average Rho (m)'], lines['Average Theta ($^\circ$)'], rstep, tstep, ax=ax[1],rbins=rbins)
+    #ax[1], h2=HThist(lines['Average Rho (m)'], lines[r'Average Theta ($^\circ$)'], rstep, tstep, ax=ax[1],rbins=rbins)
     ax[1].set_title('Clustered Data')
     fig.colorbar(h1[3], ax=ax[0])
     fig.colorbar(h2[3], ax=ax[1])
@@ -1087,7 +1087,7 @@ def DotsHT(fig, ax, lines, color=None, ColorBy="Dike Cluster Length (km)", label
     t,r=whichForm(lines)
 
     if axlabels[0]:
-        ax.set_xlabel('Theta ($^\circ$)')
+        ax.set_xlabel(r'Theta ($^\circ$)')
 
     if not rhoScale:
         if axlabels[1]:
