@@ -41,3 +41,22 @@ source_suffix = [".rst", ".md"]
 
 html_theme = 'alabaster'
 html_static_path = ['_static']
+
+# Add GitHub badge to the sidebar
+html_theme_options = {'description': "Using the Hough Transform to cluster lines",
+                      'github_user': 'aikubo',
+                      'github_repo': 'LinkingLines',
+                      'github_banner': True,
+}
+
+
+html_sidebars = {
+    '**': [
+        'about.html',
+        'navigation.html',
+        'relations.html',
+        'searchbox.html',
+        
+    ]
+}
+

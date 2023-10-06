@@ -26,7 +26,9 @@ linkinglines: hough transform for clustering and feature extraction
    :alt: License
 
 
-*Introduction*
+
+1. Introduction
+---------------
     Welcome to the documentation for our Python module that performs the Hough
     Transform on line data from a CSV, clusters it using Agglomerative Clustering,
     and provides functionality to export the results into a CSV file.
@@ -52,7 +54,7 @@ linkinglines: hough transform for clustering and feature extraction
       **Feature Extraction**\ : Extract meaningful features from clustered data to
       perform further analysis, such as linear or radial type features.
 
-1. Installation
+2. Installation
 ---------------
 To use this module, make sure you have Python installed (preferably Python 3.x).
     You can install the required packages using pip:
@@ -61,7 +63,7 @@ To use this module, make sure you have Python installed (preferably Python 3.x).
 
        pip install linkinglines
 
-2. Quick Start
+3. Quick Start
 --------------
 
     .. code-block:: python
@@ -92,7 +94,8 @@ To use this module, make sure you have Python installed (preferably Python 3.x).
 Indepth Tutorials
 -----------------
 .. toctree::
-   maxdepth:2 
+   :maxdepth:2 
+   
 
    DemoLinkingLines
 
@@ -101,7 +104,7 @@ Module Documentation
 
 .. toctree::
    :maxdepth: 4
-   :caption: Contents:
+   :caption: Modules:
 
    modules 
 
