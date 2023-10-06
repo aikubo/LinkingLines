@@ -1,0 +1,43 @@
+[build-system]
+requires = ["setuptools>=61.0.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "linkinglines"
+version = "2.1.0"
+authors = [
+  { name="Allison Kubo", email="akubo@uoregon.edu" },
+]
+description = "Uses Hough Transform and clustering to link line segments and for feature extraction of linear and radial structures"
+readme = "README.md"
+requires-python = ">=3.7"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "matplotlib>=3.7.2",
+    "matplotlib_label_lines>=0.6.0",
+    "numpy>=1.25.2",
+    "pandas>=2.0.3",
+    "pyproj>=3.6.0",
+    "scikit_learn>=1.3.0",
+    "scipy>=1.11.2",
+    "seaborn>=0.12.2",
+    "statsmodels>=0.14.0"
+]
+
+[project.urls]
+"Homepage" = "https://github.com/aikubo/Linking-and-Clustering-Dikes"
+"Bug Tracker" = "https://github.com/aikubo/Linking-and-Clustering-Dikes"
+
+[tool.setuptools]
+packages = ["linkinglines"]
+package-dir = {"" = "src"}
+
+
+[tool.pytest.ini_options]
+pythonpath = [
+  "src/linkinglines"
+]
