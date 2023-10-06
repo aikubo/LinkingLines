@@ -36,6 +36,7 @@ dependencies = [
 packages = ["linkinglines"]
 package-dir = {"" = "src"}
 
+
 [tool.pytest.ini_options]
 pythonpath = [
   "src/linkinglines"

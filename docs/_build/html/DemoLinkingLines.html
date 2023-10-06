@@ -1,26 +1,24 @@
-
 <!DOCTYPE html>
 
-<html lang="en">
+<html lang="en" data-content_root="./">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>&lt;no title&gt; &#8212; LinkingLines 0.2 documentation</title>
-    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="_static/alabaster.css" />
-    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-    <script src="_static/jquery.js"></script>
-    <script src="_static/underscore.js"></script>
-    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
-    <script src="_static/doctools.js"></script>
-    <script src="_static/sphinx_highlight.js"></script>
+    <title>Example Usage of LinkingLines Module &#8212; LinkingLines 0.2 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=4f649999" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=039e1c02" />
+    <link rel="stylesheet" type="text/css" href="_static/nbsphinx-code-cells.css" />
+    <script src="_static/documentation_options.js?v=10f1778b"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
     <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="prev" title="LinkingLines Python Module" href="intro.html" />
+    <link rel="next" title="linkinglines" href="modules.html" />
+    <link rel="prev" title="linkinglines: hough transform for clustering and feature extraction" href="index.html" />
    
   <link rel="stylesheet" href="_static/custom.css" type="text/css" />
   
@@ -37,29 +35,16 @@
 
           <div class="body" role="main">
             
-  <p><strong>Example Usage of LinkingLines Module</strong></p>
-<p>The goal of this code is to link colinear line segments spread over
-Cartesian space in the Hough Transform coordinates. It takes the
-endpoint coordinates of line segments and performs clustering on them
-and outputs the combined lines and analyctics on it. This code was used
-to produce <a class="reference external" href="https://agupubs.onlinelibrary.wiley.com/doi/10.1029/2022GC010842">Kubo Hutchison et al.,
-2023</a></p>
-<p>This example replicates the process of linking dike segments for the
-Spanish Peaks Dike Swarm in Colorado, USA. Exposure bias, the uneven
-mapping of dikes, has segmented the dikes so their true lengths can only
-be estimated. This code links the far reaching segments based on
-orientation. Later we will also show a post processing step where
-different parts of the swarm can be extracted.</p>
-<p>In this example we will go through many of the tools available in this
-module. The process is:</p>
+  <section id="Example-Usage-of-LinkingLines-Module">
+<h1>Example Usage of LinkingLines Module<a class="headerlink" href="#Example-Usage-of-LinkingLines-Module" title="Link to this heading">¶</a></h1>
+<p><em>Spanish Peaks Dataset - Overlapping radial and linear features</em></p>
+<p>The goal of this code is to link colinear line segments spread over Cartesian space in the Hough Transform coordinates. It takes the endpoint coordinates of line segments and performs clustering on them and outputs the combined lines and analyctics on it. This code was used to produce <a class="reference external" href="https://agupubs.onlinelibrary.wiley.com/doi/10.1029/2022GC010842">Kubo Hutchison et al., 2023</a></p>
+<p>This example replicates the process of linking dike segments for the Spanish Peaks Dike Swarm in Colorado, USA. Exposure bias, the uneven mapping of dikes, has segmented the dikes so their true lengths can only be estimated. This code links the far reaching segments based on orientation. Later we will also show a post processing step where different parts of the swarm can be extracted.</p>
+<p>In this example we will go through many of the tools available in this module. The process is:</p>
 <ol class="arabic simple">
-<li><p>Load in a CSV file with
-<a class="reference external" href="https://en.wikipedia.org/wiki/Well-known_text_representation_of_geometry">Well-Known-Text</a>
-format</p></li>
-<li><p>Create a <a class="reference external" href="https://pandas.pydata.org/">pandas</a> DataFrame of the
-data</p></li>
-<li><p>Perform the <a class="reference external" href="https://en.wikipedia.org/wiki/Hough_transform">Hough
-Transform</a></p></li>
+<li><p>Load in a CSV file with <a class="reference external" href="https://en.wikipedia.org/wiki/Well-known_text_representation_of_geometry">Well-Known-Text</a> format</p></li>
+<li><p>Create a <a class="reference external" href="https://pandas.pydata.org/">pandas</a> DataFrame of the data</p></li>
+<li><p>Perform the <a class="reference external" href="https://en.wikipedia.org/wiki/Hough_transform">Hough Transform</a></p></li>
 <li><p>Visualize the Results</p></li>
 <li><p>Cluster based on Hough Space</p></li>
 <li><p>Make lines out of clusters</p></li>
@@ -68,297 +53,357 @@ Transform</a></p></li>
 <li><p>Feature extraction</p></li>
 <li><p>Save features</p></li>
 </ol>
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1">#Let&#39;s begin by loading the modules</span>
-
-<span class="c1">#previously published packages</span>
-<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
-<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">import</span> <span class="nn">scipy.cluster.hierarchy</span> <span class="k">as</span> <span class="nn">sch</span>
-<span class="kn">import</span> <span class="nn">os</span>
-<span class="kn">import</span> <span class="nn">seaborn</span> <span class="k">as</span> <span class="nn">sns</span>
-<span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span>
-<span class="kn">import</span> <span class="nn">matplotlib.gridspec</span> <span class="k">as</span> <span class="nn">gridspec</span>
-
-
-
-<span class="kn">import</span> <span class="nn">sys</span>
-<span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;../src&quot;</span><span class="p">)</span>
-<span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;/home/akh/myprojects/Dikes_Linking_Project/dikedata/spanish peaks&quot;</span><span class="p">)</span>
-
-<span class="c1"># Packages written for the paper</span>
-<span class="kn">from</span> <span class="nn">htMOD</span> <span class="kn">import</span> <span class="n">HoughTransform</span>
-<span class="kn">from</span> <span class="nn">clusterMod</span> <span class="kn">import</span> <span class="n">AggCluster</span>
-<span class="kn">from</span> <span class="nn">plotmod</span> <span class="kn">import</span> <span class="n">DotsLines</span><span class="p">,</span> <span class="n">plotScatterHist</span><span class="p">,</span> <span class="n">pltRec</span><span class="p">,</span> <span class="n">DotsHT</span>
-<span class="kn">from</span> <span class="nn">PrePostProcess</span> <span class="kn">import</span> <span class="o">*</span>
-<span class="kn">from</span> <span class="nn">examineMod</span> <span class="kn">import</span> <span class="n">examineClusters</span><span class="p">,</span> <span class="n">checkoutCluster</span>
-<span class="kn">from</span> <span class="nn">fitRadialCenters</span> <span class="kn">import</span> <span class="n">RadialFit</span><span class="p">,</span> <span class="n">NearCenters</span><span class="p">,</span> <span class="n">CenterFunc</span>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[33]:
 </pre></div>
 </div>
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Load the example dataset</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>#Let&#39;s begin by loading the modules
 
-<span class="c1">#load it using pandas.read_csv</span>
-<span class="c1"># the CSV must have a column called &quot;WKT&quot; and can have any other data</span>
-<span class="n">dikeset</span><span class="o">=</span><span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s1">&#39;/home/akh/myprojects/Dikes_Linking_Project/dikedata/spanish peaks/SpanishPeaks_3857.csv&#39;</span><span class="p">)</span>
+#previously published packages
+import pandas as pd
+import matplotlib.pyplot as plt
+import numpy as np
+import scipy.cluster.hierarchy as sch
+import os
+import seaborn as sns
+from datetime import datetime
+import matplotlib.gridspec as gridspec
 
-<span class="c1">#Preprocessing step</span>
-<span class="n">dikeset</span><span class="o">=</span><span class="n">DikesetReProcess</span><span class="p">(</span><span class="n">dikeset</span><span class="p">)</span>
+
+
+import sys
+sys.path.append(&quot;../src&quot;)
+sys.path.append(&quot;/home/akh/myprojects/Dikes_Linking_Project/dikedata/spanish peaks&quot;)
+
+# Packages written for the paper
+from htMOD import HoughTransform
+from clusterMod import AggCluster
+from plotmod import DotsLines, plotScatterHist, pltRec, DotsHT
+from PrePostProcess import *
+from examineMod import examineClusters, checkoutCluster
+from fitRadialCenters import RadialFit, NearCenters, CenterFunc
+<br/></pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
 </pre></div>
 </div>
-<p>The preprocssing step does several things necessary to run the
-algorithm. First it converts the WKT strings into “Xstart” “Xend”
-“Ystart” and “Yend” columns in the dataframe. It checks to make sure
-there are no duplicate dikes in the database. Then it checks to make
-sure each of the entries in the dataframe is a straight line.</p>
-<p>The straight line checking is performed by fitting a line to all the
-points in the WKT string and only accepting the entry if the fit of the
-line is significant.</p>
-<p>It also calculates several other useful metrics including segment length
-and gives each segment a unique hash. The hash ID can be useful later to
-check the uniqueness of your clusters.</p>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span># Load the example dataset
+
+#load it using pandas.read_csv
+# the CSV must have a column called &quot;WKT&quot; and can have any other data
+dikeset=pd.read_csv(&#39;/home/akh/myprojects/Dikes_Linking_Project/dikedata/spanish peaks/SpanishPeaks_3857.csv&#39;)
+
+#Preprocessing step
+dikeset=DikesetReProcess(dikeset)
+<br/></pre></div>
+</div>
+</div>
+<p>The preprocssing step does several things necessary to run the algorithm. First it converts the WKT strings into “Xstart” “Xend” “Ystart” and “Yend” columns in the dataframe. It checks to make sure there are no duplicate dikes in the database. Then it checks to make sure each of the entries in the dataframe is a straight line.</p>
+<p>The straight line checking is performed by fitting a line to all the points in the WKT string and only accepting the entry if the fit of the line is significant.</p>
+<p>It also calculates several other useful metrics including segment length and gives each segment a unique hash. The hash ID can be useful later to check the uniqueness of your clusters.</p>
 <p>The next step is to perform the Hough Transform</p>
-<p>Besides the data the input in the hough transform code is the center
-(xc,yc) which is assumed to be the mean of the X and Y coordinates. It
-can be set arbitrarily. You may wish to set this to investigate
-structures in your dataset. But most people will use the default
-settings</p>
-<p>It outputs theta, rho, xc, yc which then are added to the dataset as
-columns.</p>
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">theta</span><span class="p">,</span> <span class="n">rho</span><span class="p">,</span> <span class="n">xc</span><span class="p">,</span>  <span class="n">yc</span><span class="o">=</span><span class="n">HoughTransform</span><span class="p">(</span><span class="n">dikeset</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">xc</span><span class="p">,</span><span class="n">yc</span><span class="p">)</span>
-<span class="n">dikeset</span><span class="p">[</span><span class="s1">&#39;theta&#39;</span><span class="p">]</span><span class="o">=</span><span class="n">theta</span> <span class="c1">#Add to the dataframe in a column called &#39;theta&#39;</span>
-<span class="n">dikeset</span><span class="p">[</span><span class="s1">&#39;rho&#39;</span><span class="p">]</span><span class="o">=</span><span class="n">rho</span>
+<p>Besides the data the input in the hough transform code is the center (xc,yc) which is assumed to be the mean of the X and Y coordinates. It can be set arbitrarily. You may wish to set this to investigate structures in your dataset. But most people will use the default settings</p>
+<p>It outputs theta, rho, xc, yc which then are added to the dataset as columns.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><br/><span></span>theta, rho, xc,  yc=HoughTransform(dikeset)
+print(xc,yc)
+dikeset[&#39;theta&#39;]=theta #Add to the dataframe in a column called &#39;theta&#39;
+dikeset[&#39;rho&#39;]=rho
 
-<span class="nb">print</span><span class="p">(</span><span class="n">dikeset</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
+print(dikeset.columns)
 </pre></div>
 </div>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">-</span><span class="mf">11684130.47751338</span> <span class="mf">4503174.613590027</span>
-<span class="n">Index</span><span class="p">([</span><span class="s1">&#39;Unnamed: 0.2&#39;</span><span class="p">,</span> <span class="s1">&#39;Unnamed: 0&#39;</span><span class="p">,</span> <span class="s1">&#39;Unnamed: 0.1&#39;</span><span class="p">,</span> <span class="s1">&#39;Unnamed: 0.1.1&#39;</span><span class="p">,</span>
-       <span class="s1">&#39;Unnamed: 0.1.1.1&#39;</span><span class="p">,</span> <span class="s1">&#39;Unnamed: 0.1.1.1.1&#39;</span><span class="p">,</span> <span class="s1">&#39;Unnamed: 0.1.1.1.1.1&#39;</span><span class="p">,</span>
-       <span class="s1">&#39;Unnamed: 0.1.1.1.1.1.1&#39;</span><span class="p">,</span> <span class="s1">&#39;id&#39;</span><span class="p">,</span> <span class="s1">&#39;Formation&#39;</span><span class="p">,</span> <span class="s1">&#39;Xstart&#39;</span><span class="p">,</span> <span class="s1">&#39;Ystart&#39;</span><span class="p">,</span> <span class="s1">&#39;Xend&#39;</span><span class="p">,</span>
-       <span class="s1">&#39;Yend&#39;</span><span class="p">,</span> <span class="s1">&#39;seg_length&#39;</span><span class="p">,</span> <span class="s1">&#39;rho&#39;</span><span class="p">,</span> <span class="s1">&#39;theta&#39;</span><span class="p">,</span> <span class="s1">&#39;HashID&#39;</span><span class="p">,</span> <span class="s1">&#39;Xmid&#39;</span><span class="p">,</span> <span class="s1">&#39;Ymid&#39;</span><span class="p">,</span> <span class="s1">&#39;yc&#39;</span><span class="p">,</span>
-       <span class="s1">&#39;xc&#39;</span><span class="p">,</span> <span class="s1">&#39;PerpOffsetDist&#39;</span><span class="p">,</span> <span class="s1">&#39;PerpIntX&#39;</span><span class="p">,</span> <span class="s1">&#39;PerpIntY&#39;</span><span class="p">,</span> <span class="s1">&#39;Date_Changed&#39;</span><span class="p">,</span>
-       <span class="s1">&#39;ScaledRho&#39;</span><span class="p">,</span> <span class="s1">&#39;Labels&#39;</span><span class="p">],</span>
-      <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;object&#39;</span><span class="p">)</span>
-</pre></div>
 </div>
-<p>The module includes custom code to visualize the cartesian and hough
-transform spacce next to eachother which is a useful exercise when
-learning about the hough transform.</p>
-<p>‘DotsLines’ is a useful tool which creates a matplotlib figure with two
-subplots with cartesian space on the left and hough space on the right.
-The ‘ColorBy’ argument can be used to color the segments and data by any
-of the data columns in the pandas dataframe.</p>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+-11684130.47751338 4503174.613590027
+Index([&#39;Unnamed: 0.2&#39;, &#39;Unnamed: 0&#39;, &#39;Unnamed: 0.1&#39;, &#39;Unnamed: 0.1.1&#39;,
+       &#39;Unnamed: 0.1.1.1&#39;, &#39;Unnamed: 0.1.1.1.1&#39;, &#39;Unnamed: 0.1.1.1.1.1&#39;,
+       &#39;Unnamed: 0.1.1.1.1.1.1&#39;, &#39;id&#39;, &#39;Formation&#39;, &#39;Xstart&#39;, &#39;Ystart&#39;, &#39;Xend&#39;,
+       &#39;Yend&#39;, &#39;seg_length&#39;, &#39;rho&#39;, &#39;theta&#39;, &#39;HashID&#39;, &#39;Xmid&#39;, &#39;Ymid&#39;, &#39;yc&#39;,
+       &#39;xc&#39;, &#39;PerpOffsetDist&#39;, &#39;PerpIntX&#39;, &#39;PerpIntY&#39;, &#39;Date_Changed&#39;,
+       &#39;ScaledRho&#39;, &#39;Labels&#39;],
+      dtype=&#39;object&#39;)
+</pre></div></div>
+</div>
+<p>The module includes custom code to visualize the cartesian and hough transform spacce next to eachother which is a useful exercise when learning about the hough transform.</p>
+<p>‘DotsLines’ is a useful tool which creates a matplotlib figure with two subplots with cartesian space on the left and hough space on the right. The ‘ColorBy’ argument can be used to color the segments and data by any of the data columns in the pandas dataframe.</p>
 <p><em>Try to color it by “seg_length”.</em></p>
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fig</span><span class="p">,</span><span class="n">ax</span><span class="o">=</span><span class="n">DotsLines</span><span class="p">(</span><span class="n">dikeset</span><span class="p">,</span> <span class="n">ColorBy</span><span class="o">=</span><span class="s1">&#39;theta&#39;</span><span class="p">)</span>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
 </pre></div>
 </div>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">km</span> <span class="n">scale</span> <span class="n">label</span>
-</pre></div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>fig,ax=DotsLines(dikeset, ColorBy=&#39;theta&#39;)
+<br/></pre></div>
 </div>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">/</span><span class="n">home</span><span class="o">/</span><span class="n">akh</span><span class="o">/</span><span class="n">myprojects</span><span class="o">/</span><span class="n">Dikes_Linking_Project</span><span class="o">/</span><span class="n">Linking</span><span class="o">-</span><span class="ow">and</span><span class="o">-</span><span class="n">Clustering</span><span class="o">-</span><span class="n">Dikes</span><span class="o">/</span><span class="n">scripts</span><span class="o">/../</span><span class="n">src</span><span class="o">/</span><span class="n">plotmod</span><span class="o">.</span><span class="n">py</span><span class="p">:</span><span class="mi">1198</span><span class="p">:</span> <span class="ne">UserWarning</span><span class="p">:</span> <span class="n">The</span> <span class="n">figure</span> <span class="n">layout</span> <span class="n">has</span> <span class="n">changed</span> <span class="n">to</span> <span class="n">tight</span>
-  <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
-</pre></div>
 </div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+km scale label
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+/home/akh/myprojects/Dikes_Linking_Project/Linking-and-Clustering-Dikes/scripts/../src/plotmod.py:1198: UserWarning: The figure layout has changed to tight
+  plt.tight_layout()
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
 <img alt="_images/DemoLinkingLines_7_2.png" src="_images/DemoLinkingLines_7_2.png" />
-<p>We can now use the clustering portion of the code to link the scattered
-line segments for data reduction or analysis.</p>
-<p>We use agglomerative clustering to perform and advise people choose
-“complete” linkage to avoid chainning which will not yield colinear
-segments. Read more about <a class="reference external" href="https://en.wikipedia.org/wiki/Hierarchical_clustering">agglomerative clustering
-here</a> and the
-<a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/cluster.hierarchy.html">implementation
-here</a>.</p>
-<p>The algorithm takes the data as input and it takes two scaling factors
-dtheta, and drho. These two scaling factors are used to set the maximum
-distances over which two segments will be clustered. The maximum
-distance,d, is set to one.</p>
+</div>
+</div>
+<p>We can now use the clustering portion of the code to link the scattered line segments for data reduction or analysis.</p>
+<p>We use agglomerative clustering to perform and advise people choose “complete” linkage to avoid chainning which will not yield colinear segments. Read more about <a class="reference external" href="https://en.wikipedia.org/wiki/Hierarchical_clustering">agglomerative clustering here</a> and the <a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/cluster.hierarchy.html">implementation here</a>.</p>
+<p>The algorithm takes the data as input and it takes two scaling factors dtheta, and drho. These two scaling factors are used to set the maximum distances over which two segments will be clustered. The maximum distance,d, is set to one.</p>
 <div class="math notranslate nohighlight">
 \[d=\sqrt( (\frac{\theta_{1}-\theta_{2}}{dtheta})^{2}+(\frac{\rho_{1}-\rho_{2}}{dtheta})^{2})\]</div>
-<p>This way if the distance between two points is greater than dtheta or
-drho or the combination of the two they will not cluster (this is true
-for complete linkage only).</p>
+<p>This way if the distance between two points is greater than dtheta or drho or the combination of the two they will not cluster (this is true for complete linkage only).</p>
 <p>The units of drho are length (usually meters) and degrees for dtheta.</p>
 <p><em>Try changing drho and dtheta and seeing how the results change.</em></p>
-<p>Another important function we introduce here is examineClusters. This
-function takes the dikeset data with labels assigned by AggCluster and
-outputs the linked lines along with some useful metrics such as average
-angle in the cluster, average rho, standard deviations of rho and theta,
-cluster size, and the ratio of the cluster length to the nearest
-neighbor distance within a cluster.</p>
-<p>The lines pandas dataframe is the linked dataset which can now be
-analyzed.</p>
-<p>Note that the columns in ‘lines’ are different than the ones we’re used
-to in ‘dikeset’.</p>
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">dtheta</span><span class="o">=</span><span class="mi">2</span>
-<span class="n">drho</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">dikeset</span><span class="p">[</span><span class="s1">&#39;seg_length&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">())</span>
-
-<span class="n">dikeset</span><span class="p">,</span> <span class="n">Z</span><span class="o">=</span><span class="n">AggCluster</span><span class="p">(</span><span class="n">dikeset</span><span class="p">,</span> <span class="n">dtheta</span><span class="p">,</span> <span class="n">drho</span><span class="p">,</span> <span class="n">linkage</span><span class="o">=</span><span class="s1">&#39;complete&#39;</span><span class="p">,</span> <span class="n">rotate</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">metric</span><span class="o">=</span><span class="s1">&#39;Euclidean&#39;</span><span class="p">)</span>
-<span class="n">lines</span><span class="p">,</span><span class="n">evaluation</span><span class="o">=</span><span class="n">examineClusters</span><span class="p">(</span><span class="n">dikeset</span><span class="p">)</span> <span class="c1">#this function takes all the data with the labels</span>
-
-<span class="n">fig</span><span class="p">,</span><span class="n">ax</span><span class="o">=</span><span class="n">DotsLines</span><span class="p">(</span><span class="n">lines</span><span class="p">,</span> <span class="n">ColorBy</span><span class="o">=</span><span class="s1">&#39;AvgTheta&#39;</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">lines</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
+<p>Another important function we introduce here is examineClusters. This function takes the dikeset data with labels assigned by AggCluster and outputs the linked lines along with some useful metrics such as average angle in the cluster, average rho, standard deviations of rho and theta, cluster size, and the ratio of the cluster length to the nearest neighbor distance within a cluster.</p>
+<p>The lines pandas dataframe is the linked dataset which can now be analyzed.</p>
+<p>Note that the columns in ‘lines’ are different than the ones we’re used to in ‘dikeset’.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
 </pre></div>
 </div>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">rotating</span> <span class="n">dataset</span> <span class="n">by</span> <span class="mf">44.69862137669443</span>
-<span class="n">km</span> <span class="n">scale</span> <span class="n">label</span>
-<span class="n">Index</span><span class="p">([</span><span class="s1">&#39;Label&#39;</span><span class="p">,</span> <span class="s1">&#39;Xstart&#39;</span><span class="p">,</span> <span class="s1">&#39;Ystart&#39;</span><span class="p">,</span> <span class="s1">&#39;Xend&#39;</span><span class="p">,</span> <span class="s1">&#39;Yend&#39;</span><span class="p">,</span> <span class="s1">&#39;X0&#39;</span><span class="p">,</span> <span class="s1">&#39;Y0&#39;</span><span class="p">,</span> <span class="s1">&#39;AvgRho&#39;</span><span class="p">,</span>
-       <span class="s1">&#39;AvgTheta&#39;</span><span class="p">,</span> <span class="s1">&#39;AvgSlope&#39;</span><span class="p">,</span> <span class="s1">&#39;AvgIntercept&#39;</span><span class="p">,</span> <span class="s1">&#39;RhoRange&#39;</span><span class="p">,</span> <span class="s1">&#39;Aspect&#39;</span><span class="p">,</span> <span class="s1">&#39;Xmid&#39;</span><span class="p">,</span>
-       <span class="s1">&#39;Ymid&#39;</span><span class="p">,</span> <span class="s1">&#39;PerpOffsetDist&#39;</span><span class="p">,</span> <span class="s1">&#39;PerpOffsetDistRange&#39;</span><span class="p">,</span> <span class="s1">&#39;NormPerpOffsetDist&#39;</span><span class="p">,</span>
-       <span class="s1">&#39;ThetaRange&#39;</span><span class="p">,</span> <span class="s1">&#39;StdRho&#39;</span><span class="p">,</span> <span class="s1">&#39;StdTheta&#39;</span><span class="p">,</span> <span class="s1">&#39;R_Width&#39;</span><span class="p">,</span> <span class="s1">&#39;R_Length&#39;</span><span class="p">,</span> <span class="s1">&#39;Size&#39;</span><span class="p">,</span>
-       <span class="s1">&#39;R_error&#39;</span><span class="p">,</span> <span class="s1">&#39;Linked&#39;</span><span class="p">,</span> <span class="s1">&#39;SegmentLSum&#39;</span><span class="p">,</span> <span class="s1">&#39;ClusterHash&#39;</span><span class="p">,</span> <span class="s1">&#39;ClusterCrossesZero&#39;</span><span class="p">,</span>
-       <span class="s1">&#39;EnEchelonAngleDiff&#39;</span><span class="p">,</span> <span class="s1">&#39;Overlap&#39;</span><span class="p">,</span> <span class="s1">&#39;nOverlapingSegments&#39;</span><span class="p">,</span> <span class="s1">&#39;EEPvalue&#39;</span><span class="p">,</span>
-       <span class="s1">&#39;MaxSegNNDist&#39;</span><span class="p">,</span> <span class="s1">&#39;MedianSegNNDist&#39;</span><span class="p">,</span> <span class="s1">&#39;MinSegNNDist&#39;</span><span class="p">,</span> <span class="s1">&#39;TrustFilter&#39;</span><span class="p">,</span>
-       <span class="s1">&#39;Date_Changed&#39;</span><span class="p">,</span> <span class="s1">&#39;xc&#39;</span><span class="p">,</span> <span class="s1">&#39;yc&#39;</span><span class="p">],</span>
-      <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;object&#39;</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>dtheta=2
+drho=np.floor(dikeset[&#39;seg_length&#39;].mean())
+
+dikeset, Z=AggCluster(dikeset, dtheta, drho, linkage=&#39;complete&#39;, rotate=True, metric=&#39;Euclidean&#39;)
+lines,evaluation=examineClusters(dikeset) #this function takes all the data with the labels
+
+fig,ax=DotsLines(lines, ColorBy=&#39;AvgTheta&#39;)
+print(lines.columns)
 </pre></div>
 </div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+rotating dataset by 44.69862137669443
+km scale label
+Index([&#39;Label&#39;, &#39;Xstart&#39;, &#39;Ystart&#39;, &#39;Xend&#39;, &#39;Yend&#39;, &#39;X0&#39;, &#39;Y0&#39;, &#39;AvgRho&#39;,
+       &#39;AvgTheta&#39;, &#39;AvgSlope&#39;, &#39;AvgIntercept&#39;, &#39;RhoRange&#39;, &#39;Aspect&#39;, &#39;Xmid&#39;,
+       &#39;Ymid&#39;, &#39;PerpOffsetDist&#39;, &#39;PerpOffsetDistRange&#39;, &#39;NormPerpOffsetDist&#39;,
+       &#39;ThetaRange&#39;, &#39;StdRho&#39;, &#39;StdTheta&#39;, &#39;R_Width&#39;, &#39;R_Length&#39;, &#39;Size&#39;,
+       &#39;R_error&#39;, &#39;Linked&#39;, &#39;SegmentLSum&#39;, &#39;ClusterHash&#39;, &#39;ClusterCrossesZero&#39;,
+       &#39;EnEchelonAngleDiff&#39;, &#39;Overlap&#39;, &#39;nOverlapingSegments&#39;, &#39;EEPvalue&#39;,
+       &#39;MaxSegNNDist&#39;, &#39;MedianSegNNDist&#39;, &#39;MinSegNNDist&#39;, &#39;TrustFilter&#39;,
+       &#39;Date_Changed&#39;, &#39;xc&#39;, &#39;yc&#39;],
+      dtype=&#39;object&#39;)
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
 <img alt="_images/DemoLinkingLines_9_1.png" src="_images/DemoLinkingLines_9_1.png" />
-<p><a href="#id2"><span class="problematic" id="id3">`examineClusters &lt;&gt;`__</span></a> fits a rectangle over the clustered line segments
-returns the average line which fits between the end points of the two
-furthest segments explore this with <a href="#id2"><span class="problematic" id="id4">`pltRec &lt;&gt;`__</span></a>. We can continue and
-use various metrics produced in ‘examineClusters’ to continue our
-analysis. Please see the documentation for <a href="#id2"><span class="problematic" id="id5">`examineClusters &lt;&gt;`__</span></a> to see
-all the metrics output.</p>
-<p>The <a href="#id2"><span class="problematic" id="id6">`plotScatterHist &lt;&gt;`__</span></a> uses
-<a class="reference external" href="https://seaborn.pydata.org/">Seaborn</a> style to make plots of two
-variables in the DataFrame with histograms on the axes.</p>
+</div>
+</div>
+<p><a href="#id1"><span class="problematic" id="id2">`examineClusters &lt;&gt;`__</span></a> fits a rectangle over the clustered line segments returns the average line which fits between the end points of the two furthest segments explore this with <a href="#id1"><span class="problematic" id="id3">`pltRec &lt;&gt;`__</span></a>. We can continue and use various metrics produced in ‘examineClusters’ to continue our analysis. Please see the documentation for <a href="#id1"><span class="problematic" id="id4">`examineClusters &lt;&gt;`__</span></a> to see all the metrics output.</p>
+<p>The <a href="#id1"><span class="problematic" id="id5">`plotScatterHist &lt;&gt;`__</span></a> uses <a class="reference external" href="https://seaborn.pydata.org/">Seaborn</a> style to make plots of two variables in the DataFrame with histograms on the axes.</p>
 <p><em>Try experimenting with plotting different parts of the dataframe.</em></p>
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fig</span><span class="p">,</span> <span class="p">[</span><span class="n">ax_main</span><span class="p">,</span> <span class="n">ax_xDist</span><span class="p">,</span> <span class="n">ax_yDist</span><span class="p">]</span><span class="o">=</span><span class="n">plotScatterHist</span><span class="p">(</span><span class="n">lines</span><span class="p">,</span> <span class="s2">&quot;AvgTheta&quot;</span><span class="p">,</span>
-                                                   <span class="s2">&quot;AvgRho&quot;</span><span class="p">,</span> <span class="n">hue</span><span class="o">=</span><span class="s1">&#39;Ymid&#39;</span><span class="p">,</span> <span class="n">palette</span><span class="o">=</span><span class="s2">&quot;icefire&quot;</span><span class="p">)</span>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[19]:
 </pre></div>
 </div>
-<img alt="_images/DemoLinkingLines_11_0.png" src="_images/DemoLinkingLines_11_0.png" />
-<p>Finally, when you are happy with the clustering results you can export
-them into a CSV file and read it into a GIS software. If you don’t need
-the GIS operability you can use
-<a class="reference external" href="https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.to_csv.html">pd.to_csv</a>.</p>
-<p>The format we export is a column in the CSV called Well Known Text.</p>
-<p>It looks like: ‘LINESTRING (30 10, 10 30, 40 40)’. We use the function
-<a href="#id2"><span class="problematic" id="id7">`writeToQGIS &lt;&gt;`__</span></a> and recommend using
-<a class="reference external" href="https://www.qgis.org/en/site/">QGIS</a> or other GIS software.</p>
-<p>You can see a tutorial for loading these types of files into QGIS
-<a class="reference external" href="https://gis.stackexchange.com/questions/175582/how-to-load-my-csv-file-with-wkt-to-qgis">here</a>.</p>
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">writeToQGIS</span><span class="p">(</span><span class="n">lines</span><span class="p">,</span> <span class="s1">&#39;SpanishPeaks_ClusteringResults.csv&#39;</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>fig, [ax_main, ax_xDist, ax_yDist]=plotScatterHist(lines, &quot;AvgTheta&quot;,
+                                                   &quot;AvgRho&quot;, hue=&#39;Ymid&#39;, palette=&quot;icefire&quot;)
 </pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="_images/DemoLinkingLines_11_0.png" src="_images/DemoLinkingLines_11_0.png" />
+</div>
+</div>
+<p>Finally, when you are happy with the clustering results you can export them into a CSV file and read it into a GIS software. If you don’t need the GIS operability you can use <a class="reference external" href="https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.to_csv.html">pd.to_csv</a>.</p>
+<p>The format we export is a column in the CSV called Well Known Text.</p>
+<p>It looks like: ‘LINESTRING (30 10, 10 30, 40 40)’. We use the function <a href="#id1"><span class="problematic" id="id6">`writeToQGIS &lt;&gt;`__</span></a> and recommend using <a class="reference external" href="https://www.qgis.org/en/site/">QGIS</a> or other GIS software.</p>
+<p>You can see a tutorial for loading these types of files into QGIS <a class="reference external" href="https://gis.stackexchange.com/questions/175582/how-to-load-my-csv-file-with-wkt-to-qgis">here</a>.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>writeToQGIS(lines, &#39;SpanishPeaks_ClusteringResults.csv&#39;)
+</pre></div>
+</div>
 </div>
 <p><strong>Using the Hough Transfrom for Feature Extraction</strong></p>
-<p>One may have different motives for clustering such as data reduction but
-the Hough Transform may also be used to extract features of the dataset.
-This code was written to extract radial or circumferential type dike
-swarms. Dike swarms, and many other types of linear features, can form
-different organized patterns.</p>
-<figure class="align-default" id="id1">
-<img alt="Ernst (2014), Large Igneous Provinces" src="_images/dikeswarms.png" />
-<figcaption>
-<p><span class="caption-text">Ernst (2014), Large Igneous Provinces</span><a class="headerlink" href="#id1" title="Permalink to this image">¶</a></p>
-</figcaption>
-</figure>
-<p>We can use the Hough Transform to extract these. See <a href="#id2"><span class="problematic" id="id8">`this page &lt;&gt;`__</span></a>
-for more on the theory of the Hough Transform.</p>
-<p>The Spanish Peaks dataset shows a great example of this because it
-contains two radial type swarms and an overlaping linear swarm. We can
-use the <a href="#id2"><span class="problematic" id="id9">`fitRadial &lt;&gt;`__</span></a> functions to extract these. This function fits
-the equation</p>
+<p>One may have different motives for clustering such as data reduction but the Hough Transform may also be used to extract features of the dataset. This code was written to extract radial or circumferential type dike swarms. Dike swarms, and many other types of linear features, can form different organized patterns.</p>
+<img alt="Ernst (2014), Large Igneous Provinces" src="dikeswarms.png" />
+<p>We can use the Hough Transform to extract these. See <a href="#id1"><span class="problematic" id="id7">`this page &lt;&gt;`__</span></a> for more on the theory of the Hough Transform.</p>
+<p>The Spanish Peaks dataset shows a great example of this because it contains two radial type swarms and an overlaping linear swarm. We can use the <a href="#id1"><span class="problematic" id="id8">`fitRadial &lt;&gt;`__</span></a> functions to extract these. This function fits the equation</p>
 <div class="math notranslate nohighlight">
 \[\rho=(x_{r}-xc)\cos(\theta)+(y_{r}-yc)\sin(\theta)\]</div>
-<p>where <span class="math notranslate nohighlight">\((x_{r}, y_{r})\)</span> is the location of intersection of the
-radiating form. In the case of dikes this might indicate a magma source
-or a volcanic landform.</p>
-<p>When you plot the data and color by ‘Ymid’ using <a href="#id2"><span class="problematic" id="id10">`plotScatterHist &lt;&gt;`__</span></a>
-you can clearly see two sinusoidal curves and one “bar” which represent
-the three trends. We can filter by ‘Ymid’ and put it into
-<a href="#id2"><span class="problematic" id="id11">`fitRadial &lt;&gt;`__</span></a>.</p>
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1">#Lets filter by &#39;Ymid&#39;</span>
-
-<span class="c1">#Radial 1 - we will color with Purple so we call it purple</span>
-<span class="n">mask2</span><span class="o">=</span><span class="p">(</span><span class="n">dikeset</span><span class="p">[</span><span class="s1">&#39;Ymid&#39;</span><span class="p">]</span><span class="o">&gt;</span><span class="mf">4.52e6</span><span class="p">)</span>  <span class="c1">#filter dataset</span>
-<span class="n">Purp</span><span class="o">=</span><span class="n">RadialFit</span><span class="p">(</span><span class="n">dikeset</span><span class="p">[</span><span class="n">mask2</span><span class="p">])</span> <span class="c1">#fit based on filtered dataset</span>
-
-<span class="c1">#What doe it return?</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">Purp</span><span class="p">)</span>
+<p>where <span class="math notranslate nohighlight">\((x_{r}, y_{r})\)</span> is the location of intersection of the radiating form. In the case of dikes this might indicate a magma source or a volcanic landform.</p>
+<p>When you plot the data and color by ‘Ymid’ using <a href="#id1"><span class="problematic" id="id9">`plotScatterHist &lt;&gt;`__</span></a> you can clearly see two sinusoidal curves and one “bar” which represent the three trends. We can filter by ‘Ymid’ and put it into <a href="#id1"><span class="problematic" id="id10">`fitRadial &lt;&gt;`__</span></a>.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[27]:
 </pre></div>
 </div>
-<pre class="literal-block">                                     Center  0  [-11698121.516341344, 4523881.405781059]
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><br/><span></span>#Lets filter by &#39;Ymid&#39;
+
+#Radial 1 - we will color with Purple so we call it purple
+mask2=(dikeset[&#39;Ymid&#39;]&gt;4.52e6)  #filter dataset
+Purp=RadialFit(dikeset[mask2]) #fit based on filtered dataset
+
+#What doe it return?
+print(Purp)
+<br/></pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+                                     Center  \
+0  [-11698121.516341344, 4523881.405781059]
 
                                Std Error       RSq
-0  [412.542680000162, 333.1552905875445]  0.938212</pre>
-<p>We can see that RadialFit returns a DataFrame with columns “Center”,
-“Std Error”, and “Rsq”. Center is the best fit cartesian location of
-radiating lines, <span class="math notranslate nohighlight">\((x_{r}, y_{r})\)</span>. Here we can see how well the
-data fits a “radial” pattern with “Rsq” (numbers closer to 1 indicate
-good fits).</p>
-<p>Now we can extract the segments or lines which intersect that center
-using <a href="#id2"><span class="problematic" id="id12">`NearCenter &lt;&gt;`__</span></a>.</p>
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">PurpClose</span><span class="p">,</span> <span class="n">Purp</span><span class="o">=</span><span class="n">NearCenters</span><span class="p">(</span><span class="n">lines</span><span class="p">,</span> <span class="n">Purp</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mi">2500</span><span class="p">)</span> <span class="c1"># pickout all clustered lines which intersect within 2.5km of center</span>
-<span class="c1">#tol can be changed to fit your circumstances</span>
-
-<span class="c1">#Let&#39;s plot those to take a look!</span>
-
-<span class="n">fig</span><span class="p">,</span><span class="n">ax</span><span class="o">=</span><span class="n">DotsLines</span><span class="p">(</span><span class="n">PurpClose</span><span class="p">,</span> <span class="n">ColorBy</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;Purple&#39;</span><span class="p">)</span>
-
-<span class="c1">#Plot the fit onto the data</span>
-<span class="n">angles</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="mi">90</span><span class="p">,</span><span class="mi">90</span><span class="p">)</span> <span class="c1">#make an array of angles from -90,90 for plotting</span>
-<span class="n">rhoPurp</span><span class="o">=</span><span class="n">CenterFunc</span><span class="p">(</span><span class="n">angles</span><span class="p">,</span><span class="n">Purp</span><span class="p">[</span><span class="s1">&#39;Center&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="n">Purp</span><span class="p">[</span><span class="s1">&#39;Center&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span> <span class="n">xc</span><span class="p">,</span><span class="n">yc</span><span class="p">)</span><span class="o">/</span><span class="mi">1000</span> <span class="c1">#calculate rho values, convert to kilometers</span>
-<span class="c1">#CenterFunc is the implementation of above equation</span>
-
-
-<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">angles</span><span class="p">,</span> <span class="n">rhoPurp</span><span class="p">,</span> <span class="s1">&#39;k&#39;</span><span class="p">)</span> <span class="c1">#plot onto the HT portion of the graph</span>
+0  [412.542680000162, 333.1552905875445]  0.938212
+</pre></div></div>
+</div>
+<p>We can see that RadialFit returns a DataFrame with columns “Center”, “Std Error”, and “Rsq”. Center is the best fit cartesian location of radiating lines, <span class="math notranslate nohighlight">\((x_{r}, y_{r})\)</span>. Here we can see how well the data fits a “radial” pattern with “Rsq” (numbers closer to 1 indicate good fits).</p>
+<p>Now we can extract the segments or lines which intersect that center using <a href="#id1"><span class="problematic" id="id11">`NearCenter &lt;&gt;`__</span></a>.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[35]:
 </pre></div>
 </div>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">km</span> <span class="n">scale</span> <span class="n">label</span>
-<span class="n">reset</span> <span class="n">x</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><br/><span></span>PurpClose, Purp=NearCenters(lines, Purp, tol=2500) # pickout all clustered lines which intersect within 2.5km of center
+#tol can be changed to fit your circumstances
+
+#Let&#39;s plot those to take a look!
+
+fig,ax=DotsLines(PurpClose, ColorBy=None, color=&#39;Purple&#39;)
+
+#Plot the fit onto the data
+angles=np.linspace(-90,90) #make an array of angles from -90,90 for plotting
+rhoPurp=CenterFunc(angles,Purp[&#39;Center&#39;][0][0], Purp[&#39;Center&#39;][0][1], xc,yc)/1000 #calculate rho values, convert to kilometers
+#CenterFunc is the implementation of above equation
+
+
+ax[1].plot(angles, rhoPurp, &#39;k&#39;) #plot onto the HT portion of the graph
 </pre></div>
 </div>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="o">&lt;</span><span class="n">matplotlib</span><span class="o">.</span><span class="n">lines</span><span class="o">.</span><span class="n">Line2D</span> <span class="n">at</span> <span class="mh">0x7fe42cc1dbd0</span><span class="o">&gt;</span><span class="p">]</span>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+km scale label
+reset x
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[35]:
 </pre></div>
 </div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+[&lt;matplotlib.lines.Line2D at 0x7fe42cc1dbd0&gt;]
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
 <img alt="_images/DemoLinkingLines_17_2.png" src="_images/DemoLinkingLines_17_2.png" />
-<p>We can continue the same process to find the dikes associated with the
-second radial swarm by filtering by ‘Ymid’. Note that depending on your
-application you could use any varible to filter the data or none.</p>
+</div>
+</div>
+<p>We can continue the same process to find the dikes associated with the second radial swarm by filtering by ‘Ymid’. Note that depending on your application you could use any varible to filter the data or none.</p>
 <p>We will call this second radial fit, Green.</p>
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1">#Radial 2 - Green</span>
-<span class="n">mask2</span><span class="o">=</span><span class="p">(</span><span class="n">dikeset</span><span class="p">[</span><span class="s1">&#39;Ymid&#39;</span><span class="p">]</span><span class="o">&lt;</span><span class="mf">4.52e6</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">dikeset</span><span class="p">[</span><span class="s1">&#39;Ymid&#39;</span><span class="p">]</span><span class="o">&gt;</span><span class="mf">4.48e6</span><span class="p">)</span> <span class="c1">#Filter dataset by &#39;Ymid&#39;</span>
-<span class="n">green</span><span class="o">=</span><span class="n">RadialFit</span><span class="p">(</span><span class="n">dikeset</span><span class="p">[</span><span class="n">mask2</span><span class="p">])</span> <span class="c1"># Run dataset through RadialFit</span>
-<span class="n">GreenClose</span><span class="p">,</span> <span class="n">green</span><span class="o">=</span><span class="n">NearCenters</span><span class="p">(</span><span class="n">lines</span><span class="p">,</span> <span class="n">green</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mi">2500</span><span class="p">)</span> <span class="c1"># find the lines which interesect within 2.5 km of Center</span>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[36]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>#Radial 2 - Green
+mask2=(dikeset[&#39;Ymid&#39;]&lt;4.52e6) &amp; (dikeset[&#39;Ymid&#39;]&gt;4.48e6) #Filter dataset by &#39;Ymid&#39;
+green=RadialFit(dikeset[mask2]) # Run dataset through RadialFit
+GreenClose, green=NearCenters(lines, green, tol=2500) # find the lines which interesect within 2.5 km of Center
 
-<span class="n">rhoGreen</span><span class="o">=</span><span class="n">CenterFunc</span><span class="p">(</span><span class="n">angles</span><span class="p">,</span><span class="n">green</span><span class="p">[</span><span class="s1">&#39;Center&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="n">green</span><span class="p">[</span><span class="s1">&#39;Center&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span> <span class="n">xc</span><span class="p">,</span><span class="n">yc</span><span class="p">)</span><span class="o">/</span><span class="mi">1000</span> <span class="c1">#make array of rho values based on center</span>
+rhoGreen=CenterFunc(angles,green[&#39;Center&#39;][0][0], green[&#39;Center&#39;][0][1], xc,yc)/1000 #make array of rho values based on center
 
-<span class="n">fig</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">DotsLines</span><span class="p">(</span><span class="n">GreenClose</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;green&#39;</span><span class="p">,</span> <span class="n">ColorBy</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="c1">#graph the data that fits the center</span>
-<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">angles</span><span class="p">,</span> <span class="n">rhoGreen</span><span class="p">,</span> <span class="s1">&#39;k&#39;</span><span class="p">)</span> <span class="c1">#plot onto the HT portion of the graph</span>
+fig, ax=DotsLines(GreenClose, color=&#39;green&#39;, ColorBy=None) #graph the data that fits the center
+ax[1].plot(angles, rhoGreen, &#39;k&#39;) #plot onto the HT portion of the graph
 </pre></div>
 </div>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">km</span> <span class="n">scale</span> <span class="n">label</span>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+km scale label
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[36]:
 </pre></div>
 </div>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="o">&lt;</span><span class="n">matplotlib</span><span class="o">.</span><span class="n">lines</span><span class="o">.</span><span class="n">Line2D</span> <span class="n">at</span> <span class="mh">0x7fe42cc3f850</span><span class="o">&gt;</span><span class="p">]</span>
-</pre></div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+[&lt;matplotlib.lines.Line2D at 0x7fe42cc3f850&gt;]
+</pre></div></div>
 </div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
 <img alt="_images/DemoLinkingLines_19_2.png" src="_images/DemoLinkingLines_19_2.png" />
+</div>
+</div>
 <p>Now we can put it all together and extract the three features.</p>
-<p>We will add another column to the DataFrame called “Structure”. Then we
-will use one new function <a href="#id2"><span class="problematic" id="id13">`writeCenterWKT &lt;&gt;`__</span></a> which write a WKT POINT
-feature.</p>
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Find labels of radial features</span>
-<span class="n">radLabelsl</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span> <span class="p">(</span><span class="n">PurpClose</span><span class="p">[</span><span class="s1">&#39;Label&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="n">GreenClose</span><span class="p">[</span><span class="s1">&#39;Label&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">))</span>
-
-<span class="c1"># Find labels of non-radial features</span>
-<span class="n">linl</span><span class="o">=</span><span class="n">lines</span><span class="p">[((</span><span class="o">~</span><span class="n">np</span><span class="o">.</span><span class="n">in1d</span><span class="p">(</span><span class="n">lines</span><span class="p">[</span><span class="s1">&#39;Label&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="n">radLabelsl</span><span class="p">))</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">lines</span><span class="p">[</span><span class="s1">&#39;AvgTheta&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="o">&lt;-</span><span class="mi">55</span><span class="p">))</span> <span class="p">]</span>
-<span class="n">linl</span><span class="o">=</span><span class="n">linl</span><span class="o">.</span><span class="n">assign</span><span class="p">(</span><span class="n">Structure</span><span class="o">=</span><span class="s1">&#39;Linear&#39;</span><span class="p">)</span>
-
-<span class="c1">#Add Structure column</span>
-<span class="n">GreenClose</span><span class="o">=</span><span class="n">GreenClose</span><span class="o">.</span><span class="n">assign</span><span class="p">(</span><span class="n">Structure</span><span class="o">=</span><span class="s1">&#39;Radial 1&#39;</span><span class="p">)</span>
-<span class="n">PurpClose</span><span class="o">=</span><span class="n">PurpClose</span><span class="o">.</span><span class="n">assign</span><span class="p">(</span><span class="n">Structure</span><span class="o">=</span><span class="s1">&#39;Radial 2&#39;</span><span class="p">)</span>
-
-<span class="n">CloseLines</span><span class="o">=</span><span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">((</span><span class="n">GreenClose</span><span class="p">,</span> <span class="n">PurpClose</span><span class="p">,</span> <span class="n">linl</span><span class="p">))</span> <span class="c1">#make one dataframe called closelines</span>
-<span class="n">Centers</span><span class="o">=</span><span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">((</span><span class="n">green</span><span class="p">,</span> <span class="n">Purp</span><span class="p">))</span> <span class="c1">#make one dataframe called centers</span>
-
-<span class="c1">#Write to CSV with QGIS operability</span>
-<span class="n">writeCenterWKT</span><span class="p">(</span><span class="n">Centers</span><span class="p">,</span> <span class="s1">&#39;SpanishPeaksRadialFitsCenters.csv&#39;</span><span class="p">)</span>
-<span class="n">writeToQGIS</span><span class="p">(</span><span class="n">CloseLines</span><span class="p">,</span> <span class="s1">&#39;SPRadialFitsLines.csv&#39;</span><span class="p">)</span>
+<p>We will add another column to the DataFrame called “Structure”. Then we will use one new function <a href="#id1"><span class="problematic" id="id12">`writeCenterWKT &lt;&gt;`__</span></a> which write a WKT POINT feature.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
 </pre></div>
 </div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span># Find labels of radial features
+radLabelsl=np.concatenate( (PurpClose[&#39;Label&#39;].values, GreenClose[&#39;Label&#39;].values))
+
+# Find labels of non-radial features
+linl=lines[((~np.in1d(lines[&#39;Label&#39;].values, radLabelsl)) &amp; (lines[&#39;AvgTheta&#39;].values&lt;-55)) ]
+linl=linl.assign(Structure=&#39;Linear&#39;)
+
+#Add Structure column
+GreenClose=GreenClose.assign(Structure=&#39;Radial 1&#39;)
+PurpClose=PurpClose.assign(Structure=&#39;Radial 2&#39;)
+
+CloseLines=pd.concat((GreenClose, PurpClose, linl)) #make one dataframe called closelines
+Centers=pd.concat((green, Purp)) #make one dataframe called centers
+
+#Write to CSV with QGIS operability
+writeCenterWKT(Centers, &#39;SpanishPeaksRadialFitsCenters.csv&#39;)
+writeToQGIS(CloseLines, &#39;SPRadialFitsLines.csv&#39;)
+</pre></div>
+</div>
+</div>
+</section>
 
 
           </div>
@@ -374,38 +419,23 @@ feature.</p>
 
 
 
-<p>
-<iframe src="https://ghbtns.com/github-btn.html?user=aikubo&repo=Linking-and-Clustering-Dikes&type=watch&count=true&size=large&v=2"
-  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
-</p>
 
 
-
-
-
-
-
-    
-
-<p>
-<a class="badge" href="https://codecov.io/github/aikubo/Linking-and-Clustering-Dikes">
-    <img
-    alt="https://codecov.io/github/aikubo/Linking-and-Clustering-Dikes/coverage.svg?branch=master"
-    src="https://codecov.io/github/aikubo/Linking-and-Clustering-Dikes/coverage.svg?branch=master"
-    />
-</a>
-</p>
 <h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Example Usage of LinkingLines Module</a></li>
+</ul>
 <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="intro.html">LinkingLines Python Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules.html">linkinglines</a></li>
 </ul>
 
 <div class="relations">
 <h3>Related Topics</h3>
 <ul>
   <li><a href="index.html">Documentation overview</a><ul>
-      <li>Previous: <a href="intro.html" title="previous chapter">LinkingLines Python Module</a></li>
+      <li>Previous: <a href="index.html" title="previous chapter">linkinglines: hough transform for clustering and feature extraction</a></li>
+      <li>Next: <a href="modules.html" title="next chapter">linkinglines</a></li>
   </ul></li>
 </ul>
 </div>
@@ -435,11 +465,11 @@ feature.</p>
       &copy;2023, Allison Kubo.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.3.0</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 7.2.6</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.13</a>
       
       |
-      <a href="_sources/DemoLinkingLines.rst.txt"
+      <a href="_sources/DemoLinkingLines.ipynb.txt"
           rel="nofollow">Page source</a>
     </div>
 
