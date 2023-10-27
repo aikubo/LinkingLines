@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "linkinglines"
-version = "2.1.0"
+version ='{{VERSION_PLACEHOLDER}}'
 authors = [
   { name="Allison Kubo", email="akubo@uoregon.edu" },
 ]
