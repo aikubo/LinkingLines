@@ -54,7 +54,7 @@ This package was originally developed to tackle the issue of mapped dike segment
 
 To use `linkinglines`, data must be in the form of a comma seperated value file with Well-Known-Text "LineString" which is a text markup language for representing vector geometry objects [@iso2016information]. This file format can be exported from GIS software such as QGIS. Preprocessing is applied to the dataset so that only straight lines are considered in the algorithm. This is done by loading in the points from each vector object and performing linear regression and only considering those which yield a line with a $p>0.05$. The data is then formated into a `pandas` DataFrame. This package heavily uses `pandas` as the database structure for ease of use, data maninpulation, and integration with `numpy` and `scipy`[@pandas].
 
-![Dike linking algorithm using the Hough Transform. First, raw data in Cartesian space are converted into Hough space (a and b). Agglomerative clustering is then performed on the data in Hough coordinates (d), in this example there are four dikes total and two (red and blue) clusters. The clusters are redrawn by connecting the endpoints of the segments in the cluster (c).](houghexamplefig.png)
+![Dike linking algorithm using the Hough Transform. First, raw data in Cartesian space are converted into Hough space (a and b). Agglomerative clustering is then performed on the data in Hough coordinates (d), in this example there are four dikes total and two (red and blue) clusters. The clusters are redrawn by connecting the endpoints of the segments in the cluster (c).](houghexamplefig1.png)
 
 The Hough Transform is a fundamental image processing technique used for detecting straight lines and other patterns in binary or edge-detection images[@hough1962method]. It achieves this by converting points in an image into parametric equations and identifying patterns through the accumulation of votes in a parameter space. The transform has been generalized to detect arbitrary shapes making it a versatile tool for pattern recognition and image analysis [@ballard1981generalizing]. After loading in the data, it is assumed to be already line structures so the accumulator array of the Hough Transform is skipped, although this functionality could be added in if needed. First the angle of the line segment is found using:
 
@@ -122,6 +122,6 @@ fig, ax = DotsLines(lines, ColorBy='AvgTheta')
 
 # Acknowledgements
 
-We acknowledge contributions from . This paper was made possible by the "Crafting Quality Research Software and Navigating Publication in Software Journals" held by the Computational Infrastructure for Geodynamics in September 2023.
+This paper was made possible by the "Crafting Quality Research Software and Navigating Publication in Software Journals" held by the Computational Infrastructure for Geodynamics in September 2023.
 
 # References
