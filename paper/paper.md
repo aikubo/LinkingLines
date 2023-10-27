@@ -22,6 +22,8 @@ affiliations:
    index: 1
 date: 5 October 2023
 bibliography: paper.bib
+header-includes:
+  - \usepackage{amsmath}
 ---
 
 # Summary
