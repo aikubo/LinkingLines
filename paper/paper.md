@@ -52,36 +52,51 @@ This package was originally developed to tackle the issue of mapped dike segment
 
 # Code Structure
 
-To use `linkinglines`, data must be in the form of a comma seperated value file with Well-Known-Text "LineString" which is a text markup language for representing vector geometry objects [@iso2016information]. This file format can be exported from GIS software such as QGIS. Preprocessing is applied to the dataset so that only straight lines are considered in the algorithm. This is done by loading in the points from each vector object and performing linear regression and only considering those which yield a line with a $p>0.05$. The data is then formated into a `pandas` DataFrame. This package heavily uses `pandas` as the database structure for ease of use, data maninpulation, and integration with `numpy` and `scipy`[@pandas].
+To use `linkinglines`, data must be in the form of a comma-separated value file with Well-Known-Text "LineString," which is a text markup language for representing vector geometry objects [@iso2016information]. This file format can be exported from GIS software such as QGIS. Preprocessing is applied to the dataset so that only straight lines are considered in the algorithm. This is done by loading in the points from each vector object and performing linear regression, only considering those that yield a line with a $p>0.05$. The data is then formatted into a `pandas` DataFrame. This package heavily uses `pandas` as the database structure for ease of use, data manipulation, and integration with `numpy` and `scipy`[@pandas].
 
-![Dike linking algorithm using the Hough Transform. First, raw data in Cartesian space are converted into Hough space (a and b). Agglomerative clustering is then performed on the data in Hough coordinates (d), in this example there are four dikes total and two (red and blue) clusters. The clusters are redrawn by connecting the endpoints of the segments in the cluster (c).](houghexamplefig1.png)
+![Dike linking algorithm using the Hough Transform. First, raw data in Cartesian space is converted into Hough space (a and b). Agglomerative clustering is then performed on the data in Hough coordinates (d). In this example, there are four dikes total and two (red and blue) clusters. The clusters are redrawn by connecting the endpoints of the segments in the cluster (c).](houghexamplefig1.png)
 
-The Hough Transform is a fundamental image processing technique used for detecting straight lines and other patterns in binary or edge-detection images[@hough1962method]. It achieves this by converting points in an image into parametric equations and identifying patterns through the accumulation of votes in a parameter space. The transform has been generalized to detect arbitrary shapes making it a versatile tool for pattern recognition and image analysis [@ballard1981generalizing]. After loading in the data, it is assumed to be already line structures so the accumulator array of the Hough Transform is skipped, although this functionality could be added in if needed. First the angle of the line segment is found using:
+The Hough Transform is a fundamental image processing technique used for detecting straight lines and other patterns in binary or edge-detection images[@hough1962method]. It achieves this by converting points in an image into parametric equations and identifying patterns through the accumulation of votes in a parameter space. The transform has been generalized to detect arbitrary shapes, making it a versatile tool for pattern recognition and image analysis [@ballard1981generalizing]. After loading in the data, it is assumed to be already line structures, so the accumulator array of the Hough Transform is skipped, although this functionality could be added if needed. First, the angle of the line segment is found using:
 
 \begin{equation}\label{eq:ht1}
 \theta = \arctan\left(\frac{-1}{m}\right)\tag{1}
 \end{equation}
 
-where $m$ is the slope of the line segment. Then Hough Tranform is performed using the following equation:
+where $m$ is the slope of the line segment. Then the Hough Transform is performed using the following equation:
 
 \begin{equation}\label{eq:ht2}
 \rho = (x_{1}-x_{c})\cos\theta+(y_{1}-y_{c})\sin\theta\tag{2}
 \end{equation}
 
-where $(x_{c}, y_{c})$ is the origin of the Hough Tranform, in traditional methods the left hand corner of the image but in geospatial applications we choose the average midpoint of the line segments (Figure 1B). Other origins can be specified in certain functions using the  `xc` and `yc` arguments.
+where $(x_{c}, y_{c})$ is the origin of the Hough Transform. In traditional methods, it is the left-hand corner of the image, but in geospatial applications, we choose the average midpoint of the line segments (Figure 1B). Other origins can be specified in certain functions using the `xc` and `yc` arguments.
 
-After the coordinate transform, $\rho$ and $\theta$ become the basis for the Agglomerative clustering step where we utilize Scipy's clustering algorithm [@scipy]. The clustering algorithm takes two inputs `dtheta` and `drho` which are used to scale the Hough Transform data then the clustering distance is set to $1$. Combined with the default complete linkage scheme, effectively this prevents clusters from being formed which have ranges of greater than either `dtheta` or `drho`  and the linear combination of the two where:
+After the coordinate transform, $\rho$ and $\theta$ become the basis for the Agglomerative clustering step, where we utilize Scipy's clustering algorithm [@scipy]. The clustering algorithm takes two inputs: `dtheta` and `drho`, which are used to scale the Hough Transform data. Then the clustering distance is set to $1$. Combined with the default complete linkage scheme, effectively, this prevents clusters from being formed that have ranges greater than either `dtheta` or `drho` and the linear combination of the two where:
 
 \begin{equation}\label{eq:ht3}
-d=\sqrt{ (\frac{\theta_{1}-\theta_{2}}{d\theta})^{2} + (\frac{\rho_{1}-\rho_{2}}{d\rho})^{2} }\tag{3}
+d=\sqrt{(\frac{\theta_{1}-\theta_{2}}{d\theta})^{2} + (\frac{\rho_{1}-\rho_{2}}{d\rho})^{2}}\tag{3}
 \end{equation}
 
-where two members of a potential cluster are denoted by the subscripts $1,2$. Other linkage or distance schemes could be considered and implemented based on the specific research applications.
+where two members of a potential cluster are denoted by the subscripts $1$ and $2$. Other linkage or distance schemes could be considered and implemented based on the specific research applications.
 
-After labels are assigned in the clustering portion of the algorithm, new lines are drawn using the end points of the clustered lines (Figure 1D) which can then be output as a CSV with WKT to interface with a GIS platform. After obtaining line data and computes various statistics for each cluster, including coordinates, average rho (distance from the origin), average theta (angle), cluster size (number of lines), and other cluster-related information. For each cluster, the nearest neighbors of the segment midpoints are calculated in Cartesian space which allows for analysis of the Cartesian spatial clustering of the lines. We also introduce a further filtering step which analyses the maximum nearest neighbors difference of mid points normalized by total cluster length. We filter segments by setting a threshold of $0.5$. This filters out clusters with segments that are not evenly clustered in cartesian space, this step can be included or skipped in your analysis depending on the research application. The function returns two DataFrames: 'clusters_data' containing summarized information for each cluster and 'evaluation' containing summary statistics of the clusters. Leveraging the `pandas` architecture allows for easy data analysis and quick referencing of the database.
+After labels are assigned in the clustering portion of the algorithm, new lines are drawn using the endpoints of the clustered lines (Figure 1D), which can then be output as a CSV with WKT to interface with a GIS platform. After obtaining line data and computing various statistics for each cluster, including coordinates, average rho (distance from the origin), average theta (angle), cluster size (number of lines), and other cluster-related information. For each cluster, the nearest neighbors of the segment midpoints are calculated in Cartesian space, allowing for an analysis of the Cartesian spatial clustering of the lines. We also introduce a further filtering step, which analyzes the maximum nearest neighbor difference of midpoints normalized by the total cluster length. We filter segments by setting a threshold of $0.5$. This filters out clusters with segments that are not evenly clustered in Cartesian space. This step can be included or skipped in your analysis, depending on the research application. The function returns two DataFrames: 'clusters_data,' containing summarized information for each cluster, and 'evaluation,' containing summary statistics of the clusters. Leveraging the `pandas` architecture allows for easy data analysis and quick referencing of the database.
 
-Finally, we have also developed various custom plotting scripts which are helpful in investigating your clustered data.
+Finally, we have also developed various custom plotting scripts that are helpful in investigating your clustered data.
 
+##Feature Extraction
+
+Additionally, we leverage the unique properties of the Hough Transform to combine clustering with feature extraction. In the original usage case of overlapping complex dike swarms, two potential end members of swarm types are linear and radial or circumferential swarms (Figure 2). We can easily derive equations to describe these Cartesian patterns in the Hough Space, then perform a best-fit analysis using @scipy.
+
+![Synthetic dike swarms in a Cartesian space (gray background, uppercase label) and Hough Transform space (white background, lowercase label). (A) Shows a simple linear swarm oriented at 30°. (B) Shows three linear swarms at −30°, 30°, 75°. (C) Shows three radial swarms aligned at a −45° angle. The angle at which radial swarms intersect in the Hough space (HS) is the angle of their relative orientation in Cartesian space. (D) Shows a circumferential swarm with the lines extending to show how it converges to Equation 8. The radius of the circumferential swarm is equal to the spacing of the parallel two curves in HS. (E) Shows three circumferential swarms with the same radius aligned at a -45° angle.](SyntheticsInkscape.png)
+
+In the case of a radial or circumferential pattern, the equation is actually the Hough Transform equation where the radial values of $\rho_{r}$ can be expressed as:
+
+\begin{equation}\label{eq:ht4}
+\rho_{r}(\theta) = (x_{r}-x_{c})\cos(\theta) + (x_{r}-y_{c})\sin(\theta) \tag{4}
+\end{equation}
+
+where the radial form is a function of $\theta$ and the center of the radial form, a Cartesian location $(x_{r}, y_{r})$. Armed with this equation, we can apply a best-fit analysis of the data to find quantitative center locations for radial or circumferential patterns. In the application of dike data, this may point to a central magma chamber or locus of stress. We can also then remove the lines which fit those patterns for feature extraction.
+
+Overall, this capability can be separated from the clustering and linking steps but is combined for ease of use in the `linkinglines` package.
 
 
 # Example Code Usage
