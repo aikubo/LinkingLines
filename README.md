@@ -5,7 +5,7 @@
 
 [![PyPI](https://img.shields.io/pypi/v/LinkingLines.svg)](https://pypi.org/project/LinkingLines/)
 
-[![ReadtheDocs](https://readthedocs.org/projects/LinkingLines/badge/)](https://linkinglines.readthedocs.io/)
+[![ReadtheDocs](https://readthedocs.org/projects/linkinglines/badge/)](https://linkinglines.readthedocs.io/)
 
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
