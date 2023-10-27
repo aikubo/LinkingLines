@@ -47,7 +47,7 @@ html_theme_options = {'description': "Using the Hough Transform to cluster lines
                       'github_user': 'aikubo',
                       'github_repo': 'LinkingLines',
                       'github_banner': True,
-                      'logo': 'dikeslogo.svg',
+                      'logo': 'dikeslogo.png',
                       'logo_name':True,
 }
 
