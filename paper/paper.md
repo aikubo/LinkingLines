@@ -55,22 +55,25 @@ This package was originally developed to tackle the issue of mapped dike segment
 To use `linkinglines`, data must be in the form of a comma seperated value file with Well-Known-Text "LineString" which is a text markup language for representing vector geometry objects [@iso2016information]. This file format can be exported from GIS software such as QGIS. Preprocessing is applied to the dataset so that only straight lines are considered in the algorithm. This is done by loading in the points from each vector object and performing linear regression and only considering those which yield a line with a $p>0.05$. The data is then formated into a `pandas` DataFrame. This package heavily uses `pandas` as the database structure for ease of use, data maninpulation, and integration with `numpy` and `scipy`[@pandas].
 
 The Hough Transform is a fundamental image processing technique used for detecting straight lines and other patterns in binary or edge-detection images[@hough1962method]. It achieves this by converting points in an image into parametric equations and identifying patterns through the accumulation of votes in a parameter space. The transform has been generalized to detect arbitrary shapes making it a versatile tool for pattern recognition and image analysis [@ballard1981generalizing]. After loading in the data, it is assumed to be already line structures so the accumulator array of the Hough Transform is skipped, although this functionality could be added in if need. First the angle of the line segment is found using:
-\begin{equation}\label{eq:ht1}
+
 \begin{equation}\label{eq:ht1}
 \theta = \arctan\left(\frac{-1}{m}\right)\tag{1}
 \end{equation}
 
-\end{equation}
 where $m$ is the slope of the line segment. Then Hough Tranform is performed using the following equation:
+
 \begin{equation}\label{eq:ht2}
 \rho = (x_{1}-x_{c})\cos\theta+(y_{1}-y_{c})\sin\theta\tag{2}
 \end{equation}
+
 where $(x_{c}, y_{c})$ is the origin of the Hough Tranform, in traditional methods the left hand corner of the image but in geospatial applications we choose the average midpoint of the line segments. Other origins can be specified in certain functions using the  `xc` and `yc` arguments.
 
 After the coordinate transform, $\rho$ and $\theta$ become the basis for the Agglomerative clustering step where we utilize Scipy's clustering algorithm [@scipy]. The clustering algorithm takes two inputs `dtheta` and `drho` which are used to scale the Hough Transform data then the clustering distance is set to $1$. Combined with the default complete linkage scheme, effectively this prevents clusters from being formed which have ranges of greater than either `dtheta` or `drho`  and the linear combination of the two where:
-\begin{equation}\label{eq:ht2}
-d=\sqrt{{ (\frac{\theta_{1}-\theta_{2}}{d\theta})^{2} + (\frac{\rho_{1}-\rho_{2}}{d\rho)^{2} }}\tag{3}
+
+\begin{equation}\label{eq:ht3}
+d=\sqrt{ (\frac{\theta_{1}-\theta_{2}}{d\theta})^{2} + (\frac{\rho_{1}-\rho_{2}}{d\rho})^{2} }\tag{3}
 \end{equation}
+
 where two members of a potential cluster are denoted by the subscripts $1,2$. Other linkage or distance schemes could be considered and implemented based on the specific research applications.
 
 After labels are assigned in the clustering portion of the algorithm, new lines are drawn using the end points of the clustered lines which can then be output as a CSV with WKT to interface with a GIS platform. After obtaining line data and computes various statistics for each cluster, including coordinates, average rho (distance from the origin), average theta (angle), cluster size (number of lines), and other cluster-related information. For each cluster, the nearest neighbors of the segment midpoints are calculated in Cartesian space which allows for analysis of the Cartesian spatial clustering of the lines. We also introduce a further filtering step which analyses the maximum nearest neighbors difference of mid points normalized by total cluster length. We filter segments by setting a threshold of $0.5$. This filters out clusters with segments that are not evenly clustered in cartesian space, this step can be included or skipped in your analysis depending on the research application. The function returns two DataFrames: 'clusters_data' containing summarized information for each cluster and 'evaluation' containing summary statistics of the clusters. Leveraging the `pandas` architecture allows for easy data analysis and quick referencing of the database.
