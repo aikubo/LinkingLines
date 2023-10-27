@@ -54,17 +54,20 @@ To use `linkinglines`, data must be in the form of a comma seperated value file 
 
 The Hough Transform is a fundamental image processing technique used for detecting straight lines and other patterns in binary or edge-detection images[@hough1962method]. It achieves this by converting points in an image into parametric equations and identifying patterns through the accumulation of votes in a parameter space. The transform has been generalized to detect arbitrary shapes making it a versatile tool for pattern recognition and image analysis [@ballard1981generalizing]. After loading in the data, it is assumed to be already line structures so the accumulator array of the Hough Transform is skipped, although this functionality could be added in if need. First the angle of the line segment is found using:
 \begin{equation}\label{eq:ht1}
-\theta = \arctan\left(\frac{-1}{m}\right)
+\begin{equation}\label{eq:ht1}
+\theta = \arctan\left(\frac{-1}{m}\right)\tag{1}
+\end{equation}
+
 \end{equation}
 where $m$ is the slope of the line segment. Then Hough Tranform is performed using the following equation:
 \begin{equation}\label{eq:ht2}
-\rho = (x_{1}-x_{c})\cos\theta+(y_{1}-y_{c})\sin\theta
+\rho = (x_{1}-x_{c})\cos\theta+(y_{1}-y_{c})\sin\theta\tag{2}
 \end{equation}
 where $(x_{c}, y_{c})$ is the origin of the Hough Tranform, in traditional methods the left hand corner of the image but in geospatial applications we choose the average midpoint of the line segments. Other origins can be specified in certain functions using the  `xc` and `yc` arguments.
 
 After the coordinate transform, $\rho$ and $\theta$ become the basis for the Agglomerative clustering step where we utilize Scipy's clustering algorithm [@scipy]. The clustering algorithm takes two inputs `dtheta` and `drho` which are used to scale the Hough Transform data then the clustering distance is set to $1$. Combined with the default complete linkage scheme, effectively this prevents clusters from being formed which have ranges of greater than either `dtheta` or `drho`  and the linear combination of the two where:
 \begin{equation}\label{eq:ht2}
-d=\sqrt{{ (\frac{\theta_{1}-\theta_{2}}{d\theta})^{2} + (\frac{\rho_{1}-\rho_{2}}{d\rho)^{2} }}
+d=\sqrt{{ (\frac{\theta_{1}-\theta_{2}}{d\theta})^{2} + (\frac{\rho_{1}-\rho_{2}}{d\rho)^{2} }}\tag{3}
 \end{equation}
 where two members of a potential cluster are denoted by the subscripts $1,2$. Other linkage or distance schemes could be considered and implemented based on the specific research applications.
 
