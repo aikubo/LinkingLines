@@ -54,7 +54,7 @@ To use `linkinglines`, data must be in the form of a comma seperated value file 
 
 The Hough Transform is a fundamental image processing technique used for detecting straight lines and other patterns in binary or edge-detection images[@hough1962method]. It achieves this by converting points in an image into parametric equations and identifying patterns through the accumulation of votes in a parameter space. The transform has been generalized to detect arbitrary shapes making it a versatile tool for pattern recognition and image analysis [@ballard1981generalizing]. After loading in the data, it is assumed to be already line structures so the accumulator array of the Hough Transform is skipped, although this functionality could be added in if need. First the angle of the line segment is found using:
 \begin{equation}\label{eq:ht1}
-\theta= \atan(\frac{-1}{m})
+\theta = \arctan\left(\frac{-1}{m}\right)
 \end{equation}
 where $m$ is the slope of the line segment. Then Hough Tranform is performed using the following equation:
 \begin{equation}\label{eq:ht2}
