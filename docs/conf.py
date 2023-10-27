@@ -50,6 +50,7 @@ html_theme_options = {'description': "Using the Hough Transform to cluster lines
 }
 
 
+html_logo = "_static/dikeslogo.svg"
 html_sidebars = {
     '**': [
         'about.html',
