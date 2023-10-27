@@ -9,7 +9,7 @@
 
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-#Read the Full documentation on [ReadtheDocs!](https://linkinglines.readthedocs.io/en/latest/)#
+# Read the Full documentation on [ReadtheDocs!](https://linkinglines.readthedocs.io/en/latest/)
 
 ## 1. Introduction
 Welcome to the documentation for our Python module that performs the Hough
