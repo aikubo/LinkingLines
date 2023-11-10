@@ -1,5 +1,6 @@
 
 # Welcome to LinkingLines!
+ [![status](https://joss.theoj.org/papers/64eeef828a1100bfba74052d89314758/status.svg)](https://joss.theoj.org/papers/64eeef828a1100bfba74052d89314758)
 
 [![DOI](https://zenodo.org/badge/272334230.svg)](https://zenodo.org/badge/latestdoi/272334230)
 
