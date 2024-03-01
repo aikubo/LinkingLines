@@ -280,15 +280,6 @@ def transformXstart(dikeset, HTredo=True):
     dikeset.loc[switchXs, ['Xstart', 'Xend']]=(dikeset.loc[switchXs, ['Xend', 'Xstart']].values)
     dikeset.loc[switchXs, ['Ystart', 'Yend']]=(dikeset.loc[switchXs, ['Yend', 'Ystart']].values)
 
-
-    # if HTredo:
-    #     t,r=whichForm(dikeset)
-    #     theta,rho,xc,yc=HoughTransform(dikeset)
-    #     dikeset['theta']=theta
-    #     dikeset['rho']=rho
-    #     dikeset['yc']=yc
-    #     dikeset['xc']=xc
-
     return dikeset
 
 def DikesetReProcess(df, HTredo=True, xc=None, yc=None):
@@ -304,6 +295,7 @@ def DikesetReProcess(df, HTredo=True, xc=None, yc=None):
     Returns:
         DataFrame: The processed dataframe with added or updated attributes.
     """
+
     # Check and transform dataframe columns if necessary
     if 'Xstart' not in df.columns:
         df = WKTtoArray(df)
@@ -330,30 +322,19 @@ def DikesetReProcess(df, HTredo=True, xc=None, yc=None):
 
     # Calculate Hough Transform attributes (theta, rho) if not present
     if 'theta' not in df.columns or 'rho' not in df.columns:
-        theta, rho, xc, yc = HoughTransform(df, xc=xc, yc=yc)
-        df['theta'] = theta
-        df['rho'] = rho
+        df, _, _ = HoughTransform(df, xc=xc, yc=yc)
 
     # Assign or update Hough Transform center coordinates
     if 'xc' not in df.columns:
-        theta, rho, xc, yc = HoughTransform(df, xc=xc, yc=yc)
-        df = df.assign(theta=theta, xc=xc, rho=rho, yc=yc)
+        df, xc, yc = HoughTransform(df, xc=xc, yc=yc)
         df=MidtoPerpDistance(df, xc, yc)
     elif xc is not df['xc'].iloc[0] and HTredo:
-        theta,rho,xc,yc=HoughTransform(df, xc=xc, yc=yc)
-        df['theta']=theta
-        df['rho']=rho
+        df, xc, yc=HoughTransform(df, xc=xc, yc=yc)
         df=MidtoPerpDistance(df, xc, yc)
-        df=df.assign(yc=yc)
-        df=df.assign(xc=xc)
-    elif HTredo:
-        theta,rho,xc,yc=HoughTransform(df, xc=xc, yc=yc)
-        df['theta']=theta
-        df['rho']=rho
-        df=MidtoPerpDistance(df, xc, yc)
-        df=df.assign(yc=yc)
-        df=df.assign(xc=xc)
 
+    elif HTredo:
+        df,xc,yc=HoughTransform(df, xc=xc, yc=yc)
+        df=MidtoPerpDistance(df, xc, yc)
 
     if 'PerpOffsetDist' not in df.columns:
         df=MidtoPerpDistance(df, xc, yc)
@@ -396,10 +377,10 @@ def LinesReProcess(df, HTredo=True):
 
     # Calculate or recalculate Hough Transform attributes (theta, rho)
     if HTredo:
-        theta, rho, xc, yc = HoughTransform(df)
+        df, xc, yc = HoughTransform(df)
         df = MidtoPerpDistance(df, xc, yc)
-        df = df.assign(yc=yc, xc=xc, AvgTheta=theta, AvgRho=rho)
-        df = df.assign(xc=xc)
+        df['AvgTheta'] = df['theta'].values
+        df['AvgRho'] = df['rho'].values
 
     # Calculate perpendicular offset distances if not present
     if 'PerpOffsetDist' not in df.columns:
@@ -412,7 +393,9 @@ def LinesReProcess(df, HTredo=True):
 
     return df
 
-def completePreProcess(df):
+def completePreProcess(data):
+
+    df = data.copy()
     """
     Fully preprocesses a dataframe containing line data to ensure it has essential attributes and is properly formatted.
 
@@ -435,11 +418,7 @@ def completePreProcess(df):
     df = midPoint(df)
 
     # Calculate Hough Transform attributes (theta, rho, xc, yc) and perpendicular offset distances
-    theta, rho, xc, yc = HoughTransform(df)
-    df['theta'] = theta
-    df['rho'] = rho
-    df['yc'] = yc
-    df['xc'] = xc
+    df, xc, yc = HoughTransform(df)
     df = MidtoPerpDistance(df, xc, yc)
 
     # Assign the processing date

@@ -46,6 +46,11 @@ def AggCluster(dikeset, dtheta, drho, dimensions=2, linkage='complete', rotate=F
         Z : ndarray
             The hierarchical clustering linkage matrix.
     """
+    # if 'theta' is not dikeset.columns:
+    # do the Hough transform
+    if 'theta' not in dikeset.columns:
+        print("Hough transform not found, performing Hough transform")
+        dikeset, xc, yc=HT(dikeset) 
 
     t,r=whichForm(dikeset)
     angle=np.median(abs(dikeset[t]))-20
