@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "linkinglines"
-version ='{{VERSION_PLACEHOLDER}}'
+version ='2.1.0'
 authors = [
   { name="Allison Kubo", email="akubo@uoregon.edu" },
 ]
@@ -27,6 +27,11 @@ dependencies = [
     "seaborn>=0.12.2",
     "statsmodels>=0.14.0"
 ]
+[project.optional-dependencies]
+tests = [
+    "pytest"
+]
+
 
 [project.urls]
 "Homepage" = "https://github.com/aikubo/Linking-and-Clustering-Dikes"
