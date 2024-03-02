@@ -85,7 +85,7 @@ import matplotlib.pyplot as plt
 import linkinglines as ll
 
 # Load data from a CSV file (replace 'path/to/data' with your file path)
-data = pd.read_csv('path/to/data')
+data = ll.readFile('path/to/data')
 
 # Apply Hough Transform to the data to find line parameters (theta and rho)
 data = ll.HoughTransform(data)

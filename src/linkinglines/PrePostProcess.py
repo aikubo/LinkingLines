@@ -38,6 +38,40 @@ from scipy import stats
 
 import matplotlib.pyplot as plt
 
+import geopandas
+
+def readFile(path):
+
+    """
+    Reads in a file and returns a pandas dataframe
+
+    Parameters:
+        path: (string) the path to the file to be read in
+    
+    Returns:
+        data: (pandas.DataFrame) a pandas or geopandas dataframe
+    """
+
+    # if not a valid path, return error
+    if not os.path.exists(path):
+        raise ValueError("Invalid path")
+    # if file is not .csv, .txt, or .shp, return error
+    if path.endswith('.csv') or path.endswith('.txt') or path.endswith('.shp') or path.endswith('.geojson') or path.endswith('.json'):
+        raise ValueError("Invalid file type")
+    
+    # identify the type of file
+    # read in .csv 
+    if path.endswith('.csv'):
+        data=pd.read_csv(path)
+    elif path.endswith('.txt'):
+        data=pd.read_csv(path, delimiter='\t')
+    else:
+        data=geopandas.read_file(path)
+        data=data.to_wkt()
+
+    return data
+
+
 def midPoint(df):
     """
     Finds the midpoint of a dataframe of line segments.
@@ -125,7 +159,7 @@ def WKTtoArray(df, plot=False):
     Processes a dataframe with columns Xstart,Ystart,Xend,Yend,seg_length to a pandas dataframe with columns Xstart,Ystart,Xend,Yend,seg_length
 
     Parameters:
-        df: a pandas dataframe with a Linestring column containing WKT strings
+        df: a pandas dataframe with a Linestring column containing WKT strings must contain ["WKT"]
     Returns:
         df: a pandas dataframe with columns Xstart,Ystart,Xend,Yend,seg_length
     '''
@@ -282,7 +316,7 @@ def transformXstart(dikeset, HTredo=True):
 
     return dikeset
 
-def DikesetReProcess(df, HTredo=True, xc=None, yc=None):
+def dikesetReProcess(df, HTredo=True, xc=None, yc=None):
     """
     Reprocesses a dataframe containing dike line data to ensure it has essential attributes and is properly formatted.
 
@@ -393,7 +427,7 @@ def LinesReProcess(df, HTredo=True):
 
     return df
 
-def completePreProcess(data):
+def preProcess(data):
 
     df = data.copy()
     """
