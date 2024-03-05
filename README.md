@@ -1,14 +1,16 @@
 
 # Welcome to LinkingLines!
+ [![status](https://joss.theoj.org/papers/64eeef828a1100bfba74052d89314758/status.svg)](https://joss.theoj.org/papers/64eeef828a1100bfba74052d89314758)
 
 [![DOI](https://zenodo.org/badge/272334230.svg)](https://zenodo.org/badge/latestdoi/272334230)
 
 [![PyPI](https://img.shields.io/pypi/v/LinkingLines.svg)](https://pypi.org/project/LinkingLines/)
 
-[![ReadtheDocs](https://readthedocs.org/projects/LinkingLines/badge/)](https://linkinglines.readthedocs.io/)
+[![ReadtheDocs](https://readthedocs.org/projects/linkinglines/badge/)](https://linkinglines.readthedocs.io/)
 
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
+# Read the Full documentation on [ReadtheDocs!](https://linkinglines.readthedocs.io/en/latest/)
 
 ## 1. Introduction
 Welcome to the documentation for our Python module that performs the Hough

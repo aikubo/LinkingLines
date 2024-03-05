@@ -16,7 +16,7 @@ linkinglines: hough transform for clustering and feature extraction
    :alt: PyPI
 
 
-.. image:: https://readthedocs.org/projects/LinkingLines/badge/
+.. image:: https://readthedocs.org/projects/linkinglines/badge/
    :target: https://linkinglines.readthedocs.io/
    :alt: ReadtheDocs
 

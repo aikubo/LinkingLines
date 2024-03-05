@@ -41,12 +41,14 @@ source_suffix = [".rst", ".md"]
 
 html_theme = 'alabaster'
 html_static_path = ['_static']
-
+#html_logo = "_static/dikeslogo.png"
 # Add GitHub badge to the sidebar
 html_theme_options = {'description': "Using the Hough Transform to cluster lines",
                       'github_user': 'aikubo',
                       'github_repo': 'LinkingLines',
                       'github_banner': True,
+                      'logo': 'dikeslogo.png',
+                      'logo_name':True,
 }
 
 
