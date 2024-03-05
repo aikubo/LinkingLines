@@ -23,7 +23,7 @@ WKT files and exporting WKT files to use in GIS programs
     transformXstart: reorders dataframe so that Xstart is always < Xend
     DikesetReprocess: Reprocesses a dataframe containing dike line data to ensure it has essential attributes and is properly formatted.
     LinesReprocess: Reprocesses a dataframe containing line data to ensure it has essential attributes and is properly formatted.
-    CompletePreprocess:     Fully preprocesses a dataframe containing line data to ensure it has essential attributes and is properly formatted.
+    preProcess:     Fully preprocesses a dataframe containing line data to ensure it has essential attributes and is properly formatted.
     whichForm: Returns the form of the dataframe column names
     MaskArea: Returns dataframe masked by bounds
     getCartLimits: Computes the Cartesian limits (x and y) of a set of lines.
@@ -39,10 +39,10 @@ import re
 from scipy import stats
 
 import matplotlib.pyplot as plt
-
+import os
 import geopandas
 
-def readFile(path):
+def readFile(path, preprocess=True):
 
     """
     Reads in a file and returns a pandas dataframe
@@ -58,7 +58,9 @@ def readFile(path):
     if not os.path.exists(path):
         raise ValueError("Invalid path")
     # if file is not .csv, .txt, or .shp, return error
-    if path.endswith('.csv') or path.endswith('.txt') or path.endswith('.shp') or path.endswith('.geojson') or path.endswith('.json'):
+    valid_extensions = ['.csv', '.txt', '.shp', '.geojson', '.json']
+
+    if not any(path.endswith(ext) for ext in valid_extensions):
         raise ValueError("Invalid file type")
     
     # identify the type of file
@@ -70,6 +72,11 @@ def readFile(path):
     else:
         data=geopandas.read_file(path)
         data=data.to_wkt()
+    
+    # if preprocess is True, preprocess the data
+    if preprocess:
+        data = WKTtoArray(data)
+        data = preProcess(data)
 
     return data
 
@@ -162,6 +169,11 @@ def WKTtoArray(df, plot=False):
 
     if len(df) < 1:
         raise ValueError("DataFrame is empty")
+    
+    #     # if neither is in columns raise value error
+    if not ("WKT" in df.columns ):
+        if not ("geometry" in df.columns):
+         raise ValueError("No geometry present")
 
     xstart=[]
     ystart=[]
@@ -171,28 +183,34 @@ def WKTtoArray(df, plot=False):
     drop=[]
     if plot:
         fig,ax=plt.subplots()
+
+    # check for either "WKT" or "geometry" columns 
+    if "geometry" in df.columns:
+        tag = "geometry"
+    else:
+        tag = "WKT"
+
     for i in range(len(df)):
-        temp=df["WKT"].iloc[i]
-        temp=re.split(r'[(|)]', temp)
+        temp=df[tag].iloc[i]
         t1=temp[0]
 
-        #print("dike #:",i)
-        print(temp)
-        if 'EMPTY' in temp[0]:
-            drop.append(i)
-            continue
-        temp=re.split(r'[,\s]+', temp[2])
+        # Using regex to find all numbers in the string
+        temp = re.findall(r"[-+]?\d*\.\d+|\d+", temp)
 
-        if "Z" in t1:
+        if len(temp)%3==0:
             tempx=np.array(temp[::3]).astype(float)
             tempy=np.array(temp[1::3]).astype(float)
         else:
             tempx=np.array(temp[::2]).astype(float)
             tempy=np.array(temp[1::2]).astype(float)
 
-        print(tempx, tempy)
+        if np.unique(tempx).shape[0]==1 or np.unique(tempy).shape[0]==1:
+            drop.append(i)
+            continue
+
+    
         slope, intercept, r_value, p_value, std_err = stats.linregress(tempx, tempy)
-        print(p_value)
+
         #for x,y in zip(tempx, tempy):
         if any(np.isnan( [slope, intercept])):
             drop.append(i)

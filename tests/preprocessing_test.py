@@ -8,10 +8,11 @@ Created on Sat Sep 9 10:01:18 2023
 
 # Import necessary modules and libraries
 from linkinglines import HoughTransform, CyclicAngleDist, rotateData, HT_center
-from linkinglines import fromHT, fragmentDikes, WKTtoArray
+from linkinglines import fromHT, fragmentDikes, WKTtoArray, readFile
 
 import pytest
 import pandas as pd
+import geopandas as gpd
 import numpy as np
 
 
@@ -360,4 +361,64 @@ class TestWKTToArray:
         assert len(data)-1==len(result_df)
 
             
+class TestReadFile():
+    # Test case 1: read csv with wkt
+    def testCSVRead(self):
+        df=readFile('../data/testCSV_dikemountain.csv')
+        assert isinstance(df, pd.DataFrame)
+        columns= ['WKT', 'seg_length', 'Xstart', 'Ystart', 'Xend', 'Yend', 'theta', 'rho']
+        assert all([a in df.columns for a in columns])
+
+    # Test case 2: read geojson 
+    def testGeoJSONRead(self):
+        df=readFile('../data/testGeoJSON_dikemountain.geojson')
+        assert isinstance(df, pd.DataFrame)
+        columns= ['WKT', 'seg_length', 'Xstart', 'Ystart', 'Xend', 'Yend', 'theta', 'rho']
+        assert all([a in df.columns for a in columns])
+
+    # Test case 3: read shapefile
+    def testShapefileRead(self):
+        df=readFile('../data/testShapefile_dikemountain.shp')
+        assert isinstance(df, pd.DataFrame)
+        columns= ['WKT', 'seg_length', 'Xstart', 'Ystart', 'Xend', 'Yend', 'theta', 'rho']
+        assert all([a in df.columns for a in columns])
+
+    def testInvalidFile(self):
+        with pytest.raises(ValueError):
+            df=readFile('invalid_file.jpg')
+
+class TestWriteFile():
+    
+    @pytest.fixture
+    def df(self, autouse=True):
+        # Create synthetic data here 
+        theta=np.array([-75, -30, 5, 45, 60, 90])
+        rho = np.random.uniform(low=-10, high=10, size=6)
+        df = fromHT(theta, rho, scale=1)
+        return df
+    
+    # Test case 1: write to csv
+    def testFileTypesWrite(self, df):
+
+        for i in [".csv", ".shp", ".gpkg", ".geojson"]:
+            
+            path = '../data/test'
         
+            dfwrite=writeFile(df, path+i)
+
+            # File exists
+            assert os.path.exists( path+i)
+
+            # Files is not empty
+            assert os.path.getsize( path+i) > 0
+
+            # File has expected columns
+            df2 = gpd.file_read(path+i)
+            columns = ['seg_length', 'Xstart', 'Ystart', 'Xend', 'Yend', 'theta', 'rho']
+
+            assert all([a in df2.columns for a in columns])
+
+
+        
+
+
