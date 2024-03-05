@@ -1,14 +1,6 @@
 
 # Welcome to LinkingLines!
- [![status](https://joss.theoj.org/papers/64eeef828a1100bfba74052d89314758/status.svg)](https://joss.theoj.org/papers/64eeef828a1100bfba74052d89314758)
-
-[![DOI](https://zenodo.org/badge/272334230.svg)](https://zenodo.org/badge/latestdoi/272334230)
-
-[![PyPI](https://img.shields.io/pypi/v/LinkingLines.svg)](https://pypi.org/project/LinkingLines/)
-
-[![ReadtheDocs](https://readthedocs.org/projects/linkinglines/badge/)](https://linkinglines.readthedocs.io/)
-
-[![License](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+ [![status](https://joss.theoj.org/papers/64eeef828a1100bfba74052d89314758/status.svg)](https://joss.theoj.org/papers/64eeef828a1100bfba74052d89314758) [![DOI](https://zenodo.org/badge/272334230.svg)](https://zenodo.org/badge/latestdoi/272334230) [![PyPI](https://img.shields.io/pypi/v/LinkingLines.svg)](https://pypi.org/project/LinkingLines/) [![ReadtheDocs](https://readthedocs.org/projects/linkinglines/badge/)](https:// inkinglines.readthedocs.io/) [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 # Read the Full documentation on [ReadtheDocs!](https://linkinglines.readthedocs.io/en/latest/)
 
@@ -53,10 +45,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import linkinglines as ll
 
-data=pd.read_csv('path/to/data')
-theta,rho,xc,yc=ll.HoughTransform(data)
-data['theta']=theta
-data['rho']=rho
+data=ll.readFile('path/to/data')
 
 dtheta=2 #degrees
 drho=500 #meters
