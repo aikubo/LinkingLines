@@ -7,10 +7,9 @@ Created on Sat Sep 9 10:01:18 2023
 """
 
 # Import necessary modules and libraries
-from htMOD import HoughTransform, CyclicAngleDist, rotateData, HT_center
-from syntheticMod import fromHT
-from PrePostProcess import * 
-from syntheticMod import * 
+from linkinglines import HoughTransform, CyclicAngleDist, rotateData, HT_center
+from linkinglines import fromHT, fragmentDikes, WKTtoArray
+
 import pytest
 import pandas as pd
 import numpy as np

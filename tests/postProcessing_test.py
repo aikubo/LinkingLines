@@ -4,12 +4,9 @@
 import pytest
 import pandas as pd
 import numpy as np
-from fitRectangle import rotateXYShift
-from dilationCalculation import dilation
-from syntheticMod import makeLinear2, addSwarms, fromHT, addSwarms
-from examineMod import RotateOverlap
-from PrePostProcess import DikesetReProcess
-from fitRadialCenters import RadialFit
+from linkinglines import dilation, rotateXYShift, DikesetReProcess, RadialFit
+from linkinglines import fromHT, makeLinearDataFrame
+
 
 class TestRotate:
     
@@ -50,11 +47,11 @@ class TestDilation():
     #Create some fixtures of linear line dataframes
     @pytest.fixture(autouse=True)
     def df2(self):
-        return makeLinear2(1000, 90, 0, 5000, 500, ndikes=5)
+        return makeLinearDataFrame(1000, 90, 0, 5000, 500, ndikes=5)
 
     @pytest.fixture(autouse=True)
     def df3(self):
-        return makeLinear2(1000, 45, 0, 5000, 500, ndikes=5)
+        return makeLinearDataFrame(1000, 45, 0, 5000, 500, ndikes=5)
         
     
     def test_dilation_90_degrees(self, df2):
