@@ -13,7 +13,6 @@ and modeling purposes.
 @author: akh
 """
 import pandas as pd
-from .HT import HoughTransform
 from sklearn.preprocessing import scale
 import numpy as np
 from .ClusterLines import *

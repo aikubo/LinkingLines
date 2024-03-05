@@ -114,14 +114,10 @@ import matplotlib.pyplot as plt
 import linkinglines as ll
 
 # Load data from a CSV file (replace 'path/to/data' with your file path)
-data = pd.read_csv('path/to/data')
+data = ll.readFile('path/to/data')
 
 # Apply Hough Transform to the data to find line parameters (theta and rho)
-theta, rho, xc, yc = ll.HoughTransform(data)
-
-# Add the computed theta and rho values to the data DataFrame
-data['theta'] = theta
-data['rho'] = rho
+data = ll.HoughTransform(data)
 
 # Set the increment values for clustering (adjust as needed)
 dtheta = 2

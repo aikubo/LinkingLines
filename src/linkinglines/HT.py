@@ -92,8 +92,8 @@ def HoughTransform(data, xc=None, yc=None):
 
     Returns
     -------
-    theta: HT angle in degrees
-    rho: HT rho in same unit as 'Xstart'
+    newdata: pandas.Dataframe
+        dataframe of the line segments with new columns of ['theta', 'rho', 'xc', 'yc']
 
     """
 
@@ -128,7 +128,13 @@ def HoughTransform(data, xc=None, yc=None):
     rho=b1*np.sin(angle)
     theta=np.rad2deg(angle)
 
-    return theta, rho, xc, yc
+    newdata= data.copy
+    newdata['theta']=theta
+    newdata['rho']=rho
+    newdata['xc']=xc
+    newdata['yc']=yc
+
+    return newdata, xc, yc
 
 
 def HT_center(data):
@@ -194,17 +200,12 @@ def rotateData(data, rotation_angle):
 
     ang=np.deg2rad(rotation_angle)
 
-    dataRotated=data.copy()
-
+    #xcR, ycR=HT_center(dataRotated)
+    dataRotated=HoughTransform(dataRotated, xc=xc, yc=yc)
     dataRotated['Xstart']=x1+xc
     dataRotated['Ystart']=y1+yc
     dataRotated['Xend']=x2+xc
     dataRotated['Yend']=y2+yc
-
-    #xcR, ycR=HT_center(dataRotated)
-    theta, rho, xc, yc=HoughTransform(dataRotated, xc=xc, yc=yc)
-    dataRotated['theta']=theta
-    dataRotated['rho']=rho
 
 
     #print(xcR,ycR)
@@ -215,7 +216,7 @@ def rotateData(data, rotation_angle):
 
 
 
-def MidtoPerpDistance(df, xc, yc):
+def MidtoPerpDistance(data, xc, yc):
     """
     Find the distance between line segment midpoint and rho line perpendicular
     intersection.
@@ -242,9 +243,9 @@ def MidtoPerpDistance(df, xc, yc):
     #     df=midPoint(df)
 
 
-    theta,rho,xc,yc=HoughTransform(df, xc, yc)
-    intx=rho*np.cos(np.deg2rad(theta))
-    inty=rho*np.sin(np.deg2rad(theta))
+    df=HoughTransform(data, xc, yc)
+    intx=rho*np.cos(np.deg2rad(df['theta'].values))
+    inty=rho*np.sin(np.deg2rad(df['theta'].values))
     df['PerpOffsetDist']=np.sqrt( (df['Xmid'].values-intx)**2 +  (df['Ymid'].values-inty)**2)*np.sign((df['Ymid'].values-inty))
     df['PerpIntX']=intx
     df['PerpIntY']=inty

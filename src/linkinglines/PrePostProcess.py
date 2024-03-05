@@ -11,8 +11,10 @@ Created on Thu Jul  1 11:04:53 2021
 Contains various preprocessing data and post processing including reading in
 WKT files and exporting WKT files to use in GIS programs
 
-    writeToQGIS makes the dataframe into a WKT (well known text) string and writes as CSV (comma seperated values)
-    writeToQGISLong: writes to QGIS after examineMod/extendlines has been applied
+    writeFile makes the dataframe into a variety of file types including .csv, .txt, .shp, .geojson, and .json
+    readFile reads in a file and returns a pandas dataframe
+    writeToWKT writes a dataframe to a CSV file using WKT
+    writetoGeoData writes a dataframe to a shapefile, geopackage, or geojson file
     WKTtoArray processes from a WKT CSV to a pandas Dataframe with columns Xstart,Ystart,Xend,Yend,seg_length
     giveID gives a numeric ID to data
     midPoint: Finds the midpoint of a dataframe of line segments.
@@ -38,6 +40,40 @@ from scipy import stats
 
 import matplotlib.pyplot as plt
 
+import geopandas
+
+def readFile(path):
+
+    """
+    Reads in a file and returns a pandas dataframe
+
+    Parameters:
+        path: (string) the path to the file to be read in
+    
+    Returns:
+        data: (pandas.DataFrame) a pandas or geopandas dataframe
+    """
+
+    # if not a valid path, return error
+    if not os.path.exists(path):
+        raise ValueError("Invalid path")
+    # if file is not .csv, .txt, or .shp, return error
+    if path.endswith('.csv') or path.endswith('.txt') or path.endswith('.shp') or path.endswith('.geojson') or path.endswith('.json'):
+        raise ValueError("Invalid file type")
+    
+    # identify the type of file
+    # read in .csv 
+    if path.endswith('.csv'):
+        data=pd.read_csv(path)
+    elif path.endswith('.txt'):
+        data=pd.read_csv(path, delimiter='\t')
+    else:
+        data=geopandas.read_file(path)
+        data=data.to_wkt()
+
+    return data
+
+
 def midPoint(df):
     """
     Finds the midpoint of a dataframe of line segments.
@@ -59,7 +95,7 @@ def midPoint(df):
     return df
 
 
-def writeToQGIS(df,name, myProj=None):
+def writeToWKT(df,name, myProj=None):
     """
 
     Writes a dataframe to a CSV file in the format of a QGIS layer.
@@ -88,33 +124,25 @@ def writeToQGIS(df,name, myProj=None):
 
     return df
 
-def writeToQGISLong(df,name, myProj=None):
 
+def writetoGeoData(df, name, driver, myProj=None):
     """
-    Writes a dataframe to a CSV file in the format of a QGIS layer.
-    with the lines extended by examineMod/extendLines
-    Uses well known text (WKT) to write the data as readable line vectors in QGIS.
+    Writes a dataframe to a shapefile.
 
     Parameters:
         df: a pandas dataframe with columns Xstart,Ystart,Xend,Yend,seg_length
-
         name: the name of the file to be written
-
         myProj: the projection of the dataframe. If none is given, the projection is set to WGS84
 
     Returns:
-        A CSV file with the dataframe in the format of a QGIS layer
+        A shapefile with the dataframe
     """
 
-    front="LINESTRING("
-    linestring=[]
-    for i in range(len(df)):
-        line=front+str(df['XstartL'].iloc[i])+" "+str(df['YstartL'].iloc[i])+","+str(df['XendL'].iloc[i])+" "+str(df['YendL'].iloc[i])+")"
-        linestring.append(line)
+    if myProj is None:
+        myProj='WGS84'
 
-    df['Linestring']=linestring
-    df['Linestring']=df['Linestring'].astype(str)
-    df.to_csv(name)
+    gdf = geopandas.GeoDataFrame(df, geometry=geopandas.points_from_xy(df.Xstart, df.Ystart))
+    gdf.to_file(name, driver=driver, crs=myProj)
 
     return df
 
@@ -125,7 +153,7 @@ def WKTtoArray(df, plot=False):
     Processes a dataframe with columns Xstart,Ystart,Xend,Yend,seg_length to a pandas dataframe with columns Xstart,Ystart,Xend,Yend,seg_length
 
     Parameters:
-        df: a pandas dataframe with a Linestring column containing WKT strings
+        df: a pandas dataframe with a Linestring column containing WKT strings must contain ["WKT"]
     Returns:
         df: a pandas dataframe with columns Xstart,Ystart,Xend,Yend,seg_length
     '''
@@ -280,18 +308,9 @@ def transformXstart(dikeset, HTredo=True):
     dikeset.loc[switchXs, ['Xstart', 'Xend']]=(dikeset.loc[switchXs, ['Xend', 'Xstart']].values)
     dikeset.loc[switchXs, ['Ystart', 'Yend']]=(dikeset.loc[switchXs, ['Yend', 'Ystart']].values)
 
-
-    # if HTredo:
-    #     t,r=whichForm(dikeset)
-    #     theta,rho,xc,yc=HoughTransform(dikeset)
-    #     dikeset['theta']=theta
-    #     dikeset['rho']=rho
-    #     dikeset['yc']=yc
-    #     dikeset['xc']=xc
-
     return dikeset
 
-def DikesetReProcess(df, HTredo=True, xc=None, yc=None):
+def dikesetReProcess(df, HTredo=True, xc=None, yc=None):
     """
     Reprocesses a dataframe containing dike line data to ensure it has essential attributes and is properly formatted.
 
@@ -304,6 +323,7 @@ def DikesetReProcess(df, HTredo=True, xc=None, yc=None):
     Returns:
         DataFrame: The processed dataframe with added or updated attributes.
     """
+
     # Check and transform dataframe columns if necessary
     if 'Xstart' not in df.columns:
         df = WKTtoArray(df)
@@ -330,30 +350,19 @@ def DikesetReProcess(df, HTredo=True, xc=None, yc=None):
 
     # Calculate Hough Transform attributes (theta, rho) if not present
     if 'theta' not in df.columns or 'rho' not in df.columns:
-        theta, rho, xc, yc = HoughTransform(df, xc=xc, yc=yc)
-        df['theta'] = theta
-        df['rho'] = rho
+        df, _, _ = HoughTransform(df, xc=xc, yc=yc)
 
     # Assign or update Hough Transform center coordinates
     if 'xc' not in df.columns:
-        theta, rho, xc, yc = HoughTransform(df, xc=xc, yc=yc)
-        df = df.assign(theta=theta, xc=xc, rho=rho, yc=yc)
+        df, xc, yc = HoughTransform(df, xc=xc, yc=yc)
         df=MidtoPerpDistance(df, xc, yc)
     elif xc is not df['xc'].iloc[0] and HTredo:
-        theta,rho,xc,yc=HoughTransform(df, xc=xc, yc=yc)
-        df['theta']=theta
-        df['rho']=rho
+        df, xc, yc=HoughTransform(df, xc=xc, yc=yc)
         df=MidtoPerpDistance(df, xc, yc)
-        df=df.assign(yc=yc)
-        df=df.assign(xc=xc)
-    elif HTredo:
-        theta,rho,xc,yc=HoughTransform(df, xc=xc, yc=yc)
-        df['theta']=theta
-        df['rho']=rho
-        df=MidtoPerpDistance(df, xc, yc)
-        df=df.assign(yc=yc)
-        df=df.assign(xc=xc)
 
+    elif HTredo:
+        df,xc,yc=HoughTransform(df, xc=xc, yc=yc)
+        df=MidtoPerpDistance(df, xc, yc)
 
     if 'PerpOffsetDist' not in df.columns:
         df=MidtoPerpDistance(df, xc, yc)
@@ -396,10 +405,10 @@ def LinesReProcess(df, HTredo=True):
 
     # Calculate or recalculate Hough Transform attributes (theta, rho)
     if HTredo:
-        theta, rho, xc, yc = HoughTransform(df)
+        df, xc, yc = HoughTransform(df)
         df = MidtoPerpDistance(df, xc, yc)
-        df = df.assign(yc=yc, xc=xc, AvgTheta=theta, AvgRho=rho)
-        df = df.assign(xc=xc)
+        df['AvgTheta'] = df['theta'].values
+        df['AvgRho'] = df['rho'].values
 
     # Calculate perpendicular offset distances if not present
     if 'PerpOffsetDist' not in df.columns:
@@ -412,7 +421,9 @@ def LinesReProcess(df, HTredo=True):
 
     return df
 
-def completePreProcess(df):
+def preProcess(data):
+
+    df = data.copy()
     """
     Fully preprocesses a dataframe containing line data to ensure it has essential attributes and is properly formatted.
 
@@ -435,11 +446,7 @@ def completePreProcess(df):
     df = midPoint(df)
 
     # Calculate Hough Transform attributes (theta, rho, xc, yc) and perpendicular offset distances
-    theta, rho, xc, yc = HoughTransform(df)
-    df['theta'] = theta
-    df['rho'] = rho
-    df['yc'] = yc
-    df['xc'] = xc
+    df, xc, yc = HoughTransform(df)
     df = MidtoPerpDistance(df, xc, yc)
 
     # Assign the processing date
@@ -538,3 +545,38 @@ def getCartLimits(lines):
     xlim = [np.min([lines['Xstart'].min(), lines['Xend'].min()]), np.max([lines['Xstart'].max(), lines['Xend'].max()])]
     ylim = [np.min([lines['Ystart'].min(), lines['Yend'].min()]), np.max([lines['Ystart'].max(), lines['Yend'].max()])]
     return xlim, ylim
+
+def writeFile(df, name, myProj=None):
+    """
+    Writes a dataframe to a file based on the file extension.
+
+    Parameters:
+        df: (pandas.DataFrame) a pandas dataframe
+        name: (string) the name of the file to be written with file extension
+
+    Returns:
+        df: (pandas.DataFrame) the input dataframe
+    """
+
+    # if file is not .csv, .txt, or .shp, return error
+    if path.endswith('.csv') or path.endswith('.txt') or path.endswith('.shp') or path.endswith('.geojson') or path.endswith('.json'):
+        raise ValueError("Invalid file type")
+
+   # if ends with .csv or .txt, write as csv
+    if name.endswith('.csv') or name.endswith('.txt'):
+        df = writeToWKT(df, name, myProj=myProj)
+    # if ends with .shp, write as shapefile
+    else: 
+        if name.endswith('.shp'):
+            driver = 'ESRI Shapefile'
+        elif name.endswith('.geojson') or name.endswith('.json'):
+            driver = 'GeoJSON'
+        elif name.endswith('.gpkg'):
+            driver = 'GPKG'
+        else:
+            raise ValueError("Invalid file type")
+        
+        df = writetoGeoData(df, name, driver, myProj=myProj)
+
+
+    return df
