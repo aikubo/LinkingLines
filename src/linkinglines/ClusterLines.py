@@ -12,7 +12,7 @@ Created on Thu Apr  1 13:12:50 2021
 import numpy as np
 import pandas as pd
 from scipy.cluster.hierarchy import dendrogram
-from .HT import rotateData
+from .HT import rotateData, HoughTransform
 #from examineMod import *
 from .PrePostProcess import whichForm
 from scipy.spatial.distance import pdist, squareform
@@ -50,7 +50,7 @@ def AggCluster(dikeset, dtheta, drho, dimensions=2, linkage='complete', rotate=F
     # do the Hough transform
     if 'theta' not in dikeset.columns:
         print("Hough transform not found, performing Hough transform")
-        dikeset, xc, yc=HT(dikeset) 
+        dikeset, xc, yc=HoughTransform(dikeset) 
 
     t,r=whichForm(dikeset)
     angle=np.median(abs(dikeset[t]))-20

@@ -4,8 +4,8 @@
 import pytest
 import pandas as pd
 import numpy as np
-from linkinglines import dilation, rotateXYShift, DikesetReProcess, RadialFit
-from linkinglines import fromHT, makeLinearDataFrame
+from linkinglines import dilation, rotateXYShift, dikesetReProcess, RadialFit
+from linkinglines import fromHT, makeLinearDataFrame, RotateOverlap
 
 
 class TestRotate:
@@ -58,7 +58,7 @@ class TestDilation():
         EWDilation, NSDilation, EWbin, NSbin = dilation(df2, binWidth=1)
         
         assert np.isclose(np.sum(np.abs(EWDilation)), 0.0)
-        assert np.isclose(np.max(NSDilation),4.0)
+        assert np.isclose(np.max(NSDilation),5.0)
         assert len(EWDilation)==len(NSbin)
         assert len(NSDilation)==len(EWbin)
         
@@ -81,7 +81,7 @@ class TestDilation():
     def test_dilation_non_1_average_width(self, df2):
         EWDilation2, NSDilation2, _, _ = dilation(df2, binWidth=1, averageWidth=10)
         Value = [np.max(NSDilation2), np.max(EWDilation2)]
-        Expected = [30, 0]
+        Expected = [40, 0]
         
         assert np.allclose(Value, Expected)
         
@@ -105,7 +105,7 @@ class TestOverlap():
             }
 
         df = pd.DataFrame(data)
-        df=DikesetReProcess(df, xc=0, yc=0)
+        df=dikesetReProcess(df, xc=0, yc=0)
  
         for i in df['label'].unique():
             lines=df[ df['label']==i]

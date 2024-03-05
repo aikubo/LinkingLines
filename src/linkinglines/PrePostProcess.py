@@ -42,35 +42,35 @@ import matplotlib.pyplot as plt
 import os
 import geopandas
 
-def readFile(path, preprocess=True):
+def readFile(name, preprocess=True):
 
     """
     Reads in a file and returns a pandas dataframe
 
     Parameters:
-        path: (string) the path to the file to be read in
+        name: (string) the path to the file to be read in
     
     Returns:
         data: (pandas.DataFrame) a pandas or geopandas dataframe
     """
 
     # if not a valid path, return error
-    if not os.path.exists(path):
+    if not os.path.exists(name):
         raise ValueError("Invalid path")
     # if file is not .csv, .txt, or .shp, return error
     valid_extensions = ['.csv', '.txt', '.shp', '.geojson', '.json']
 
-    if not any(path.endswith(ext) for ext in valid_extensions):
+    if not any(name.endswith(ext) for ext in valid_extensions):
         raise ValueError("Invalid file type")
     
     # identify the type of file
     # read in .csv 
-    if path.endswith('.csv'):
-        data=pd.read_csv(path)
-    elif path.endswith('.txt'):
-        data=pd.read_csv(path, delimiter='\t')
+    if name.endswith('.csv'):
+        data=pd.read_csv(name)
+    elif name.endswith('.txt'):
+        data=pd.read_csv(name, delimiter='\t')
     else:
-        data=geopandas.read_file(path)
+        data=geopandas.read_file(name)
         data=data.to_wkt()
     
     # if preprocess is True, preprocess the data
@@ -181,6 +181,7 @@ def WKTtoArray(df, plot=False):
     xend=[]
     yend=[]
     drop=[]
+
     if plot:
         fig,ax=plt.subplots()
 
@@ -193,11 +194,15 @@ def WKTtoArray(df, plot=False):
     for i in range(len(df)):
         temp=df[tag].iloc[i]
         t1=temp[0]
-
         # Using regex to find all numbers in the string
         temp = re.findall(r"[-+]?\d*\.\d+|\d+", temp)
 
-        if len(temp)%3==0:
+
+        if len(temp)<1:
+            drop.append(i)
+            continue
+       
+        if "Z" in t1:
             tempx=np.array(temp[::3]).astype(float)
             tempy=np.array(temp[1::3]).astype(float)
         else:
@@ -576,10 +581,7 @@ def writeFile(df, name, myProj=None):
         df: (pandas.DataFrame) the input dataframe
     """
 
-    # if file is not .csv, .txt, or .shp, return error
-    if path.endswith('.csv') or path.endswith('.txt') or path.endswith('.shp') or path.endswith('.geojson') or path.endswith('.json'):
-        raise ValueError("Invalid file type")
-
+    
    # if ends with .csv or .txt, write as csv
     if name.endswith('.csv') or name.endswith('.txt'):
         df = writeToWKT(df, name, myProj=myProj)
@@ -592,7 +594,7 @@ def writeFile(df, name, myProj=None):
         elif name.endswith('.gpkg'):
             driver = 'GPKG'
         else:
-            raise ValueError("Invalid file type")
+            driver = 'GeoJSON'
         
         df = writetoGeoData(df, name, driver, myProj=myProj)
 

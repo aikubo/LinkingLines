@@ -19,9 +19,9 @@ from .ClusterLines import *
 import matplotlib.pyplot as plt
 from .PlotUtils import plotlines, labelcolors, BA_HT, HThist, DotsLines, labelSubplots
 from .ExamineClusters import examineClusters
+from .PrePostProcess import dikesetReProcess
 import seaborn as sns
 from matplotlib import cm
-from .PrePostProcess import transformXstart, DikesetReProcess
 
 
 
@@ -273,7 +273,7 @@ def fromHT(angles, rhos, scale=10000, length=10000, xc=0, yc=0, CartRange=100000
 
     df=pd.DataFrame({'Xstart':Xstart, 'Xend': Xend, 'Ystart': Ystart, 'Yend':Yend, 'Label': labels})
 
-    df=DikesetReProcess(df, xc=xc, yc=yc)
+    df=dikesetReProcess(df, xc=xc, yc=yc)
 
 
     return df
