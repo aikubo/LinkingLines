@@ -62,3 +62,5 @@ You are now ready to utilize the power of Hough Line Transform, Agglomerative Cl
 
 Happy coding!
 
+
+[Contribution Guidelines](CONTRIBUTING.md)
