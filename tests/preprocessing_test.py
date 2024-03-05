@@ -7,14 +7,14 @@ Created on Sat Sep 9 10:01:18 2023
 """
 
 # Import necessary modules and libraries
-from htMOD import HoughTransform, CyclicAngleDist, rotateData, HT_center
-from syntheticMod import fromHT
-from PrePostProcess import * 
-from syntheticMod import * 
+from linkinglines import HoughTransform, CyclicAngleDist, rotateData, HT_center
+from linkinglines import fromHT, fragmentDikes, WKTtoArray, readFile, writeFile
+
 import pytest
 import pandas as pd
+import geopandas as gpd
 import numpy as np
-
+import os
 
 class TestHTCenter:
     # Test case 1: Test with a DataFrame containing horizontal line segments
@@ -64,23 +64,23 @@ class TestHTCenter:
 class TestHough:
     # Test case for an empty DataFrame input to HoughTransform function
     @staticmethod
-    def test_emptyDataFrame_akhht():
+    def test_emptyDataFrame_ht():
         # Create an empty DataFrame with the required columns
         empty_df = pd.DataFrame(columns=['Xstart', 'Ystart', 'Xend', 'Yend'])
         
         # Call the HoughTransform function with the empty DataFrame
         with pytest.raises(ValueError):
-            theta, rho, xc, yc = HoughTransform(empty_df)
+            df, xc, yc = HoughTransform(empty_df)
     
     # Test case for a non-DataFrame input to HoughTransform function
     @staticmethod
-    def test_notDataFrame_akhht():
+    def test_notDataFrame_ht():
         # Create an array (non-DataFrame)
         array = np.linspace(0, 100)
         
         # Call the HoughTransform function with the non-DataFrame input
         with pytest.raises(ValueError):
-            theta, rho, xc, yc = HoughTransform(array)
+            df, xc, yc = HoughTransform(array)
             
     # Test case for points not lines
     @staticmethod
@@ -94,7 +94,7 @@ class TestHough:
 
         # Call the HoughTransform function with the points input
         with pytest.raises(ValueError):
-            theta, rho, xc, yc = HoughTransform(data)
+            data, xc, yc = HoughTransform(data)
 
     # Test case for HoughTransform with specified center coordinates
     @staticmethod
@@ -111,7 +111,7 @@ class TestHough:
         xc, yc = 1.5, 1.5
         
         # Calculate the Hough Transform
-        theta, rho, result_xc, result_yc = HoughTransform(data, xc=xc, yc=yc)
+        df, result_xc, result_yc = HoughTransform(data, xc=xc, yc=yc)
         
         # Perform assertions
         assert result_xc == xc
@@ -120,9 +120,11 @@ class TestHough:
         # Check calculated theta and rho values
         theta_true = np.array([-45., -45., -45., -45.])
         rho_true = np.array([0, 0, 0, 0])
-        assert len(theta) == len(data)
+
+        theta = df['theta'].values
+        rho = df['rho'].values
+        assert len(df)==len(data)
         assert all([np.isclose(a, b) for a, b in zip(theta, theta_true)])
-        assert len(rho) == len(data)
         assert all([np.isclose(a, b) for a, b in zip(rho, rho_true)])
     
     # Test case for HoughTransform without specifying center coordinates
@@ -137,16 +139,16 @@ class TestHough:
         })
         
         # Calculate the Hough Transform without specifying center
-        theta, rho, xc, yc = HoughTransform(data)
+        df, xc, yc = HoughTransform(data)
         
         # Perform assertions
-        assert isinstance(theta, np.ndarray)
-        assert isinstance(rho, np.ndarray)
+        theta = df['theta'].values
+        rho = df['rho'].values
         theta_true = np.array([-45., -45., -45., -45.])
         rho_true = np.array([0, 0, 0, 0])
-        assert len(theta) == len(data)
+
+        assert len(data)==len(df)
         assert all([np.isclose(a, b) for a, b in zip(theta, theta_true)])
-        assert len(rho) == len(data)
         assert all([np.isclose(a, b) for a, b in zip(rho, rho_true)])
         assert xc == 1.5
         assert yc == 1.5
@@ -165,11 +167,11 @@ class TestHough:
         })
         
         # Calculate the Hough Transform with specified center (0, 0)
-        theta, rho, xc, yc = HoughTransform(data, xc=0, yc=0)
+        df, xc, yc = HoughTransform(data, xc=0, yc=0)
         
         # Perform assertions
-        assert isinstance(theta, np.ndarray)
-        assert isinstance(rho, np.ndarray)
+        theta = df['theta'].values
+        rho = df['rho'].values
         theta_true = np.array([0., 0., 0., 0.])
         rho_true = np.array([0, 1, 2, 3])
         assert all([np.isclose(a, b) for a, b in zip(theta, theta_true)])
@@ -189,11 +191,12 @@ class TestHough:
         })
         
         # Calculate the Hough Transform with specified center (0, 0)
-        theta, rho, xc, yc = HoughTransform(data, xc=0, yc=0)
+        df, xc, yc = HoughTransform(data, xc=0, yc=0)
         
         # Perform assertions
-        assert isinstance(theta, np.ndarray)
-        assert isinstance(rho, np.ndarray)
+
+        theta = df['theta'].values
+        rho = df['rho'].values
         theta_true = np.array([90., 90., 90., 90.])
         rho_true = np.array([0, 1, 2, 3])
         assert all([np.isclose(a, b) for a, b in zip(theta, theta_true)])
@@ -307,7 +310,7 @@ class TestWKTToArray:
             'WKT': ['LINESTRING ((0 0, 1 1))', 'LINESTRING ((1 1, 2 2))', 'LINESTRING ((2 2, 3 3))']
         })
         
-        result_df = WKTtoArray(data, plot=False)
+        result_df = WKTtoArray(data)
         assert isinstance(result_df, pd.DataFrame)
         # Assert that the resulting DataFrame has the expected columns
         assert 'Xstart' in result_df.columns
@@ -339,8 +342,11 @@ class TestWKTToArray:
             'WKT': ['INVALID_WKT_STRING', 'LINESTRING ((0 0, 1 1))', 'EMPTY', 'LINESTRING ((1 1, 2 2))']
         })
         
-        with pytest.raises(IndexError):
-            result_df = WKTtoArray(data, plot=False)
+        result_df = WKTtoArray(data, plot=False)
+
+        assert len(result_df)==2
+        assert result_df['Xstart'].iloc[0] == 0
+        assert result_df['Yend'].iloc[1] == 2
 
     def test_nonlinear_segments(self):
         # Create a sample DataFrame with valid WKT strings
@@ -348,7 +354,7 @@ class TestWKTToArray:
             'WKT': ['LINESTRING ((0 0, 50 50, 10,-20))', 'LINESTRING ((1 1, 2 2))', 'LINESTRING ((2 2, 3 3))']
         })
         
-        result_df = WKTtoArray(data, plot=True)
+        result_df = WKTtoArray(data)
         
         # Assert that the resulting DataFrame has the expected columns
         assert 'Xstart' in result_df.columns
@@ -357,8 +363,79 @@ class TestWKTToArray:
         assert 'Yend' in result_df.columns
         assert 'seg_length' in result_df.columns
 
+        print(result_df)
+
         #Assert dataframe has expected length 
         assert len(data)-1==len(result_df)
 
             
+class TestReadFile():
+    # Test case 1: read csv with wkt
+    def testCSVRead(self):
+        df=readFile('../data/testCSV_dikemountain.csv')
+        assert isinstance(df, pd.DataFrame)
+        columns= ['WKT', 'seg_length', 'Xstart', 'Ystart', 'Xend', 'Yend', 'theta', 'rho']
+        assert all([a in df.columns for a in columns])
+
+    # Test case 2: read geojson 
+    def testGeoJSONRead(self):
+        df=readFile('../data/testGJSON_dikemountain.geojson')
+        assert isinstance(df, pd.DataFrame)
+        columns= ['geometry','seg_length', 'Xstart', 'Ystart', 'Xend', 'Yend', 'theta', 'rho']
+        assert all([a in df.columns for a in columns])
+
+    # Test case 3: read shapefile
+    def testShapefileRead(self):
+        df=readFile('../data/testShapefile_dikemountain.shp')
+        assert isinstance(df, pd.DataFrame)
+        columns= ['geometry', 'seg_length', 'Xstart', 'Ystart', 'Xend', 'Yend', 'theta', 'rho']
+        assert all([a in df.columns for a in columns])
+
+    def testInvalidFile(self):
+        with pytest.raises(ValueError):
+            df=readFile('invalid_file.jpg')
+
+class TestWriteFile():
+    
+    @pytest.fixture
+    def df(self, autouse=True):
+        # Create synthetic data here 
+        theta=np.array([-75, -30, 5, 45, 60, 90])
+        rho = np.random.uniform(low=-10, high=10, size=6)
+        df = fromHT(theta, rho, scale=1)
+        return df
+    
+    # Test case 1: write to csv
+    def testFileTypesWrite(self, df):
+
+        for i in [".csv", ".shp", ".gpkg", ".geojson"]:
+            
+            testpath = '../data/test'
         
+            dfwrite=writeFile(df, testpath+i)
+
+            # File exists
+            assert os.path.exists( testpath+i)
+
+            # Files is not empty
+            assert os.path.getsize( testpath+i) > 0
+
+            # File has expected columns
+            df2 = gpd.read_file(testpath+i)
+            columns = ['seg_length', 'Xstart', 'Ystart', 'Xend', 'Yend', 'theta', 'rho']
+
+            assert all([a in df2.columns for a in columns])
+
+    def testWriteWKT(self,df):
+
+        # write as geojson 
+        dfwrite = writeFile(df, '../data/testWKTwrite.geojson')
+
+        df2 = gpd.read_file('../data/testWKTwrite.geojson')
+
+        assert "WKT" in df2.columns or "geometry" in df2.columns
+
+
+        
+
+

@@ -19,9 +19,9 @@ from .ClusterLines import *
 import matplotlib.pyplot as plt
 from .PlotUtils import plotlines, labelcolors, BA_HT, HThist, DotsLines, labelSubplots
 from .ExamineClusters import examineClusters
+from .PrePostProcess import dikesetReProcess
 import seaborn as sns
 from matplotlib import cm
-from .PrePostProcess import transformXstart, DikesetReProcess
 
 
 
@@ -139,7 +139,7 @@ def addSwarms(dflist):
 
     return dfSwarm
 
-def makeLinear2(length, angle, angleSTD, rho, rhoSTD, ndikes=100, CartRange=300000, label=None):
+def makeLinearDataFrame(length, angle, angleSTD, rho, rhoSTD, ndikes=100, CartRange=300000, label=None):
     """
     Generate a DataFrame containing linear dike data with angle and rho distributions.
 
@@ -182,49 +182,6 @@ def makeLinear2(length, angle, angleSTD, rho, rhoSTD, ndikes=100, CartRange=3000
 
     return df
 
-def makeLinearDf(length, angle, angleSTD, rho, rhoSTD, ndikes=100, CartRange=300000, label=None):
-    """
-    Generate a DataFrame containing linear dike data with angle and rho distributions.
-
-    Parameters:
-        length (float): The length of the dike segments.
-        angle (float): The mean angle of dike orientation (in degrees).
-        angleSTD (float): The standard deviation of the angle distribution.
-        rho (float): The mean rho value of dike segments.
-        rhoSTD (float): The standard deviation of the rho distribution.
-        ndikes (int): The number of dikes to generate.
-        CartRange (float): The Cartesian range to filter dikes based on coordinates.
-        label (int or None): The label to assign to the generated dikes. If None, labels will be assigned automatically.
-
-    Returns:
-        DataFrame: A DataFrame containing linear dike data.
-    """
-
-    angles=np.random.normal(angle, angleSTD, ndikes)
-    rhos=np.random.normal(rho, rhoSTD, ndikes)
-
-    b=rhos/np.sin(np.deg2rad(angles))
-    slopes=-1/(np.tan(np.deg2rad(angles))+0.000000001)
-    Xstart=np.random.normal(0, rhoSTD, ndikes)
-
-    Ystart=slopes*Xstart+b
-    a=np.array([1,-1])
-    c=np.random.choice(a, ndikes)
-    Xend=Xstart-length/np.sqrt(1+slopes**2)*c
-    Yend=slopes*Xend+b
-
-    if type(label) is int:
-        labels=np.ones(ndikes)*label
-    else:
-        labels=np.arange(0,ndikes)
-
-    df=pd.DataFrame({'Xstart':Xstart, 'Xend': Xend, 'Ystart': Ystart, 'Yend':Yend, 'theta':angles, 'rho':rhos, 'Labels':labels})
-
-    df=df.drop(df[ abs(df['Ystart']) > CartRange].index)
-    labels=[label]*len(df)
-    df['Label']=labels
-
-    return df
 
 def EnEchelonSynthetic(ndikes, angle, RhoStart, RhoSpacing, Overlap=0, CartRange=100000):
     """
@@ -316,7 +273,7 @@ def fromHT(angles, rhos, scale=10000, length=10000, xc=0, yc=0, CartRange=100000
 
     df=pd.DataFrame({'Xstart':Xstart, 'Xend': Xend, 'Ystart': Ystart, 'Yend':Yend, 'Label': labels})
 
-    df=DikesetReProcess(df, xc=xc, yc=yc)
+    df=dikesetReProcess(df, xc=xc, yc=yc)
 
 
     return df

@@ -50,7 +50,7 @@ from .ClusterLines import *
 import statsmodels.api as sm
 from matplotlib.colors import ListedColormap, LinearSegmentedColormap
 
-from .PrePostProcess import completePreProcess, whichForm, midPoint
+from .PrePostProcess import preProcess, whichForm, midPoint, transformXstart
 
 from sklearn.neighbors import NearestNeighbors
 import matplotlib.pyplot as plt

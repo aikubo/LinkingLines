@@ -128,7 +128,7 @@ def HoughTransform(data, xc=None, yc=None):
     rho=b1*np.sin(angle)
     theta=np.rad2deg(angle)
 
-    newdata= data.copy
+    newdata= data.copy()
     newdata['theta']=theta
     newdata['rho']=rho
     newdata['xc']=xc
@@ -200,12 +200,15 @@ def rotateData(data, rotation_angle):
 
     ang=np.deg2rad(rotation_angle)
 
-    #xcR, ycR=HT_center(dataRotated)
-    dataRotated=HoughTransform(dataRotated, xc=xc, yc=yc)
+    dataRotated = data.copy(deep=True)
+
     dataRotated['Xstart']=x1+xc
     dataRotated['Ystart']=y1+yc
     dataRotated['Xend']=x2+xc
     dataRotated['Yend']=y2+yc
+
+    #xcR, ycR=HT_center(dataRotated)
+    dataRotated, _, _=HoughTransform(dataRotated, xc=xc, yc=yc)
 
 
     #print(xcR,ycR)
@@ -243,7 +246,10 @@ def MidtoPerpDistance(data, xc, yc):
     #     df=midPoint(df)
 
 
-    df=HoughTransform(data, xc, yc)
+    df, _, _=HoughTransform(data, xc, yc)
+    rho = df['rho'].values 
+    theta = df['theta'].values
+
     intx=rho*np.cos(np.deg2rad(df['theta'].values))
     inty=rho*np.sin(np.deg2rad(df['theta'].values))
     df['PerpOffsetDist']=np.sqrt( (df['Xmid'].values-intx)**2 +  (df['Ymid'].values-inty)**2)*np.sign((df['Ymid'].values-inty))
