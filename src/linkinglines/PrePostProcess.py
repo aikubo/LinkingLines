@@ -11,8 +11,10 @@ Created on Thu Jul  1 11:04:53 2021
 Contains various preprocessing data and post processing including reading in
 WKT files and exporting WKT files to use in GIS programs
 
-    writeToQGIS makes the dataframe into a WKT (well known text) string and writes as CSV (comma seperated values)
-    writeToQGISLong: writes to QGIS after examineMod/extendlines has been applied
+    writeFile makes the dataframe into a variety of file types including .csv, .txt, .shp, .geojson, and .json
+    readFile reads in a file and returns a pandas dataframe
+    writeToWKT writes a dataframe to a CSV file using WKT
+    writetoGeoData writes a dataframe to a shapefile, geopackage, or geojson file
     WKTtoArray processes from a WKT CSV to a pandas Dataframe with columns Xstart,Ystart,Xend,Yend,seg_length
     giveID gives a numeric ID to data
     midPoint: Finds the midpoint of a dataframe of line segments.
@@ -93,7 +95,7 @@ def midPoint(df):
     return df
 
 
-def writeToQGIS(df,name, myProj=None):
+def writeToWKT(df,name, myProj=None):
     """
 
     Writes a dataframe to a CSV file in the format of a QGIS layer.
@@ -122,33 +124,25 @@ def writeToQGIS(df,name, myProj=None):
 
     return df
 
-def writeToQGISLong(df,name, myProj=None):
 
+def writetoGeoData(df, name, driver, myProj=None):
     """
-    Writes a dataframe to a CSV file in the format of a QGIS layer.
-    with the lines extended by examineMod/extendLines
-    Uses well known text (WKT) to write the data as readable line vectors in QGIS.
+    Writes a dataframe to a shapefile.
 
     Parameters:
         df: a pandas dataframe with columns Xstart,Ystart,Xend,Yend,seg_length
-
         name: the name of the file to be written
-
         myProj: the projection of the dataframe. If none is given, the projection is set to WGS84
 
     Returns:
-        A CSV file with the dataframe in the format of a QGIS layer
+        A shapefile with the dataframe
     """
 
-    front="LINESTRING("
-    linestring=[]
-    for i in range(len(df)):
-        line=front+str(df['XstartL'].iloc[i])+" "+str(df['YstartL'].iloc[i])+","+str(df['XendL'].iloc[i])+" "+str(df['YendL'].iloc[i])+")"
-        linestring.append(line)
+    if myProj is None:
+        myProj='WGS84'
 
-    df['Linestring']=linestring
-    df['Linestring']=df['Linestring'].astype(str)
-    df.to_csv(name)
+    gdf = geopandas.GeoDataFrame(df, geometry=geopandas.points_from_xy(df.Xstart, df.Ystart))
+    gdf.to_file(name, driver=driver, crs=myProj)
 
     return df
 
@@ -551,3 +545,38 @@ def getCartLimits(lines):
     xlim = [np.min([lines['Xstart'].min(), lines['Xend'].min()]), np.max([lines['Xstart'].max(), lines['Xend'].max()])]
     ylim = [np.min([lines['Ystart'].min(), lines['Yend'].min()]), np.max([lines['Ystart'].max(), lines['Yend'].max()])]
     return xlim, ylim
+
+def writeFile(df, name, myProj=None):
+    """
+    Writes a dataframe to a file based on the file extension.
+
+    Parameters:
+        df: (pandas.DataFrame) a pandas dataframe
+        name: (string) the name of the file to be written with file extension
+
+    Returns:
+        df: (pandas.DataFrame) the input dataframe
+    """
+
+    # if file is not .csv, .txt, or .shp, return error
+    if path.endswith('.csv') or path.endswith('.txt') or path.endswith('.shp') or path.endswith('.geojson') or path.endswith('.json'):
+        raise ValueError("Invalid file type")
+
+   # if ends with .csv or .txt, write as csv
+    if name.endswith('.csv') or name.endswith('.txt'):
+        df = writeToWKT(df, name, myProj=myProj)
+    # if ends with .shp, write as shapefile
+    else: 
+        if name.endswith('.shp'):
+            driver = 'ESRI Shapefile'
+        elif name.endswith('.geojson') or name.endswith('.json'):
+            driver = 'GeoJSON'
+        elif name.endswith('.gpkg'):
+            driver = 'GPKG'
+        else:
+            raise ValueError("Invalid file type")
+        
+        df = writetoGeoData(df, name, driver, myProj=myProj)
+
+
+    return df
