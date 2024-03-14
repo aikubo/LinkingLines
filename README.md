@@ -56,11 +56,20 @@ fig,ax=DotsLines(lines, ColorBy='AvgTheta')
 
 ```
 
-Follow this indepth [tutorial](DemoLinkingLines.md) to get started!
+We have three examples:
+1. Indepth tutorial with hough transform, clustering, and feature extraction using Spanish Peaks Data CSV file.
+2. Hough Transform and feature extraction on Venus lineament data shape file.
+3. Hough transform on fracture data geoJSON.
+
+Data from: 
+1. https://agupubs.onlinelibrary.wiley.com/doi/full/10.1029/2022GC010842
+2. https://pubs.usgs.gov/sim/3121/
+3. https://doi.org/10.5281/zenodo.7919843
 
 You are now ready to utilize the power of Hough Line Transform, Agglomerative Clustering, and custom plotting in your data analysis projects. If you have any questions or need further assistance, please refer to the detailed documentation or contact our support team.
 
 Happy coding!
 
 
-[Contribution Guidelines](CONTRIBUTING.md)
+
+![Contribution Guidelines](CONTRIBUTING.md)
