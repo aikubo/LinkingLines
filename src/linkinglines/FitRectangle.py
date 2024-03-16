@@ -26,27 +26,6 @@ Functions:
 - `W_L(Clusters)`: Calculate the widths and lengths of rectangles fitted to clusters of lines.
 - `squaresError(lines, xc, yc)`: Calculate the sum of squared errors for a cluster of lines fitted to a rectangle.
 
-Usage:
-Import the 'fitRectangle' module and use its functions to perform operations on line segments, including rotating, fitting rectangles, and calculating rectangle properties.
-
-Example:
-```python
-import fitRectangle
-
-# Rotate line segments
-x, y = fitRectangle.rotateXYShift(angle, x, y, center_x, center_y)
-
-# Fit rectangles to clusters of lines
-width, length, corr_coef, x_edges, y_edges, X_mid, Y_mid = fitRectangle.fit_Rec(lines, xc, yc)
-
-# Calculate the sum of squared errors for fitted rectangles
-error = fitRectangle.squaresError(lines, xc, yc)
-
-Notes:
-
-This module is designed for working with line segments represented as DataFrames with specific column names.
-It provides functions for fitting rectangles to clusters of lines based on their angles and distances from the origin.
-The module includes utility functions for various operations related to line segments and rectangles.
 
 """
 
@@ -327,14 +306,10 @@ def fit_Rec(lines, xc, yc):
 
 
     xp, yp= rotateXYShift(np.deg2rad(-1*ang), xi,yi, x0,y0)
-    #plotlines(lines, 'k.-', a)
 
     width=np.ptp(xp.flatten())
     length=np.ptp(yp.flatten())
 
-    # if width>length :
-    #     length=width
-    #     width=length
     xc=(max(xp)-min(xp))/2 + min(xp)
     yc=(max(yp)-min(yp))/2 + min(yp)
 
@@ -350,7 +325,7 @@ def fit_Rec(lines, xc, yc):
 
     Xedges=np.array([xs[0], xs[0], xs[1], xs[1], xs[0]])
     Yedges=np.array([ys[1], ys[0], ys[0], ys[1], ys[1]])
-    # a.plot(Xedges, Yedges, 'r.-')
+
     Xmid=(np.max(xs)+np.min(xs))/2
     Ymid=(np.max(ys)+np.min(ys))/2
 
@@ -359,10 +334,7 @@ def fit_Rec(lines, xc, yc):
 
 
 
-    #xstart, xend, ystart, yend=clustered_lines(xi, yi, np.mean(lines['theta'].values), length)
-
-
-    r=np.sum((yc-yp)**2)/lines[segl].sum() #len(lines)
+    r=np.sum((yc-yp)**2)/lines[segl].sum()
 
 
     return width, length, r, xs, ys, Xmid, Ymid

@@ -7,8 +7,17 @@
 Created on Wed Apr 21 14:07:06 2021
 
 This module contains functions for generating synthetic dike data and performing various operations on dike datasets.
-These functions are primarily used for creating, manipulating, and analyzing synthetic dike datasets for geological studies
+These functions are primarily used for creating, manipulating, and analyzing synthetic dike or fracture datasets for geological studies
 and modeling purposes.
+
+Functions:
+- makeRadialSwarmdf: Generate a DataFrame containing radial swarm dike data.
+- makeCircumfrentialSwarmdf: Generate a DataFrame containing circumferential swarm dike data.
+- addSwarms: Combine multiple swarm DataFrames into a single DataFrame.
+- makeLinearDataFrame: Generate a DataFrame containing linear dike data with angle and rho distributions.
+- EnEchelonSynthetic: Generate a DataFrame containing en echelon synthetic dike data.
+- fromHT: Generate a DataFrame containing dike data from angles and rhos using the HT method.
+- fragmentDikes: Fragment dike segments into smaller segments.
 
 @author: akh
 """
@@ -31,6 +40,7 @@ def makeRadialSwarmdf(radius, doubled=True, anglestart=-90, anglestop=90, ndikes
     Generate a DataFrame containing radial swarm dike data.
 
     Parameters:
+    ----------
         radius (float): The radius of the radial swarm.
         doubled (bool): Whether to create a doubled radial swarm.
         anglestart (float): The starting angle for dike generation (in degrees).
@@ -41,6 +51,7 @@ def makeRadialSwarmdf(radius, doubled=True, anglestart=-90, anglestop=90, ndikes
         CartRange (float): The Cartesian range to filter dikes based on coordinates.
 
     Returns:
+    -------
         DataFrame: A DataFrame containing radial swarm dike data.
     """
 
@@ -80,6 +91,7 @@ def makeCircumfrentialSwarmdf(radius, lenf=1, anglestart=-90, anglestop=90, ndik
     Generate a DataFrame containing circumferential swarm dike data.
 
     Parameters:
+    ----------
         radius (float): The radius of the circumferential swarm.
         lenf (float): The length factor for dike segments.
         anglestart (float): The starting angle for dike generation (in degrees).
@@ -90,7 +102,8 @@ def makeCircumfrentialSwarmdf(radius, lenf=1, anglestart=-90, anglestop=90, ndik
         CartRange (float): The Cartesian range to filter dikes based on coordinates.
 
     Returns:
-        DataFrame: A DataFrame containing circumferential swarm dike data.
+    --------
+        df (pandas.DataFrame): A DataFrame containing circumferential swarm dike data.
     """
 
     #center=np.array([0,0])
@@ -127,10 +140,12 @@ def addSwarms(dflist):
     Combine multiple swarm DataFrames into a single DataFrame.
 
     Parameters:
+    ----------
         dflist (list of DataFrames): A list of DataFrames containing swarm dike data.
 
     Returns:
-        DataFrame: A combined DataFrame containing swarm dike data.
+    -------
+        dfSwarm (pandas.DataFrame): A combined DataFrame containing swarm dike data.
     """
 
     for i, b in zip(dflist, range(len(dflist))):
@@ -154,7 +169,7 @@ def makeLinearDataFrame(length, angle, angleSTD, rho, rhoSTD, ndikes=100, CartRa
         label (int or None): The label to assign to the generated dikes. If None, labels will be assigned automatically.
 
     Returns:
-        DataFrame: A DataFrame containing linear dike data.
+        df (pandas.DataFrame): A DataFrame containing linear dike data.
     """
 
     angles=np.random.normal(angle, angleSTD, ndikes)
@@ -188,6 +203,7 @@ def EnEchelonSynthetic(ndikes, angle, RhoStart, RhoSpacing, Overlap=0, CartRange
     Generate a DataFrame containing en echelon synthetic dike data.
 
     Parameters:
+    ----------
         ndikes (int): The number of en echelon dikes to generate.
         angle (float): The angle of dike orientation (in degrees).
         RhoStart (float): The starting rho value.
@@ -196,7 +212,8 @@ def EnEchelonSynthetic(ndikes, angle, RhoStart, RhoSpacing, Overlap=0, CartRange
         CartRange (float): The Cartesian range to filter dikes based on coordinates.
 
     Returns:
-        DataFrame: A DataFrame containing en echelon synthetic dike data.
+    -------
+        df (pandas.DataFrame): A DataFrame containing en echelon synthetic dike data.
     """
 
     angles=np.ones(ndikes)*angle #np.random.normal(angle, angleSTD, ndikes)
@@ -223,6 +240,7 @@ def fromHT(angles, rhos, scale=10000, length=10000, xc=0, yc=0, CartRange=100000
     Generate a DataFrame containing dike data from angles and rhos using the HT method.
 
     Parameters:
+    ----------
         angles (array-like): Array of dike angles (in degrees).
         rhos (array-like): Array of rho values.
         scale (float): Scaling factor for the generated dike coordinates.
@@ -235,7 +253,8 @@ def fromHT(angles, rhos, scale=10000, length=10000, xc=0, yc=0, CartRange=100000
         test (bool): Whether to perform a test to check the generated angles and rhos.
 
     Returns:
-        DataFrame: A DataFrame containing dike data generated from HT parameters.
+    -------
+        df (pandas.DataFrame): A DataFrame containing dike data generated from HT parameters.
     """
     if len(angles) is not len(rhos):
         raise ValueError('Angles and Rhos arrays are not the same length')
@@ -283,10 +302,12 @@ def fragmentDikes(df, nSegments=5):
     Fragment dike segments into smaller segments.
 
     Parameters:
-        df (DataFrame): The input DataFrame containing dike data.
+    ----------
+        df (pandas.DataFrame): The input DataFrame containing dike data.
 
     Returns:
-        DataFrame: A DataFrame containing fragmented dike segments.
+    -------
+        dfFragmented (pandas.DataFrame): A DataFrame containing fragmented dike segments.
     """
 
     m=(df['Ystart'].values-df['Yend'].values)/(df['Xstart'].values-df['Xend'].values)

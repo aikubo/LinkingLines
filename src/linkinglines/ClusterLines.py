@@ -25,7 +25,8 @@ def AggCluster(dikeset, dtheta, drho, dimensions=2, linkage='complete', rotate=F
     Agglomerative clustering with custom metric on Hough transform data.
 
     Parameters:
-        dikeset : DataFrame
+    ----------
+        dikeset : pandas DataFrame
             DataFrame with Hough transform data.
         dtheta : float
             Scaling factor for theta.
@@ -41,9 +42,10 @@ def AggCluster(dikeset, dtheta, drho, dimensions=2, linkage='complete', rotate=F
             Metric to use for clustering (default is 'Euclidean').
 
     Returns:
-        dikeset : DataFrame
+    -------
+        dikeset : pandas DataFrame
             DataFrame with cluster labels.
-        Z : ndarray
+        Z : numpy ndarray
             The hierarchical clustering linkage matrix.
     """
     # if 'theta' is not dikeset.columns:
@@ -100,12 +102,14 @@ def fullTree(model, **kwargs):
     Generate and plot a full dendrogram for hierarchical clustering results.
 
     Parameters:
+    ----------
         model : sklearn.cluster.AgglomerativeClustering
             Fitted AgglomerativeClustering model.
         **kwargs : dict
             Additional keyword arguments to be passed to the dendrogram function.
 
     Returns:
+    -------
         None
 
     Note:
@@ -142,6 +146,7 @@ def plotDendro(dist1, labels, title):
     Plot a dendrogram for hierarchical clustering results.
 
     Parameters:
+    ----------
         dist1 : ndarray
             Distance matrix.
         labels : list
@@ -150,6 +155,7 @@ def plotDendro(dist1, labels, title):
             Title for the dendrogram plot.
 
     Returns:
+    -------
         Z1 : dict
             The dendrogram data for the left-oriented dendrogram.
 

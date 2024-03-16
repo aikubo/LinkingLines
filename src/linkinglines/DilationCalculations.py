@@ -19,58 +19,45 @@ def dilation(df, binWidth=1, averageWidth=1, method='Expanded'):
     """
     Calculate dilation values for a given dataset along EW and NS directions.
 
-    This function calculates dilation values along the East-West (EW) and North-South (NS) directions based on the input DataFrame. It divides the data into bins and computes the dilation for each bin. The method parameter allows you to choose between different dilation calculation methods.
+    This function calculates dilation values along the East-West (EW) and North-South (NS) directions based on the input DataFrame. It divides the data into bins and computes the dilation for each bin.
+    The method parameter allows you to choose between different dilation calculation methods.
+
+     The differences between the three dilation calculation methods (Expanded, Average, and Total) lie in how they compute dilation values from the data. Dilation is a measure of how much a geological feature has been stretched or expanded, typically expressed as a ratio. Let's explain the differences between these methods:
+
+    1. **Expanded Dilation:**
+    - **Method Description:** Expanded dilation calculates dilation by considering how much a line segment expands within a bin. It accounts for segments that partially cross the bin's boundaries and calculates dilation accordingly.
+    - **Calculation:** For each bin, it sums the fractional expansions of line segments within the bin. Fractional expansion is the portion of a line segment that enters the bin. It considers both the portion of segments that start or end within the bin and the portions that cross into the bin.
+
+    2. **Average Dilation:**
+    - **Method Description:** Average dilation calculates dilation by averaging the dilation values of all line segments entirely contained within each bin.
+    - **Calculation:** For each bin, it calculates the dilation value for each segment entirely contained within the bin. It then averages these segment dilation values to obtain the bin's dilation value.
+
+    3. **Total Dilation:**
+    - **Method Description:** Total dilation calculates dilation by summing the dilation values of all line segments entirely contained within each bin.
+    - **Calculation:** Similar to Average Dilation, it calculates the dilation value for each segment entirely contained within the bin. Instead of averaging, it sums these segment dilation values to obtain the bin's dilation value.
+
+    In summary, the choice between Expanded, Average, or Total dilation depends on your specific geological analysis needs. Expanded dilation is more detailed and suitable for capturing partial segment contributions. Average dilation provides a smoother representation, while Total dilation gives a cumulative measure of dilation within each bin. The choice should be based on the level of detail and accuracy required for your analysis.
+    
 
     Parameters:
+    ----------
         df (pandas.DataFrame): The input DataFrame containing data.
         binWidth (float, optional): The width of bins used for dilation calculation. Default is 1.
         averageWidth (float, optional): The average width used in dilation calculation. Default is 1.
         method (str, optional): The dilation calculation method. Options are 'Average', 'Total', and 'Expanded'. Default is 'Expanded'.
 
- The differences between the three dilation calculation methods (Expanded, Average, and Total) lie in how they compute dilation values from the data. Dilation is a measure of how much a geological feature has been stretched or expanded, typically expressed as a ratio. Let's explain the differences between these methods:
-
-1. **Expanded Dilation:**
-
-   - **Method Description:** Expanded dilation calculates dilation by considering how much a line segment expands within a bin. It accounts for segments that partially cross the bin's boundaries and calculates dilation accordingly.
-
-   - **Calculation:** For each bin, it sums the fractional expansions of line segments within the bin. Fractional expansion is the portion of a line segment that enters the bin. It considers both the portion of segments that start or end within the bin and the portions that cross into the bin.
-
-   - **Advantages:** Expanded dilation provides a more detailed measure of dilation because it considers partial segments within bins. It can capture dilation from segments that only partially cross the bin boundaries.
-
-   - **Use Cases:** Expanded dilation is useful when you want to capture the full contribution of line segments to dilation, including those that partially overlap with the bin.
-
-2. **Average Dilation:**
-
-   - **Method Description:** Average dilation calculates dilation by averaging the dilation values of all line segments entirely contained within each bin.
-
-   - **Calculation:** For each bin, it calculates the dilation value for each segment entirely contained within the bin. It then averages these segment dilation values to obtain the bin's dilation value.
-
-   - **Advantages:** Average dilation provides a simpler and smoother measure of dilation. It may reduce noise caused by the partial overlap of line segments with bin boundaries.
-
-   - **Use Cases:** Average dilation is suitable when you want a smoother representation of dilation and are less concerned about capturing the effects of partial segment overlap.
-
-3. **Total Dilation:**
-
-   - **Method Description:** Total dilation calculates dilation by summing the dilation values of all line segments entirely contained within each bin.
-
-   - **Calculation:** Similar to Average Dilation, it calculates the dilation value for each segment entirely contained within the bin. Instead of averaging, it sums these segment dilation values to obtain the bin's dilation value.
-
-   - **Advantages:** Total dilation provides a cumulative measure of dilation within each bin. It considers the total dilation contributed by all segments within the bin.
-
-   - **Use Cases:** Total dilation is useful when you want to understand the cumulative effect of line segments on dilation within each bin. It may be preferred when analyzing the combined impact of multiple segments.
-
-In summary, the choice between Expanded, Average, or Total dilation depends on your specific geological analysis needs. Expanded dilation is more detailed and suitable for capturing partial segment contributions. Average dilation provides a smoother representation, while Total dilation gives a cumulative measure of dilation within each bin. The choice should be based on the level of detail and accuracy required for your analysis.
     Returns:
-        numpy.ndarray: The EW dilation values.
-        numpy.ndarray: The NS dilation values.
-        numpy.ndarray: The bin edges along the EW direction.
-        numpy.ndarray: The bin edges along the NS direction.
+    -------
+        EWDilation (numpy.ndarray): The EW dilation values.
+        NSDilation (numpy.ndarray): The NS dilation values.
+        binx (numpy.ndarray): The bin edges along the EW direction.
+        biny (numpy.ndarray): The bin edges along the NS direction.
 
     Example:
         # Calculate dilation using the 'Expanded' method
         EW_Dilation, NS_Dilation, binx, biny = dilation(df, binWidth=1, averageWidth=1, method='Expanded')
     """
-    # Function code goes here...
+ 
 
     t,r=whichForm(df)
     df=transformXstart(df)
@@ -180,6 +167,7 @@ def TripleDilationPlot(df, lines, shape=['half', 'portrait'], kwargs=None):
     values on the right.
 
     Parameters:
+    ----------
         df (pandas.DataFrame): A DataFrame containing data points.
         lines (pandas.DataFrame): A DataFrame containing line segment data.
         shape (list, optional): A list specifying the final figure size and orientation.
@@ -188,8 +176,9 @@ def TripleDilationPlot(df, lines, shape=['half', 'portrait'], kwargs=None):
             Defaults to None.
 
     Returns:
-        matplotlib.figure.Figure: The modified Figure object.
-        list of matplotlib.axes._subplots.AxesSubplot: A list of three axes objects (main panel, NS dilation histogram, and EW dilation histogram).
+    -------
+        fig (matplotlib.figure.Figure): The modified Figure object.
+        ax (list of matplotlib.axes._subplots.AxesSubplot): A list of three axes objects (main panel, NS dilation histogram, and EW dilation histogram).
 
     Example:
         # Create a triple-panel dilation plot
