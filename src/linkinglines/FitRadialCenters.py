@@ -440,9 +440,9 @@ def writeCenterWKT(df, name):
     df['geometry'] = linestring
     df['geometry'] = df['geometry'].astype(str)
 
-    if os.path.endswith('.csv'):
+    if os.name.endswith('.csv'):
         df.to_csv(name)
-    elif os.path.endswith('.shp') or os.path.endswith('.geojson'):
+    elif os.name.endswith('.shp') or os.name.endswith('.geojson'):
         df = gpd.GeoDataFrame(df, geometry='geometry')
         df.to_file(name)
 

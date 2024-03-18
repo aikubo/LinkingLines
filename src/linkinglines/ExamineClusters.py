@@ -63,11 +63,6 @@ def checkoutCluster(dikeset, label):
 
     Additionally, it handles cases where the cluster crosses the zero angle boundary and adjusts the plot accordingly.
 
-    Note:
-    - The input DataFrame 'dikeset' must contain columns 'xc', 'yc', 'Labels', 'theta', and 'rho'.
-    - 'label' specifies the cluster to be analyzed.
-    - The function returns the Figure and Axes objects for further customization or saving.
-
     Parameters
     ----------
     dikeset : pandas.DataFrame
@@ -478,7 +473,7 @@ def enEchelonAngleTwist(d, avgtheta):
 
     Notes
     -----
-    - The function assumes significant alignment if the p-value is below 0.05, following standard statistical
+    The function assumes significant alignment if the p-value is below 0.05, following standard statistical
     significance levels.
 
     """
@@ -545,8 +540,8 @@ def examineClusterShort(clusters):
     clusters_data : pandas.DataFrame
         A DataFrame containing summarized information for each cluster.
 
-    See Also:
-    ----------
+    See Also
+    --------
     examineCluster: A more detailed version of this function that provides additional information about the clusters.
 
 
@@ -721,8 +716,8 @@ def examineClusters(clusters, enEchelonCutofff=7, ifEE=False, MaxNNSegDist=0.5, 
                                                           MaxNNSegDist=0.6,
                                                           skipUnlinked=True)
 
-    See Also:
-    ----------
+    See Also
+    --------
     fit_Rec: A function to fit a rectangle to a cluster of line segments.
     EnEchelonAngleTwist: A function to calculate the angle twist and statistical significance for en échelon features.
     RotateOverlap: A function to calculate the overlap ratio and maximum overlap count of lines after rotation.
@@ -993,10 +988,10 @@ def checkIndividualClusterChange(df1, df2):
 
     Returns
     -------
-    eq : tuple
-        A tuple containing two NumPy arrays - eqLabels and diffLabels.
-           - eqLabels: An array of labels that are found in both df1 and df2.
-           - diffLabels: An array of labels that are unique to either df1 or df2.
+    eqLabels : numpy.ndarray
+        An array of labels that are found in both df1 and df2.
+    diffLabels : numpy.ndarray
+        An array of labels that are unique to either df1 or df2.
 
 
     """
@@ -1085,7 +1080,7 @@ def extendLines(lines, save=False, name='Longlines.csv'):
 def OutputRectangles(clusters):
     """
     Compute the coordinates of bounding rectangles for each cluster in a set of line clusters.
-     This function computes the coordinates of bounding rectangles for each cluster in a set of
+    This function computes the coordinates of bounding rectangles for each cluster in a set of
     line clusters. It uses the 'Xmid' and 'Ymid' attributes of the clusters to determine the
     center points and calculates the coordinates of the corners of rectangles that enclose
     the clusters.
@@ -1093,13 +1088,14 @@ def OutputRectangles(clusters):
     Parameters
     ----------
     clusters : DataFrame
-         A DataFrame containing line clusters with attributes 'Labels', 'Xmid', 'Ymid'.
+        A DataFrame containing line clusters with attributes 'Labels', 'Xmid', 'Ymid'.
 
     Returns
     -------
-    tuple: A tuple containing two NumPy arrays - Xs and Ys.
-           - Xs: An array of X-coordinates for the corners of bounding rectangles for each cluster.
-           - Ys: An array of Y-coordinates for the corners of bounding rectangles for each cluster.
+    Xs : numpy.ndarray
+        An array of X-coordinates for the corners of bounding rectangles for each cluster.
+    Ys : numpy.ndarray
+        An array of Y-coordinates for the corners of bounding rectangles for each cluster.
 
     """
     clabel = np.unique(clusters['Labels'])

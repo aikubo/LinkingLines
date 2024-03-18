@@ -3,7 +3,7 @@
  # Version: 2.1.0
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""
+r"""
 htMOD Module
 
 HT: provides functions for working with line segments and performing Hough Transform-related calculations.
@@ -16,7 +16,9 @@ We use the algorithm from Ballard, D.H. (1981). Generalizing the Hough Transform
 
 where :math:`\rho` is the perpendicular distance from the origin to the line, and :math:`\theta` is the angle between the x-axis and the line.
 
-.. math :: \theta = \arctan(-1/m) where "m" is the slope of the line.
+.. math :: \theta = \arctan(-1/m) 
+
+where "m" is the slope of the line.
 
 
 Functions:
@@ -47,6 +49,7 @@ def segLength(df):
     -------
     df : pandas.DataFrame
         The input DataFrame with an additional 'seg_length' column representing the length of line segments.
+
     """
     if not isinstance(df, pd.DataFrame):
         raise ValueError("Input 'df' must be a pandas DataFrame.")
@@ -80,12 +83,13 @@ def CyclicAngleDist(u, v):
         The cyclic angle distance between the two angles, ranging from 0 to 90 degrees.
 
 
-    Example:
+    Example
     -------
     >>> angle1 = [45.0]
     >>> angle2 = [160.0]
     >>> distance = CyclicAngleDist(angle1, angle2)
     >>> print("Cyclic Angle Distance (degrees):", distance)
+
     """
 
     u[0]=u[0]+90

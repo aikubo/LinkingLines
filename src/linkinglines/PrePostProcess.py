@@ -118,7 +118,7 @@ def writeToWKT(df,name, myProj=None):
         Dataframe with columns ['Xstart', 'Ystart', 'Xend', 'Yend', 'seg_length'].
     name : str
         Name of the output file.
-    myProj : projection, optional
+    myProj : pyproj.CRS, optional
         Projection of the dataframe. If None, WGS84 is assumed, by default None.
 
     Returns
@@ -152,7 +152,7 @@ def writetoGeoData(df, name, driver, myProj=None):
         Name of the output file.
     driver : str
         Format of the file (e.g., 'ESRI Shapefile', 'GeoJSON').
-    myProj : projection, optional
+    myProj : pyproj.CRS, optional
         Projection of the dataframe. If None, WGS84 is assumed, by default None.
 
     Returns
@@ -160,9 +160,6 @@ def writetoGeoData(df, name, driver, myProj=None):
     pandas.DataFrame
         The input dataframe.
     """
-
-    if myProj is None:
-        myProj='WGS84'
 
     gdf = geopandas.GeoDataFrame(df, geometry=geopandas.points_from_xy(df.Xstart, df.Ystart))
     gdf.to_file(name, driver=driver, crs=myProj)

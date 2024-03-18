@@ -46,10 +46,6 @@ class FixCartesianLabels:
     useful in cases where the offset notation is preferred to be part of the axis label, enhancing the
     readability and presentation of plots.
 
-    Parameters
-    ----------
-    ax : matplotlib.axis.Axis
-        The axis object for which the labels are to be adjusted.
 
     Methods
     -------
@@ -1199,19 +1195,6 @@ def annotateWLines(ax, angles=None):
         ax.plot(x, y, color='k')
 
 
-def AngleHistograms(dikeset,lines, ax=None, fig=None, Trusted=True, Annotate=False):
-
-    if ax is None:
-        fig,ax=plt.subplots()
-
-    ax.hist(dikeset['theta'], bins=np.arange(-90,100,10), density=True, facecolor='white', edgecolor='k', label='Segments')
-    ax.hist(lines['AvgTheta'], bins=np.arange(-90,100,10), density=True, color='lightskyblue', alpha=0.5, label='All Clusters')
-
-    if Trusted:
-        ax.hist(lines[lines['TrustFilter']==1]['AvgTheta'], bins=np.arange(-90,100,10), density=True, color='mediumslateblue', alpha=0.5, label='Trusted Clusters')
-    if Annotate:
-        annotateWLines(ax)
-    return ax
 
 def AngleHistograms(dikeset, lines, ax=None, fig=None, Trusted=True, Annotate=False):
     """
@@ -1252,8 +1235,6 @@ def AngleHistograms(dikeset, lines, ax=None, fig=None, Trusted=True, Annotate=Fa
     - The `lines` DataFrame must contain an 'AvgTheta' column for the average angles of clusters and can optionally
       contain a 'TrustFilter' boolean column to filter for trusted clusters.
     """
-    import matplotlib.pyplot as plt
-    import numpy as np
 
     if ax is None:
         fig, ax = plt.subplots()
@@ -1384,7 +1365,7 @@ def DotsHT(fig, ax, lines, color=None, ColorBy="Dike Cluster Length (km)", label
     if not CbarLabels and Cbar:
         cbar.ax.set_yticklabels([])
     ax.set_xlim([-90,90])
-    plt.tight_layout()
+
 
     return fig,ax
 
@@ -1440,7 +1421,7 @@ def DotsLines(lines, ColorBy="seg_length", cmap=cm.turbo, linewidth=1, fig=None,
 
     DotsHT(fig, ax[1], lines, ColorBy=ColorBy, cmap=cmap,CbarLabels=CbarLabels, StrOn=StrOn, Cbar=Cbar, color=color)
 
-    plt.tight_layout()
+    
     FixAxisAspect(ax[1], ax[0])
     return fig,ax
 
@@ -1648,7 +1629,6 @@ def plotScatterHist(lines, x, y, hue=None, hue_norm=None, xlim=None, ylim=None, 
     ax_yDist = plt.subplot(gs[1:4, 3])#,sharey=ax_main)
 
 
-    m=lines['Linked']==1
     if hue is not None:
         sns.scatterplot(lines, x=x, y=y, hue=hue,
                         palette=palette,
@@ -1697,7 +1677,7 @@ def plotScatterHist(lines, x, y, hue=None, hue_norm=None, xlim=None, ylim=None, 
                          legend=False)
 
 
-        lines=FilterLines(lines)
+        
         h2.set(yticklabels=[])
         h2.set(ylabel=None)
 
@@ -1726,7 +1706,7 @@ def plotScatterHist(lines, x, y, hue=None, hue_norm=None, xlim=None, ylim=None, 
 
     ax_main.set_xlabel(x)
     ax_main.set_ylabel(y)
-    plt.tight_layout()
+    
 
 
     return fig, [ax_main, ax_xDist, ax_yDist]
