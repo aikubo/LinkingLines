@@ -164,14 +164,14 @@ def RadialAzimuthal(lines, Center):
     In a radial structure of lines, the hough transform does not distinguish between lines on either side of the center. This function calculates the radial azimuthal angles of the lines relative to a given center.
     Which assigns lines based on their angle relative to the center.
 
-    Parameters:
+    Parameters
     ----------
     lines : pandas.DataFrame
         Dataframe containing dike lines data.
     Center : pandas.DataFrame
         Dataframe containing center information.
 
-    Returns:
+    Returns
     -------
     rAngle : numpy.array
         Array of radial azimuthal angles.
@@ -188,14 +188,14 @@ def CyclicAngle360(u, v):
     """
     Calculate the cyclic angle between two angles in the range [0, 360).
 
-    Parameters:
+    Parameters
     ----------
     u : float or array_like
         First angle.
     v : float or array_like
         Second angle.
 
-    Returns:
+    Returns
     -------
     d : float or array_like
         Cyclic angle between the two angles.
@@ -245,14 +245,14 @@ def RipleyRadial(rAngle, plot=False):
     """
     Measure the radial dike swarm angle "clumpiness" using the Ripley K function.
 
-    Parameters:
+    Parameters
     ----------
     rAngle : numpy.array
         Array of radial azimuthal angles.
     plot : bool, default False
         Whether to plot the Ripley K function. Defaults to False.
 
-    Returns:
+    Returns
     -------
     K : numpy.array
         Ripley K function values.
@@ -299,14 +299,14 @@ def ExpandingR(lines, Center):
     """
     Measure the density of lines at different radial distances from a center.
 
-    Parameters:
+    Parameters
     ----------
     lines : pandas.DataFrame
         Dataframe containing dike lines data.
     Center : pandas.DataFrame
         Dataframe containing center information.
 
-    Returns:
+    Returns
     -------
     ntol : list
         List of density values at different radial distances.
@@ -418,14 +418,14 @@ def writeCenterWKT(df, name):
     Write center information to a geospatial data file.
     Can be "csv" or "shp" or "geojson".
 
-    Parameters:
+    Parameters
     ----------
     df : pandas.DataFrame 
         Dataframe containing center information.
     name : str
         File name to save the geospacial data.
 
-    Returns:
+    Returns
     -------
     df : pandas.DataFrame
         Dataframe containing center information.

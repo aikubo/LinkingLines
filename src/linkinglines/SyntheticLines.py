@@ -39,7 +39,7 @@ def makeRadialSwarmdf(radius, doubled=True, anglestart=-90, anglestop=90, ndikes
     """
     Generate a DataFrame containing radial swarm dike data.
 
-    Parameters:
+    Parameters
     ----------
         radius (float): The radius of the radial swarm.
         doubled (bool): Whether to create a doubled radial swarm.
@@ -50,7 +50,7 @@ def makeRadialSwarmdf(radius, doubled=True, anglestart=-90, anglestop=90, ndikes
         label (int): The label to assign to the generated dikes.
         CartRange (float): The Cartesian range to filter dikes based on coordinates.
 
-    Returns:
+    Returns
     -------
         DataFrame: A DataFrame containing radial swarm dike data.
     """
@@ -90,7 +90,7 @@ def makeCircumfrentialSwarmdf(radius, lenf=1, anglestart=-90, anglestop=90, ndik
     """
     Generate a DataFrame containing circumferential swarm dike data.
 
-    Parameters:
+    Parameters
     ----------
         radius (float): The radius of the circumferential swarm.
         lenf (float): The length factor for dike segments.
@@ -101,7 +101,7 @@ def makeCircumfrentialSwarmdf(radius, lenf=1, anglestart=-90, anglestop=90, ndik
         label (int): The label to assign to the generated dikes.
         CartRange (float): The Cartesian range to filter dikes based on coordinates.
 
-    Returns:
+    Returns
     --------
         df (pandas.DataFrame): A DataFrame containing circumferential swarm dike data.
     """
@@ -139,11 +139,11 @@ def addSwarms(dflist):
     """
     Combine multiple swarm DataFrames into a single DataFrame.
 
-    Parameters:
+    Parameters
     ----------
         dflist (list of DataFrames): A list of DataFrames containing swarm dike data.
 
-    Returns:
+    Returns
     -------
         dfSwarm (pandas.DataFrame): A combined DataFrame containing swarm dike data.
     """
@@ -158,7 +158,7 @@ def makeLinearDataFrame(length, angle, angleSTD, rho, rhoSTD, ndikes=100, CartRa
     """
     Generate a DataFrame containing linear dike data with angle and rho distributions.
 
-    Parameters:
+    Parameters
         length (float): The length of the dike segments.
         angle (float): The mean angle of dike orientation (in degrees).
         angleSTD (float): The standard deviation of the angle distribution.
@@ -168,7 +168,7 @@ def makeLinearDataFrame(length, angle, angleSTD, rho, rhoSTD, ndikes=100, CartRa
         CartRange (float): The Cartesian range to filter dikes based on coordinates.
         label (int or None): The label to assign to the generated dikes. If None, labels will be assigned automatically.
 
-    Returns:
+    Returns
         df (pandas.DataFrame): A DataFrame containing linear dike data.
     """
 
@@ -202,7 +202,7 @@ def EnEchelonSynthetic(ndikes, angle, RhoStart, RhoSpacing, Overlap=0, CartRange
     """
     Generate a DataFrame containing en echelon synthetic dike data.
 
-    Parameters:
+    Parameters
     ----------
         ndikes (int): The number of en echelon dikes to generate.
         angle (float): The angle of dike orientation (in degrees).
@@ -211,7 +211,7 @@ def EnEchelonSynthetic(ndikes, angle, RhoStart, RhoSpacing, Overlap=0, CartRange
         Overlap (float): The overlap between en echelon dikes.
         CartRange (float): The Cartesian range to filter dikes based on coordinates.
 
-    Returns:
+    Returns
     -------
         df (pandas.DataFrame): A DataFrame containing en echelon synthetic dike data.
     """
@@ -239,7 +239,7 @@ def fromHT(angles, rhos, scale=10000, length=10000, xc=0, yc=0, CartRange=100000
     """
     Generate a DataFrame containing dike data from angles and rhos using the HT method.
 
-    Parameters:
+    Parameters
     ----------
         angles (array-like): Array of dike angles (in degrees).
         rhos (array-like): Array of rho values.
@@ -252,7 +252,7 @@ def fromHT(angles, rhos, scale=10000, length=10000, xc=0, yc=0, CartRange=100000
         xrange (float or None): Optional X-coordinate range for dike generation.
         test (bool): Whether to perform a test to check the generated angles and rhos.
 
-    Returns:
+    Returns
     -------
         df (pandas.DataFrame): A DataFrame containing dike data generated from HT parameters.
     """
@@ -301,11 +301,11 @@ def fragmentDikes(df, nSegments=5):
     """
     Fragment dike segments into smaller segments.
 
-    Parameters:
+    Parameters
     ----------
         df (pandas.DataFrame): The input DataFrame containing dike data.
 
-    Returns:
+    Returns
     -------
         dfFragmented (pandas.DataFrame): A DataFrame containing fragmented dike segments.
     """

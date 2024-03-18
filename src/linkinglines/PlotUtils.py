@@ -256,12 +256,12 @@ def get_aspect(ax):
 
     This function calculates the aspect ratio of a given matplotlib axes, taking into account both the aspect ratio of the figure and the aspect ratio of the data displayed in the axes.
 
-    Parameters:
+    Parameters
     ----------
     ax : matplotlib.axes._subplots.AxesSubplot
         The axes for which to calculate the aspect ratio.
 
-    Returns:
+    Returns
     -------
     float
         The aspect ratio of the axes.
@@ -292,7 +292,7 @@ def get_aspect(ax):
 def RGBtoHex(vals, rgbtype=1):
   """Converts RGB values in a variety of formats to Hex values.
 
-    Parameters:
+    Parameters
     ----------
     vals : tuple
         An RGB/RGBA tuple
@@ -301,7 +301,7 @@ def RGBtoHex(vals, rgbtype=1):
                     1 - Inputs are in the range 0 to 1
                     256 - Inputs are in the range 0 to 255
 
-    Returns:
+    Returns
     -------
     list
          A hex string in the form '#RRGGBB' or '#RRGGBBAA'
@@ -325,12 +325,12 @@ def RGBArraytoHexArray(c):
 
     This function takes an array of RGB or RGBA tuples and converts them to an array of their corresponding hexadecimal color representations.
 
-    Parameters:
+    Parameters
     ----------
     c : list 
         A list of RGB or RGBA tuples.
 
-    Returns:
+    Returns
     -------
     list
     A list of hex strings in the form '#RRGGBB' or '#RRGGBBAA'.
@@ -351,14 +351,14 @@ def StringColors(values, palette="turbo"):
 
     This function takes a list of strings and maps each unique string to a unique color from a specified color palette.
 
-    Parameters:
+    Parameters
     ----------
     values : list
         A list of strings to be mapped to colors.
     palette : str, default "turbo"
         The name of the color palette to use.
 
-    Returns:
+    Returns
     -------
     tuple
         A tuple containing two elements:
@@ -897,14 +897,14 @@ def labelcolors(labels, colormap):
     This function takes a list of labels and a colormap and assigns a unique color to each unique label based on the
     colormap. It returns a list of colors corresponding to the input labels.
 
-    Parameters:
+    Parameters
     ----------
     labels : list or pandas.Series
         A list of labels.
     colormap : matplotlib.colors.Colormap
         A colormap to assign colors from.
 
-    Returns:
+    Returns
     -------
     colors : list
         A list of colors in hexadecimal format (#RRGGBB) corresponding to the input labels.
@@ -1737,7 +1737,7 @@ def plotRatioLine(ax, x, ratio, line_kw=None):
 
     This function plots a line on a given axis with a specified ratio (slope) by specifying the x values. You can customize the appearance of the line using the `line_kw` argument.
 
-    Parameters:
+    Parameters
     -----------
     ax : matplotlib.axes._subplots.AxesSubplot
         The axis object on which to plot the line.
@@ -1748,7 +1748,7 @@ def plotRatioLine(ax, x, ratio, line_kw=None):
     line_kw : dict, optional 
         A dictionary of keyword arguments to customize the line's appearance (e.g., color, linestyle, label).
 
-    Returns:
+    Returns
     --------
     ax : matplotlib.axes._subplots.AxesSubplot
         The modified axis object.

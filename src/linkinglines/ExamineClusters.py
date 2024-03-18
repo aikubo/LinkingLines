@@ -68,14 +68,14 @@ def checkoutCluster(dikeset, label):
     - 'label' specifies the cluster to be analyzed.
     - The function returns the Figure and Axes objects for further customization or saving.
 
-    Parameters:
+    Parameters
     ----------
     dikeset : pandas.DataFrame
         A DataFrame containing line data with columns 'xc', 'yc', 'Labels', 'theta', and 'rho'.
     label : int
         The label of the cluster to be analyzed.
 
-    Returns:
+    Returns
     -------
     fig : matplotlib.figure.Figure
         The Figure object for the generated plots.
@@ -324,7 +324,7 @@ def CheckoutBy(dikeset, lines, col, maximum=True, minimum=False):
     information and plots and prints the label and the corresponding maximum or
     minimum value of the specified column.
 
-    Parameters:
+    Parameters
     ----------
     dikeset : pandas.DataFrame
         A DataFrame containing line data with columns 'xc', 'yc', 'Labels', 'theta', and 'rho'.
@@ -337,15 +337,15 @@ def CheckoutBy(dikeset, lines, col, maximum=True, minimum=False):
     minimum : bool, default False
         If True, display information and plots for lines with the minimum 'col' value.
 
-    Returns:
+    Returns
     -------
     fig : matplotlib.figure.Figure
         The Figure object for the generated plots.
     ax : matplotlib.axes.Axes
         The Axes object for the generated plots.
 
-    Example:
-    ----------
+    Example
+    -------
     >>> fig, ax = ll.CheckoutBy(lines, dikeset, 'theta', maximum=True, minimum=True)
     >>> plt.show()
     """
@@ -535,12 +535,12 @@ def examineClusterShort(clusters):
     coordinates, average rho, average theta, size, and a hash identifier.
 
 
-    Parameters:
+    Parameters
     ----------
     clusters : pandas.DataFrame
         A DataFrame containing line data with columns 'Labels', 'theta', 'rho', and 'HashID'.
 
-    Returns:
+    Returns
     -------
     clusters_data : pandas.DataFrame
         A DataFrame containing summarized information for each cluster.
@@ -618,7 +618,7 @@ def examineClusters(clusters, enEchelonCutofff=7, ifEE=False, MaxNNSegDist=0.5, 
     (one segment at the middle and two on either ends of a line), would have a MaxNNSegDist of 0.5. Whereas a cluster with 3 segments in which
     two are close together and one is far away would have a MaxNNSegDist greater than 0.5 and up to 1.0.
 
-    Parameters:
+    Parameters
     ----------
     clusters pandas.DataFrame
         A DataFrame containing line data with columns 'Xstart', 'Ystart', 'Xend', 'Yend', 'seg_length',
@@ -637,7 +637,7 @@ def examineClusters(clusters, enEchelonCutofff=7, ifEE=False, MaxNNSegDist=0.5, 
     yc : float, optional
         The y-coordinate of the center 
 
-    Returns:
+    Returns
     -------
     clusters_data :pandas.DataFrame
         A DataFrame containing summarized information for each cluster.
@@ -896,12 +896,12 @@ def evaluationOnClusters(clusters_data):
     characteristics of the clusters, making it useful for further analysis and
     interpretation of the data.
 
-    Parameters:
+    Parameters
     ----------
     clusters_data : pandas.DataFrame
         A DataFrame containing cluster information.
 
-    Returns:
+    Returns
     -------
     evaluation : pandas.DataFrame
         A summary DataFrame with evaluation metrics.
@@ -946,14 +946,14 @@ def checkAllClusterChange(lines1, lines2):
     values are the same, the clusters are considered the same; otherwise, they
     are considered different. Both must have "ClusterHash" as a column.
 
-    Parameters:
+    Parameters
     ----------
     lines1 : pandas.DataFrame
         The first set of line clusters as a DataFrame.
     lines2 : DataFrame
         The second set of line clusters as a DataFrame.
 
-    Returns:
+    Returns
     -------
         (bool): True if the clusters are the same, False otherwise.
 
@@ -984,14 +984,14 @@ def checkIndividualClusterChange(df1, df2):
     the number of overlapping clusters and the total number of clusters in each data
     frame.
 
-    Parameters:
+    Parameters
     ----------
     df1 : pandas.DataFrame
         The first set of line clusters as a DataFrame.
     df2 pandas.DataFrame
         The second set of line clusters as a DataFrame.
 
-    Returns:
+    Returns
     -------
     eq : tuple
         A tuple containing two NumPy arrays - eqLabels and diffLabels.
@@ -1090,12 +1090,12 @@ def OutputRectangles(clusters):
     center points and calculates the coordinates of the corners of rectangles that enclose
     the clusters.
 
-    Parameters:
+    Parameters
     ----------
     clusters : DataFrame
          A DataFrame containing line clusters with attributes 'Labels', 'Xmid', 'Ymid'.
 
-    Returns:
+    Returns
     -------
     tuple: A tuple containing two NumPy arrays - Xs and Ys.
            - Xs: An array of X-coordinates for the corners of bounding rectangles for each cluster.

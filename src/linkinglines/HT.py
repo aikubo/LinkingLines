@@ -38,12 +38,12 @@ def segLength(df):
     """
     Computes and adds a 'seg_length' column to a DataFrame, representing the length of line segments.
 
-    Parameters:
+    Parameters
     ----------
     df : pandas.DataFrame
         The input DataFrame containing line data with 'Xstart', 'Xend', 'Ystart', and 'Yend' columns.
 
-    Returns:
+    Returns
     -------
     df : pandas.DataFrame
         The input DataFrame with an additional 'seg_length' column representing the length of line segments.
@@ -67,14 +67,14 @@ def CyclicAngleDist(u, v):
     angles, ranging from 0 to 90 degrees.
 
 
-    Parameters:
+    Parameters
     ----------
     u : list or array of floats
         The first angle(s) in degrees.
     v : list or array of floats
         The second angle(s) in degrees.
 
-    Returns:
+    Returns
     -------
     dist : list or array of floats
         The cyclic angle distance between the two angles, ranging from 0 to 90 degrees.
