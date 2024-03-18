@@ -620,7 +620,7 @@ def examineClusters(clusters, enEchelonCutofff=7, ifEE=False, MaxNNSegDist=0.5, 
 
     Parameters
     ----------
-    clusters pandas.DataFrame
+    clusters : pandas.DataFrame
         A DataFrame containing line data with columns 'Xstart', 'Ystart', 'Xend', 'Yend', 'seg_length',
         'ID', 'rho', 'theta', 'Labels', and 'PerpOffsetDist'.
     enEchelonCutofff : int, default = 7
@@ -639,50 +639,50 @@ def examineClusters(clusters, enEchelonCutofff=7, ifEE=False, MaxNNSegDist=0.5, 
 
     Returns
     -------
-    clusters_data :pandas.DataFrame
+    clusters_data : pandas.DataFrame
         A DataFrame containing summarized information for each cluster.
 
-            1. `Label`: Cluster label or identifier.
-            2. `Xstart`: Starting x-coordinate of the clustered line.
-            3. `Ystart`: Starting y-coordinate of the clustered line.
-            4. `Xend`: Ending x-coordinate of the clustered line.
-            5. `Yend`: Ending y-coordinate of the clustered line.
-            6. `X0`: Midpoint of the x-coordinate range of the cluster.
-            7. `Y0`: Midpoint of the y-coordinate range of the cluster.
-            8. `AvgRho`: Average rho for the cluster.
-            9. `AvgTheta`: Average angle (theta) for the cluster.
-            10. `AvgSlope`: Average slope of the lines in the cluster.
-            11. `AvgIntercept`: Average intercept of the lines in the cluster.
-            12. `RhoRange`: Range of rho values within the cluster.
-            13. `Aspect`: Aspect ratio, calculated as the length (l) divided by the width (w).
-            14. `Xmid`: X-coordinate of the midpoint of the fitted rectangle
-            15. `Ymid`: Y-coordinate of the midpoint of the fitted rectangle
-            16. `PerpOffsetDist`: Average perpendicular offset distance for the lines in the cluster.
-            17. `PerpOffsetDistRange`: Range of perpendicular offset distances within the cluster.
-            18. `NormPerpOffsetDist`: Normalized perpendicular offset distance.
-            19. `ThetaRange`: Range of theta values within the cluster.
-            20. `StdRho`: Standard deviation of rho values within the cluster.
-            21. `StdTheta`: Standard deviation of theta values within the cluster.
-            22. `R_Width`: Width (w) of the cluster.
-            23. `R_Length`: Length (l) of the cluster.
-            24. `Size`: Number of lines in the cluster.
-            25. `R_error`: Square root of the error (r) in the cluster's line fit.
-            26. `Linked`: Indicates whether the lines in the cluster are considered linked or not.
-            27. `SegmentLSum`: Sum of the lengths of line segments within the cluster.
-            28. `ClusterHash`: A hash identifier for the cluster.
-            29. `ClusterCrossesZero`: Indicates whether the cluster's angles cross zero.
-            30. `EnEchelonAngleDiff`: Twist angle difference for features within the cluster.
-            31. `Overlap`: Overlap of line segments within the cluster.
-            32. `nOverlapingSegments`: Number of overlapping segments within the cluster.
-            33. `EEPvalue`: P-value related to en échelon analysis.
-            34. `MaxSegNNDist`: Maximum normalized nearest neighbor segment distance.
-            35. `MedianSegNNDist`: Median normalized nearest neighbor segment distance.
-            36. `MinSegNNDist`: Minimum normalized nearest neighbor segment distance.
-            37. `TrustFilter`: A filter indicating trustworthiness based on the
-            maximum normalized nearest neighbor segment distance.
-            38. 'xc': X-coordinate of HT origin
-            39. 'yc': Y-coordinate of HT origin
-            40: 'Date_Changed': date string of generation or change time
+        1. `Label`: Cluster label or identifier.
+        2. `Xstart`: Starting x-coordinate of the clustered line.
+        3. `Ystart`: Starting y-coordinate of the clustered line.
+        4. `Xend`: Ending x-coordinate of the clustered line.
+        5. `Yend`: Ending y-coordinate of the clustered line.
+        6. `X0`: Midpoint of the x-coordinate range of the cluster.
+        7. `Y0`: Midpoint of the y-coordinate range of the cluster.
+        8. `AvgRho`: Average rho for the cluster.
+        9. `AvgTheta`: Average angle (theta) for the cluster.
+        10. `AvgSlope`: Average slope of the lines in the cluster.
+        11. `AvgIntercept`: Average intercept of the lines in the cluster.
+        12. `RhoRange`: Range of rho values within the cluster.
+        13. `Aspect`: Aspect ratio, calculated as the length (l) divided by the width (w).
+        14. `Xmid`: X-coordinate of the midpoint of the fitted rectangle
+        15. `Ymid`: Y-coordinate of the midpoint of the fitted rectangle
+        16. `PerpOffsetDist`: Average perpendicular offset distance for the lines in the cluster.
+        17. `PerpOffsetDistRange`: Range of perpendicular offset distances within the cluster.
+        18. `NormPerpOffsetDist`: Normalized perpendicular offset distance.
+        19. `ThetaRange`: Range of theta values within the cluster.
+        20. `StdRho`: Standard deviation of rho values within the cluster.
+        21. `StdTheta`: Standard deviation of theta values within the cluster.
+        22. `R_Width`: Width (w) of the cluster.
+        23. `R_Length`: Length (l) of the cluster.
+        24. `Size`: Number of lines in the cluster.
+        25. `R_error`: Square root of the error (r) in the cluster's line fit.
+        26. `Linked`: Indicates whether the lines in the cluster are considered linked or not.
+        27. `SegmentLSum`: Sum of the lengths of line segments within the cluster.
+        28. `ClusterHash`: A hash identifier for the cluster.
+        29. `ClusterCrossesZero`: Indicates whether the cluster's angles cross zero.
+        30. `EnEchelonAngleDiff`: Twist angle difference for features within the cluster.
+        31. `Overlap`: Overlap of line segments within the cluster.
+        32. `nOverlapingSegments`: Number of overlapping segments within the cluster.
+        33. `EEPvalue`: P-value related to en échelon analysis.
+        34. `MaxSegNNDist`: Maximum normalized nearest neighbor segment distance.
+        35. `MedianSegNNDist`: Median normalized nearest neighbor segment distance.
+        36. `MinSegNNDist`: Minimum normalized nearest neighbor segment distance.
+        37. `TrustFilter`: A filter indicating trustworthiness based on the
+        maximum normalized nearest neighbor segment distance.
+        38. 'xc': X-coordinate of HT origin
+        39. 'yc': Y-coordinate of HT origin
+        40: 'Date_Changed': date string of generation or change time
 
     evaluation : pandas.DataFrame
         A DataFrame containing summary statistics of the clusters.
