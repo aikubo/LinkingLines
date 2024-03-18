@@ -387,7 +387,7 @@ def StringColors(values, palette="turbo"):
 
     return color_idx, cm
 
-def StringCbar(c, fig, ax, values):
+
 def StringCbar(c, fig, ax, values):
     """
     Create a colorbar for string-based categorical data.

@@ -50,7 +50,7 @@ def segLength(df):
     """
     if not isinstance(df, pd.DataFrame):
         raise ValueError("Input 'df' must be a pandas DataFrame.")
-    if ['Xstart', 'Ystart', 'Xend', 'Yend'] not in df.columns:
+    if not all(column in df.columns for column in ['Xstart', 'Ystart', 'Xend', 'Yend']):
         raise ValueError("Input DataFrame must contain columns 'Xstart', 'Ystart', 'Xend', and 'Yend'.")
     
     length = np.sqrt((df['Xstart'] - df['Xend'])**2 + (df['Ystart'] - df['Yend'])**2)
@@ -128,8 +128,9 @@ def HoughTransform(df, xc=None, yc=None):
     if any(np.isclose(df['seg_length'],0)):
         raise ValueError('Some lines are points')
     
-    if ['Xstart', 'Ystart', 'Xend', 'Yend'] not in df.columns:
+    if not all(column in df.columns for column in ['Xstart', 'Ystart', 'Xend', 'Yend']):
         raise ValueError("Input DataFrame must contain columns 'Xstart', 'Ystart', 'Xend', and 'Yend'.")
+
     
 
 
@@ -179,7 +180,7 @@ def HT_center(df):
 
     """
     
-    if ['Xstart', 'Ystart', 'Xend', 'Yend'] not in df.columns:
+    if not all(column in df.columns for column in ['Xstart', 'Ystart', 'Xend', 'Yend']):
         raise ValueError("Input DataFrame must contain columns 'Xstart', 'Ystart', 'Xend', and 'Yend'.")
     
 
@@ -251,7 +252,7 @@ def rotateData(df, rotation_angle, xc = None, yc = None):
 
 
 
-def MidtoPerpDistance(df, xc,=None yc=None):
+def MidtoPerpDistance(df, xc=None, yc=None):
     """
     Find the distance between line segment midpoint and rho line perpendicular
     intersection.
@@ -280,7 +281,7 @@ def MidtoPerpDistance(df, xc,=None yc=None):
     except:
         print("Xmid must be calculate first")
     
-    if ['Xstart', 'Ystart', 'Xend', 'Yend'] not in df.columns:
+    if not all(column in df.columns for column in ['Xstart', 'Ystart', 'Xend', 'Yend']):
         raise ValueError("Input DataFrame must contain columns 'Xstart', 'Ystart', 'Xend', and 'Yend'.")
 
 
@@ -330,7 +331,7 @@ def moveHTcenter(df, xc=None, yc=None):
     1    -1.0    -1.0   0.0   0.0
     2     0.0     0.0   1.0   1.0
     """
-    if ['Xstart', 'Ystart', 'Xend', 'Yend'] not in df.columns:
+    if not all(column in df.columns for column in ['Xstart', 'Ystart', 'Xend', 'Yend']):
         raise ValueError("Input DataFrame must contain columns 'Xstart', 'Ystart', 'Xend', and 'Yend'.")
     
     if xc is None and yc is None:

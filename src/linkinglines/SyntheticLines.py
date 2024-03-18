@@ -26,7 +26,7 @@ from sklearn.preprocessing import scale
 import numpy as np
 from .ClusterLines import *
 import matplotlib.pyplot as plt
-from .PlotUtils import plotlines, labelcolors, BA_HT, HThist, DotsLines, labelSubplots
+from .PlotUtils import plotlines, labelcolors, HThist, DotsLines, labelSubplots
 from .ExamineClusters import examineClusters
 from .PrePostProcess import dikesetReProcess
 import seaborn as sns

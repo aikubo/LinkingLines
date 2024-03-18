@@ -15,5 +15,3 @@ from .PrePostProcess import *
 from .SyntheticLines import *
 from .ExamineClusters import *
 
-# You can also import subpackages if needed
-#from .FeatureExtraction import *
