@@ -1,6 +1,5 @@
 # LinkingLines Package
- # Written by aikubo
- # Version: 2.1.0
+# Written by aikubo
 # __main__.py
 
 import sys

@@ -2,7 +2,7 @@
 
 # Define package-level variables or constants
 PACKAGE_NAME = "linkinglines"
-PACKAGE_VERSION = "2.1.0"
+PACKAGE_VERSION = "2.1.1"
 
 # Import modules or submodules to make them accessible
 from .HT import *
