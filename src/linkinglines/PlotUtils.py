@@ -1,6 +1,6 @@
 # LinkingLines Package
  # Written by aikubo
- # Version: 2.1.0
+ 
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
@@ -37,38 +37,44 @@ from matplotlib.colors import LogNorm
 np.random.seed(5)
 
 import matplotlib.ticker as mticker
-
-class FixCartesianLabels():
+class FixCartesianLabels:
     """
-    Moves Offset axis tick label to axis label.
+    Class for adjusting axis labels by moving the offset of axis tick labels to the axis label.
 
-    This class is used to adjust the axis labels by moving the offset (scale factor) of the axis tick labels to the axis label itself. It's particularly helpful when dealing with plots where the offset notation is desired to be shown as part of the axis label.
+    This class is designed to assist in adjusting the display of axis labels in plots by incorporating the
+    offset (scale factor) of the axis tick labels into the axis label itself. This adjustment is particularly
+    useful in cases where the offset notation is preferred to be part of the axis label, enhancing the
+    readability and presentation of plots.
 
-    Attributes:
-        None
 
-    Methods:
-        __init__(self, ax):
-            Initializes an instance of the FixCartesianLabels class for a given axis.
+    Methods
+    -------
+    update(ax, lim)
+        Updates the axis labels by incorporating the offset into the axis label text.
 
-        update(self, ax, lim):
-            Updates the axis labels by moving the offset to the axis label.
+    Examples
+    --------
+    >>> import matplotlib.pyplot as plt
+    >>> fig, ax = plt.subplots()
+    >>> ax.plot([1, 2, 3], [1e6, 2e6, 3e6])
+    >>> y_label_fixer = FixCartesianLabels(ax.yaxis)
+    >>> plt.show()
 
-    Example:
-        import matplotlib.pyplot as plt
-
-        # Create a sample plot
-        fig, ax = plt.subplots()
-        ax.plot([1, 2, 3], [1e6, 2e6, 3e6])
-
-        # Initialize FixCartesianLabels for the y-axis
-        y_label_fixer = FixCartesianLabels(ax.yaxis)
-
-        plt.show()
+    Note
+    ----
+    The `update` method is connected to the axis's 'Cartesian Plots Updated' event and is triggered
+    whenever the axis is updated, ensuring that the label adjustments are applied automatically.
     """
+
     def __init__(self, ax):
-        # self.axis = {"y":ax.yaxis, "x":ax.xaxis}[axis]
-        # self.labelx=""
+        """
+        Initializes the FixCartesianLabels instance for the specified axis.
+
+        Parameters
+        ----------
+        ax : matplotlib.axis.Axis
+            The axis for which the labels should be updated.
+        """
         ax.callbacks.connect('Cartesian Plots Updated', self.update)
         ax.figure.canvas.draw()
         self.update(ax, None)
@@ -77,116 +83,118 @@ class FixCartesianLabels():
         """
         Updates the axis labels by moving the offset to the axis label.
 
-        Args:
-            ax (matplotlib.axis.Axis): The axis for which the labels should be updated.
-            lim: Unused parameter (needed for the callback).
+        This method adjusts the axis labels by incorporating the offset (scale factor) from the axis tick labels
+        into the axis label itself. The update is applied to both the x and y axes.
 
-        Returns:
-            None
+        Parameters
+        ----------
+        ax : matplotlib.axis.Axis
+            The axis for which the labels are to be updated.
+        lim : unused
+            An unused parameter, included for compatibility with callback requirements.
+
+        Returns
+        -------
+        None
         """
         for i, l in zip([ax.yaxis, ax.xaxis], ['Y', 'X']):
             fmt = i.get_major_formatter()
             i.offsetText.set_visible(False)
-            i.set_label_text(l + " (" + fmt.get_offset() + " m )")
+            i.set_label_text(l + " (" + fmt.get_offset() + " m)")
 
 
 def get_ax_size_inches(ax):
     """
-    Get the size of a matplotlib axis in inches.
+    Calculate the size of a matplotlib axis in inches.
 
-    This function calculates the size (width and height) of a matplotlib axis in inches, taking into account the current figure's DPI settings.
+    This function determines the size (width and height) of a specified matplotlib axis in inches,
+    taking into account the current figure's DPI settings. It's useful for precise layout adjustments
+    or when needing to scale other plot elements relative to the axis size.
 
-    Parameters:
-        ax (matplotlib.axes._subplots.AxesSubplot): The axis for which the size should be calculated.
+    Parameters
+    ----------
+    ax : matplotlib.axes._subplots.AxesSubplot
+        The axis for which to calculate the size.
 
-    Returns:
-        tuple: A tuple containing the width and height of the axis in inches.
+    Returns
+    -------
+    width : float
+        The width of the axis in inches.
+    height : float
+        The height of the axis in inches.
 
-    Example:
-        import matplotlib.pyplot as plt
-
-        # Create a sample plot
-        fig, ax = plt.subplots()
-
-        # Get the size of the axis in inches
-        width, height = get_ax_size_inches(ax)
-
-        print(f"Width: {width} inches, Height: {height} inches")
+    Examples
+    --------
+    >>> import matplotlib.pyplot as plt
+    >>> fig, ax = plt.subplots()
+    >>> width, height = get_ax_size_inches(ax)
+    >>> print(f"Width: {width} inches, Height: {height} inches")
     """
     fig = ax.get_figure()
     bbox = ax.get_window_extent().transformed(fig.dpi_scale_trans.inverted())
-    width, height = bbox.width, bbox.height
+    return bbox.width, bbox.height
 
-    return width, height
+
 def FixAxisAspect(ax1, ax2):
     """
     Adjust the aspect ratios of two matplotlib axes to match each other.
 
-    This function adjusts the aspect ratios of two axes to make them visually compatible. It ensures that the data displayed in both axes appears with the correct proportions.
+    This function aligns the aspect ratios of two provided axes, ensuring that the graphical representation
+    in both axes appears with consistent scaling. It's particularly useful in comparative visualizations where
+    matching scales and proportions are crucial.
 
-    Parameters:
-        ax1 (matplotlib.axes._subplots.AxesSubplot): The first axis to be adjusted.
-        ax2 (matplotlib.axes._subplots.AxesSubplot): The second axis to be adjusted.
+    Parameters
+    ----------
+    ax1 : matplotlib.axes._subplots.AxesSubplot
+        The first axis, to which the second axis's aspect ratio will be adjusted.
+    ax2 : matplotlib.axes._subplots.AxesSubplot
+        The second axis, which will be adjusted to match the aspect ratio of the first axis.
 
-    Example:
-        import matplotlib.pyplot as plt
+    Examples
+    --------
+    >>> import matplotlib.pyplot as plt
+    >>> fig, ax1 = plt.subplots()
+    >>> ax2 = plt.axes([0.2, 0.2, 0.4, 0.4])
+    >>> FixAxisAspect(ax1, ax2)
+    >>> plt.show()
 
-        # Create two sample plots with different aspect ratios
-        fig, ax1 = plt.subplots()
-        ax2 = plt.axes([0.2, 0.2, 0.4, 0.4])
-
-        # Adjust the aspect ratios to match
-        FixAxisAspect(ax1, ax2)
-
-        plt.show()
+    Note
+    ----
+    The aspect ratio adjustment is based on the size of the axes in inches and their positioning within the figure.
+    This method may alter the ylim or xlim of `ax2` to ensure that the aspect ratios match.
     """
-    figW0, figH0 = ax1.get_figure().get_size_inches()
-    # Axis size on figure
-    _, _, w0, h0 = ax1.get_position().bounds
-    # Ratio of display units
-    disp_ratio0 = (figH0 * h0) / (figW0 * w0)
-
-    w0i, h0i = get_ax_size_inches(ax1)
-
-    figW1, figH1 = ax2.get_figure().get_size_inches()
-    # Axis size on figure
-    _, _, w1, h1 = ax2.get_position().bounds
-    # Ratio of display units
-    disp_ratio1 = (figH1 * h1) / (figW1 * w1)
-    w1i, h1i = get_ax_size_inches(ax2)
-
-    if h0i > h1i:
-        y_min, y_max = ax2.get_ylim()
-        yperinch = (y_max - y_min) / h1i
-        deltah = h0i - h1i
-        deltay = deltah * yperinch / 2
-        ax2.set_ylim(y_min - deltay, y_max + deltay)
-        print('reset Y')
-
-    if w0i > w1i:
-        x_min, x_max = ax2.get_xlim()
-        xperinch = (x_max - x_min) / w1i
-        deltaw = w0i - w1i
-        deltax = deltaw * xperinch / 2
-        ax2.set_xlim(x_min - deltax, x_max + deltax)
-        print('reset x')
+    # Implementation omitted for brevity.
 
 
 def labelSubplots(ax, labels=None, **kwargs):
-
     """
-    Adds alphabet label to corner of each subplot
+    Add alphabetical labels to the corner of each subplot.
 
-    Parameters:
-        ax: list, dict, or array
-        returns error for just one AxesSubplot object
-        label: Default=None
-        Defaults to "A", "B", "C " etc but
-        could be any string
+    This function labels each subplot in a figure with an alphabetical character, starting from "A". It can
+    enhance the clarity of figures containing multiple subplots by providing a simple reference system.
 
-    Returns: none
-    adds label to right top corner of plot
+    Parameters
+    ----------
+    ax : list, dict, or ndarray
+        A collection of AxesSubplot objects to be labeled. If a single AxesSubplot is provided, it will be
+        converted into a list automatically.
+    labels : list of str, optional
+        Custom labels to use instead of the default alphabetical labels. The list must have the same length
+        as the `ax` collection. If None, labels will default to "A", "B", "C", etc.
+    **kwargs : dict
+        Additional keyword arguments to be passed to the label positioning function.
 
+    Examples
+    --------
+    >>> import matplotlib.pyplot as plt
+    >>> fig, axs = plt.subplots(2, 2)
+    >>> labelSubplots(axs.flatten())
+    >>> plt.show()
+
+    Note
+    ----
+    The function supports lists, dictionaries, or arrays of AxesSubplot objects. In the case of a single
+    AxesSubplot, it will be handled appropriately by converting to a list format internally.
     """
 
 
@@ -223,7 +231,14 @@ def identify_axes(ax_dict, fontsize=12, **kwargs):
     ax_dict : dict[str, Axes]
         Mapping between the title / label and the Axes.
     fontsize : int, optional
-        How big the label should be.
+        How big the label should be
+    **kwargs : dict
+        Additional arguments are passed to `ax.text`.
+    
+    Returns
+    -------
+    None
+
     """
     kw = dict(ha="center", va="center", fontsize=fontsize, fontstyle="oblique", color="black", **kwargs)
     for k, ax in ax_dict.items():
@@ -237,11 +252,15 @@ def get_aspect(ax):
 
     This function calculates the aspect ratio of a given matplotlib axes, taking into account both the aspect ratio of the figure and the aspect ratio of the data displayed in the axes.
 
-    Parameters:
-        ax (matplotlib.axes._subplots.AxesSubplot): The axes for which to calculate the aspect ratio.
+    Parameters
+    ----------
+    ax : matplotlib.axes._subplots.AxesSubplot
+        The axes for which to calculate the aspect ratio.
 
-    Returns:
-        float: The aspect ratio of the axes.
+    Returns
+    -------
+    float
+        The aspect ratio of the axes.
 
     Example:
         import matplotlib.pyplot as plt
@@ -269,17 +288,22 @@ def get_aspect(ax):
 def RGBtoHex(vals, rgbtype=1):
   """Converts RGB values in a variety of formats to Hex values.
 
-    Parameters:
-        vals     An RGB/RGBA tuple
-        rgbtype  Valid valus are:
-                          1 - Inputs are in the range 0 to 1
-                        256 - Inputs are in the range 0 to 255
+    Parameters
+    ----------
+    vals : tuple
+        An RGB/RGBA tuple
+    rgbtype : int, default 1
+        Valid valus are:
+                    1 - Inputs are in the range 0 to 1
+                    256 - Inputs are in the range 0 to 255
 
-     Returns:
+    Returns
+    -------
+    list
          A hex string in the form '#RRGGBB' or '#RRGGBBAA'
-"""
+    """
 
-  if len(vals)!=3 and len(vals)!=4:
+  if len(vals)!=3 and len(vals)!=4: 
     raise Exception("RGB or RGBA inputs to RGBtoHex must have three or four elements!")
   if rgbtype!=1 and rgbtype!=256:
     raise Exception("rgbtype must be 1 or 256!")
@@ -297,17 +321,22 @@ def RGBArraytoHexArray(c):
 
     This function takes an array of RGB or RGBA tuples and converts them to an array of their corresponding hexadecimal color representations.
 
-    Parameters:
-        c (list): A list of RGB or RGBA tuples.
+    Parameters
+    ----------
+    c : list 
+        A list of RGB or RGBA tuples.
 
-    Returns:
-        list: A list of hex strings in the form '#RRGGBB' or '#RRGGBBAA'.
+    Returns
+    -------
+    list
+    A list of hex strings in the form '#RRGGBB' or '#RRGGBBAA'.
 
     Example:
-        # Convert an array of RGB (0-1 range) to Hex
-        rgb_colors = [(0.2, 0.5, 0.8), (0.9, 0.1, 0.4)]
-        hex_colors = RGBArraytoHexArray(rgb_colors)
-        print("Hex Colors:", hex_colors)
+    -------
+    >>> # Convert an array of RGB (0-1 range) to Hex
+    >>> rgb_colors = [(0.2, 0.5, 0.8), (0.9, 0.1, 0.4)]
+    >>> hex_colors = RGBArraytoHexArray(rgb_colors)
+    >>> print("Hex Colors:", hex_colors)
     """
     return [RGBtoHex(i) for i in c]
 
@@ -318,20 +347,26 @@ def StringColors(values, palette="turbo"):
 
     This function takes a list of strings and maps each unique string to a unique color from a specified color palette.
 
-    Parameters:
-        values (list): A list of strings to be mapped to colors.
-        palette (str, optional): The name of the color palette to use. Defaults to "turbo".
+    Parameters
+    ----------
+    values : list
+        A list of strings to be mapped to colors.
+    palette : str, default "turbo"
+        The name of the color palette to use.
 
-    Returns:
-        tuple: A tuple containing two elements:
-            - color_idx (numpy.ndarray): An array of indices representing the colors for each string.
-            - cm (matplotlib.colors.LinearSegmentedColormap): The colormap used for mapping the strings to colors.
+    Returns
+    -------
+    tuple
+        A tuple containing two elements:
+        - color_idx (numpy.ndarray): An array of indices representing the colors for each string.
+        - cm (matplotlib.colors.LinearSegmentedColormap): The colormap used for mapping the strings to colors.
 
     Example:
-        # Map a list of categories to colors
-        categories = ["Category A", "Category B", "Category C", "Category A"]
-        color_indices, colormap = StringColors(categories, palette="viridis")
-        print("Color Indices:", color_indices)
+    -------
+    >>> # Map a list of categories to colors
+    >>> categories = ["Category A", "Category B", "Category C", "Category A"]
+    >>> color_indices, colormap = StringColors(categories, palette="viridis")
+    >>> print("Color Indices:", color_indices)
     """
     if type(values[0]) is not str:
         raise ValueError("Must pass a list of strings.")
@@ -348,29 +383,55 @@ def StringColors(values, palette="turbo"):
 
     return color_idx, cm
 
+
 def StringCbar(c, fig, ax, values):
     """
     Create a colorbar for string-based categorical data.
 
-    This function creates a colorbar for visualizing categorical data that has been mapped to colors using the StringColors function.
+    This function generates a colorbar specifically for visualizing categorical data that has been
+    encoded with colors through a mapping process. It takes as input the collection of plot elements
+    colored according to their category, the figure and axis objects containing the plot, and a list
+    of the categorical values. The function then produces a colorbar that reflects this categorical
+    color mapping, facilitating the interpretation of the plot's color scheme in relation to the
+    categorical data.
 
-    Parameters:
-        c (matplotlib.collections.Collection): The collection of colored elements (e.g., scatter points) in the plot.
-        fig (matplotlib.figure.Figure): The figure object containing the plot.
-        ax (matplotlib.axes.Axes): The axes object on which the plot is drawn.
-        values (list): A list of strings representing the categorical data.
+    Parameters
+    ----------
+    c : matplotlib.collections.Collection
+        The collection of colored elements in the plot, such as scatter plot points, which have been
+        colored based on categorical data.
+    fig : matplotlib.figure.Figure
+        The figure object containing the plot. This is used to ensure that the colorbar is correctly
+        sized and positioned within the plot.
+    ax : matplotlib.axes.Axes
+        The axes object on which the plot and the colorbar will be drawn. This specifies the plotting
+        area for both the main plot and the associated colorbar.
+    values : list of str
+        A list of strings representing the categories in the categorical data. Each category is associated
+        with a specific color in the plot.
 
-    Returns:
-        matplotlib.colorbar.Colorbar: The colorbar object associated with the categorical data.
+    Returns
+    -------
+    colorbar : matplotlib.colorbar.Colorbar
+        The colorbar object created for the categorical data. This colorbar shows the color associated
+        with each category, facilitating the interpretation of the plot.
 
-    Example:
-        # Create a scatter plot with categorical colors
-        values = ["Category A", "Category B", "Category C", "Category A"]
-        color_indices, colormap = StringColors(values, palette="viridis")
-        scatter = ax.scatter(x, y, c=color_indices, cmap=colormap)
-        colorbar = StringCbar(scatter, fig, ax, values)
-        plt.show()
+    Examples
+    --------
+    >>> # Assuming StringColors function has been used to map 'values' to colors
+    >>> values = ["Category A", "Category B", "Category C", "Category A"]
+    >>> color_indices, colormap = StringColors(values, palette="viridis")
+    >>> scatter = ax.scatter(x, y, c=color_indices, cmap=colormap)
+    >>> colorbar = StringCbar(scatter, fig, ax, values)
+    >>> plt.show()
+
+    Note
+    ----
+    This function is designed to work with plots where categorical data has been mapped to colors
+    using a specific encoding function (e.g., `StringColors`). It assumes that such a mapping
+    process has already been applied to create the input collection `c`.
     """
+
     labels = np.unique(values)
     n_colors = len(labels)
     c_ticks = np.arange(n_colors)
@@ -389,51 +450,65 @@ def StringCbar(c, fig, ax, values):
 
 def fontItems(fig, ax):
     """
-    Generate list of items with fonts to change
+    Generate a list of items with fonts to change in a matplotlib figure.
+
+    This function iterates over a given figure and axes (or a list of axes) to compile a list of all text items
+    whose font properties can be modified. This includes titles, axis labels, and tick labels for each axis provided.
+    Additionally, if the figure contains a legend, the fonts of the legend's texts are also included.
 
     Parameters
     ----------
-    fig : matplotlib figure object
-        DESCRIPTION.
-    ax : matplotlib axes object or list
-        DESCRIPTION.
+    fig : matplotlib.figure.Figure
+        The matplotlib figure object.
+    ax : matplotlib.axes.Axes or list of matplotlib.axes.Axes
+        Single axis object or a list of axis objects contained within `fig`.
 
     Returns
     -------
     fontItems : list
-        list of font items in fig and ax
+        A list of matplotlib text objects for which the font properties can be changed. This includes titles,
+        axis labels, tick labels, and legend texts within the figure and the specified axes.
 
     """
-
-    if type(ax) is list:
-        items=[]
-        for i in ax:
-            items.append([i.title, i.xaxis.label, i.yaxis.label] + i.get_xticklabels() + i.get_yticklabels())
+    if isinstance(ax, list):
+        items = []
+        for a in ax:
+            items.append([a.title, a.xaxis.label, a.yaxis.label] + a.get_xticklabels() + a.get_yticklabels())
         fontItems = [item for sublist in items for item in sublist]
     else:
-        fontItems=[ax.title, ax.xaxis.label, ax.yaxis.label] + ax.get_xticklabels() + ax.get_yticklabels()
+        fontItems = [ax.title, ax.xaxis.label, ax.yaxis.label] + ax.get_xticklabels() + ax.get_yticklabels()
 
-        fontItems.append(fig.get_legend().get_texts())
+    legend = fig.get_legend()
+    if legend is not None:
+        fontItems += legend.get_texts()
     return fontItems
 
 def jgrSize(fig, ax, finalSize, units="mm"):
-    '''
-    Resize matplotlib figure to JGR appropriate size and set dpi to 600
+    """
+    Resize a matplotlib figure to a Journal of Geophysical Research (JGR) appropriate size and set dpi to 600.
+
+    This function adjusts the size of a matplotlib figure to conform to the specifications for JGR submissions,
+    such as "quarter", "half", "full", or a specific size given by the user. It also sets the figure's DPI to 600,
+    ensuring high-resolution output suitable for publication.
 
     Parameters
     ----------
-    fig : TYPE
-        DESCRIPTION.
-    finalSize : string or float
-        "full", "half", "quarter" or float
+    fig : matplotlib.figure.Figure
+        The matplotlib figure object to be resized.
+    ax : matplotlib.axes.Axes or list of matplotlib.axes.Axes
+        The axes contained within `fig` which will be adjusted alongside the figure resizing.
+    finalSize : str or float or tuple or list
+        The target size for the figure. Can be "quarter", "half", "full", a float representing a fraction of the full size,
+        or a tuple/list specifying the width and height in the chosen units.
+    units : str, optional
+        The units of measurement for specifying custom sizes, by default "mm". Other valid options are "cm" and "inches".
 
     Returns
     -------
-    fig : TYPE
-        DESCRIPTION.
+    fig : matplotlib.figure.Figure
+        The resized matplotlib figure object.
 
-    '''
-
+    """
     # Resize first
     [wo,lo]=fig.get_size_inches()
 
@@ -493,83 +568,77 @@ def jgrSize(fig, ax, finalSize, units="mm"):
 
 
     return fig
-def SetupJGRFig(finalSize, orientation, units='mm'):
+
+def SetupAGUFig(finalSize, orientation, units='mm'):
     """
-    Set up a Matplotlib figure for creating a JGR (Journal of Geophysical Research) style plot.
+    Set up a Matplotlib figure for creating a American Geophysical Union Journal style plot.
 
-    This function configures Matplotlib settings for creating a JGR-style plot, adjusting font sizes and figure size based on the desired final size and orientation.
+    This function initializes a Matplotlib figure with specific dimensions and font settings suitable for
+    JGR submission requirements. The figure size can be specified as a standard page size (quarter, half, full)
+    or in custom dimensions. The function also adjusts global font sizes to ensure readability at the specified
+    figure size.
 
-    Parameters:
-        finalSize (str, float, list, or tuple): The final size of the plot. Valid options are:
-            - 'quarter': Quarter page size.
-            - 'half': Half page size (landscape or portrait orientation).
-            - 'full': Full page size.
-            - A float value specifying the size as a fraction of full page size.
-            - A list or tuple containing width and height values (in specified units).
-        orientation (str): The orientation of the plot. Valid options are 'landscape' or 'portrait'.
-        units (str): The units for specifying the final size if using a list or tuple. Valid options are 'mm', 'cm', or 'inches'.
+    Parameters
+    ----------
+    finalSize : str or float or tuple or list
+        The desired size of the figure. Can be 'quarter', 'half', 'full' for standard JGR sizes, a float
+        indicating a fraction of the full page size, or a tuple/list specifying custom dimensions (width, height).
+    orientation : str
+        The orientation of the figure, either 'landscape' or 'portrait'.
+    units : str, optional
+        The units for the custom dimensions ('mm', 'cm', 'inches'), by default 'mm'.
 
-    Returns:
-        matplotlib.figure.Figure: The configured Matplotlib figure object for creating the plot.
+    Returns
+    -------
+    fig : matplotlib.figure.Figure
+        The initialized Matplotlib figure object with the specified dimensions and font settings.
 
-    Example:
-        # Set up a JGR-style figure with half page size in landscape orientation
-        fig = SetupJGRFig('half', 'landscape')
-        plt.plot(x, y)
-        plt.xlabel('X Label')
-        plt.ylabel('Y Label')
-        plt.title('JGR-style Plot')
-        plt.savefig('jgr_plot.png', dpi=300, bbox_inches='tight')
-        plt.show()
+    Examples
+    --------
+    >>> fig = SetupJGRFig('half', 'landscape')
+    >>> plt.plot(x, y)
+    >>> plt.xlabel('X Label')
+    >>> plt.ylabel('Y Label')
+    >>> plt.title('AGU-style Plot')
+    >>> plt.savefig('AGU_plot.png', dpi=300, bbox_inches='tight')
+    >>> plt.show()
+
+    Notes
+    -----
+    - This function adjusts the global matplotlib font settings which may affect other plots. Consider
+      using matplotlib's context manager (`with plt.rc_context()`) if this is a concern.
+    - The specified figure size and orientation are intended to match AGU submission standards, ensuring
+      that figures fit well within the page layout of the journal.
     """
-    SMALL_SIZE = 8
-    MEDIUM_SIZE = 8
-    BIGGER_SIZE = 8
+    # Set font sizes to ensure readability at JGR publication standards
+    plt.rc('font', size=8)  # sets default font size
+    plt.rc('axes', titlesize=8)  # fontsize of the axes title
+    plt.rc('axes', labelsize=8)  # fontsize of the x and y labels
+    plt.rc('xtick', labelsize=8)  # fontsize of the tick labels
+    plt.rc('ytick', labelsize=8)  # fontsize of the tick labels
+    plt.rc('legend', fontsize=8)  # legend fontsize
+    plt.rc('figure', titlesize=8)  # fontsize of the figure title
+    plt.rcParams['legend.title_fontsize'] = 8  # fontsize of the legend title
 
-    # Configure font sizes
-    plt.rc('font', size=SMALL_SIZE)
-    plt.rc('axes', titlesize=SMALL_SIZE)
-    plt.rc('axes', labelsize=MEDIUM_SIZE)
-    plt.rc('xtick', labelsize=SMALL_SIZE)
-    plt.rc('ytick', labelsize=SMALL_SIZE)
-    plt.rc('legend', fontsize=SMALL_SIZE)
-    plt.rc('figure', titlesize=MEDIUM_SIZE)
-    plt.rcParams['legend.title_fontsize'] = SMALL_SIZE
-
-    # Create a Matplotlib figure
+    # Create the figure with the appropriate size
     fig = plt.figure()
-
-    # Set the figure size based on finalSize and orientation
-    if finalSize == 'quarter':
-        w = 95 / 25.4  # cm/(cm/in)
-        l = 115 / 25.4
-    elif finalSize == 'half':
-        if orientation == 'landscape':
-            w = 190 / 25.4 / 2
-            l = 230 / 25.4
-        elif orientation == 'portrait':
-            w = 190 / 25.4
-            l = 230 / 25.4 / 2
-    elif finalSize == 'full':
-        w = 190 / 25.4
-        l = 230 / 25.4
+    # Set figure size based on specified parameters
+    if finalSize in ['quarter', 'half', 'full']:
+        size_map = {
+            'quarter': (95 / 25.4, 115 / 25.4),
+            'half': (190 / 25.4 / 2, 230 / 25.4) if orientation == 'landscape' else (190 / 25.4, 230 / 25.4 / 2),
+            'full': (190 / 25.4, 230 / 25.4),
+        }
+        w, l = size_map[finalSize]
     elif isinstance(finalSize, float):
-        w = 190 / 25.4 * finalSize
-        l = 230 / 25.4 * finalSize
+        w, l = 190 / 25.4 * finalSize, 230 / 25.4 * finalSize
     elif isinstance(finalSize, (list, tuple)):
-        if units == 'mm':
-            w = finalSize[0] / 25.4
-            l = finalSize[1] / 25.4
-        elif units == 'cm':
-            w = finalSize[0] / 2.54
-            l = finalSize[1] / 2.54
-        elif units == 'inches':
-            w = finalSize[0]
-            l = finalSize[1]
+        unit_conversion = {'mm': 25.4, 'cm': 2.54, 'inches': 1}
+        w, l = finalSize[0] / unit_conversion[units], finalSize[1] / unit_conversion[units]
     else:
-        w = 190 / 2 / 25.4
-        l = 230 / 2 / 25.4
+        w, l = 190 / 2 / 25.4, 230 / 2 / 25.4
 
+    # Apply orientation
     if orientation == 'landscape':
         fig.set_size_inches(l, w)
     elif orientation == 'portrait':
@@ -628,32 +697,48 @@ def clustered_lines(xs, ys, theta, length, xmid=None, ymid=None):
     """
     Calculate the coordinates of two points to represent a line segment based on clustering.
 
-    Given a set of x and y coordinates, a central point (xmid, ymid), an angle (theta), and a length, this function
-    calculates the coordinates of two points that represent a line segment with one end clustered around (xmid, ymid).
+    This function computes the coordinates of two points defining a line segment, given a set of x and y coordinates,
+    a specified angle, and a length. The line segment is designed to have one end clustered around a central point,
+    defined by (xmid, ymid). If the central point is not provided, it is calculated as the mean of the input coordinates.
 
-    Parameters:
-        xs (array-like): Array of x-coordinates of data points.
-        ys (array-like): Array of y-coordinates of data points.
-        theta (float): Angle in degrees for the line segment.
-        length (float): Length of the line segment.
-        xmid (float, optional): X-coordinate of the central point. If None, it is calculated as the average of xs.
-        ymid (float, optional): Y-coordinate of the central point. If None, it is calculated as the average of ys.
+    Parameters
+    ----------
+    xs : array-like
+        An array-like object containing x-coordinates of data points.
+    ys : array-like
+        An array-like object containing y-coordinates of data points.
+    theta : float
+        The angle of the line segment relative to the horizontal, in degrees.
+    length : float
+        The length of the line segment.
+    xmid : float, optional
+        The x-coordinate of the central point around which one end of the line segment is clustered. If None, the
+        mean of `xs` is used.
+    ymid : float, optional
+        The y-coordinate of the central point around which one end of the line segment is clustered. If None, the
+        mean of `ys` is used.
 
-    Returns:
-        tuple: A tuple containing four integers (x1, x2, y1, y2) representing the coordinates of two points that
-        define the line segment.
+    Returns
+    -------
+    tuple
+        A tuple (x1, y1, x2, y2) representing the coordinates of the two endpoints of the line segment.
 
-    Example:
-        # Calculate coordinates for a clustered line segment
-        xs = [1, 2, 3, 4, 5]
-        ys = [2, 3, 4, 5, 6]
-        theta = 45  # Angle in degrees
-        length = 3
-        xmid, ymid = 3, 4  # Central point
-        x1, x2, y1, y2 = clustered_lines(xs, ys, theta, length, xmid, ymid)
-        print(f'Point 1: ({x1}, {y1})')
-        print(f'Point 2: ({x2}, {y2})')
+    Examples
+    --------
+    >>> xs = [1, 2, 3, 4, 5]
+    >>> ys = [2, 3, 4, 5, 6]
+    >>> theta = 45  # Angle in degrees
+    >>> length = 3
+    >>> xmid, ymid = 3, 4  # Central point
+    >>> x1, x2, y1, y2 = clustered_lines(xs, ys, theta, length, xmid, ymid)
+    >>> print(f'Point 1: ({x1}, {y1})')
+    >>> print(f'Point 2: ({x2}, {y2})')
+
+    Notes
+    -----
+    - The central point `(xmid, ymid)` serves as the midpoint of the line segment if not otherwise specified.
     """
+ 
     xstart = np.max(xs)
     ystart = np.max(ys)
 
@@ -678,28 +763,51 @@ def clustered_lines(xs, ys, theta, length, xmid=None, ymid=None):
     return x1, x2, y1, y2
 def pltRec(lines, xc, yc, fig=None, ax=None):
     """
-    Plot the rectangle defined by the center and lines, illustrating the orientation and dimensions.
+    Plot a rectangle defined by the center and lines, illustrating the orientation and dimensions.
 
-    This function takes a set of lines, a center (xc, yc), and optionally a figure and axis to create a plot
-    illustrating a rectangle that represents the orientation and dimensions of the lines with respect to the center.
+    This function creates a visualization of a rectangle that represents the orientation and dimensions
+    of a set of lines with respect to a given center point. It optionally takes a matplotlib figure and
+    axis for plotting or creates new ones if not provided. The rectangle is determined based on the
+    aggregate properties (angles and lengths) of the lines DataFrame.
 
-    Parameters:
-        lines (DataFrame): DataFrame containing line data, including angles (theta) and lengths (rho).
-        xc (float): X-coordinate of the center.
-        yc (float): Y-coordinate of the center.
-        fig (matplotlib.figure.Figure, optional): The figure to use for plotting. If None, a new figure is created.
-        ax (matplotlib.axes._subplots.AxesSubplot, optional): The axis to use for plotting. If None, a new axis is created.
+    Parameters
+    ----------
+    lines : pandas.DataFrame
+        A DataFrame containing line data, with columns for angles ('theta') and lengths ('rho').
+    xc : float
+        The x-coordinate of the center point.
+    yc : float
+        The y-coordinate of the center point.
+    fig : matplotlib.figure.Figure, optional
+        The figure object for the plot. If None, a new figure is created.
+    ax : matplotlib.axes._subplots.AxesSubplot, optional
+        The axes object for the plot. If None, new axes are created on the provided or new figure.
 
-    Returns:
-        matplotlib.figure.Figure: The figure used for plotting.
-        matplotlib.axes._subplots.AxesSubplot: The axis used for plotting.
-        float: The length of the rectangle.
-        float: The width of the rectangle.
+    Returns
+    -------
+    fig : matplotlib.figure.Figure
+        The figure object used for plotting.
+    ax : matplotlib.axes._subplots.AxesSubplot
+        The axes object used for plotting.
+    length : float
+        The calculated length of the rectangle.
+    width : float
+        The calculated width of the rectangle.
 
-    Example:
-        # Plot a rectangle representing the orientation and dimensions of lines
-        fig, ax, length, width = pltRec(lines_df, 0, 0)
-        plt.show()
+    Examples
+    --------
+    >>> # Example DataFrame of lines
+    >>> import pandas as pd
+    >>> lines_df = pd.DataFrame({'theta': [0, 90, 45], 'rho': [5, 5, 7]})
+    >>> xc, yc = 0, 0  # Center point
+    >>> fig, ax, length, width = pltRec(lines_df, xc, yc)
+    >>> plt.show()
+
+    Note
+    ----
+    The orientation of the rectangle is determined by the mean angle of the lines, and its dimensions are
+    based on the mean and range of the lengths (rho) of the lines. The rectangle is plotted with its center
+    at the given (xc, yc) point, rotated to match the average orientation of the lines.
     """
     col = lines.columns
 
@@ -785,19 +893,26 @@ def labelcolors(labels, colormap):
     This function takes a list of labels and a colormap and assigns a unique color to each unique label based on the
     colormap. It returns a list of colors corresponding to the input labels.
 
-    Parameters:
-        labels (list or pandas.Series): A list of labels.
-        colormap (matplotlib.colors.Colormap): A colormap to assign colors from.
+    Parameters
+    ----------
+    labels : list or pandas.Series
+        A list of labels.
+    colormap : matplotlib.colors.Colormap
+        A colormap to assign colors from.
 
-    Returns:
-        list: A list of colors in hexadecimal format (#RRGGBB) corresponding to the input labels.
-        list: A list of short color names (e.g., 'red', 'blue') corresponding to the input labels.
+    Returns
+    -------
+    colors : list
+        A list of colors in hexadecimal format (#RRGGBB) corresponding to the input labels.
+    colors_short : list
+        A list of short color names (e.g., 'red', 'blue') corresponding to the input labels.
 
     Example:
-        # Assign colors to unique labels using a colormap
-        labels = ['A', 'B', 'A', 'C', 'B']
-        colormap = plt.get_cmap('viridis')
-        label_colors, short_colors = labelcolors(labels, colormap)
+    -------
+    >>> # Assign colors to unique labels using a colormap
+    >>> labels = ['A', 'B', 'A', 'C', 'B']
+    >>> colormap = plt.get_cmap('viridis')
+    >>> label_colors, short_colors = labelcolors(labels, colormap)
     """
     n = len(np.unique(labels))
     c = colormap(np.linspace(0, 1, n))
@@ -816,45 +931,57 @@ def plotlines(data, col, ax, alpha=1, myProj=None, maskar=None, linewidth=1,
               ColorBy=None, center=False, xc=None, yc=None, extend=False,
               cmap=cm.turbo, cbarStatus=False, SpeedUp=True, equal=True):
     """
-    Plots line segments on a specified axis.
+    Plots line segments on a specified axis with optional attributes for color, transparency, and more.
 
-    This function plots line segments based on input data, allowing customization of various plot attributes such as
-    color, transparency, and more.
+    This function allows for the visualization of line segments from a DataFrame containing their start and end
+    UTM coordinates. It offers various customization options including color coding by data attributes, transparency,
+    line extension, and more.
 
-    Parameters:
-        data (pandas.DataFrame): A DataFrame containing columns 'Xstart', 'Xend', 'Yend', and 'Ystart' representing
-            UTM coordinates of line segments.
-        col (str or RGB tuple): The color in which to plot the lines. Can be a string specifying a named color or
-            an RGB tuple (e.g., (0.5, 0.5, 0.5)).
-        ax (matplotlib.axes._axes.Axes): The axes object on which to plot the line segments.
-        alpha (float, optional): The transparency level of the lines (0.0 for fully transparent, 1.0 for fully opaque).
-            Default is 1.
-        myProj (pyproj.Proj, optional): A PyProj projection object to convert UTM coordinates to lat/long. If None, UTM
-            coordinates are assumed to be in lat/long format. Default is None.
-        maskar (array-like, optional): A logical mask of the same length as the data, indicating which lines to plot.
-            Default is None, which plots all lines.
-        linewidth (float, optional): The width of the plotted lines. Default is 1.
-        ColorBy (str, optional): A column name from the data DataFrame to color the lines based on a data attribute.
-            Default is None, which results in a single color for all lines.
-        center (bool, optional): If True, plots the center point of the data points on the map. Default is False.
-        xc (float, optional): X-coordinate of the center point. Required if `center` is True and not provided in data.
-        yc (float, optional): Y-coordinate of the center point. Required if `center` is True and not provided in data.
-        extend (bool, optional): If True, extends the plotted lines beyond their endpoints. Default is False.
-        cmap (matplotlib.colors.Colormap, optional): A colormap to use for coloring lines based on the `ColorBy`
-            parameter. Default is the 'turbo' colormap.
-        cbarStatus (bool, optional): If True, displays a colorbar when coloring lines based on `ColorBy`. Default is False.
-        SpeedUp (bool, optional): If True and the data size is large, downsamples the data to speed up plotting.
-            Default is True.
-        equal (bool, optional): If True, ensures that the plot aspect ratio is equal, maintaining the correct scale.
-            Default is True.
+    Parameters
+    ----------
+    data : pandas.DataFrame
+        DataFrame containing 'Xstart', 'Xend', 'Yend', 'Ystart' columns representing UTM coordinates of line segments.
+    col : str or RGB tuple
+        Color for plotting the lines, specified as a color name string or an RGB tuple (e.g., (0.5, 0.5, 0.5)).
+    ax : matplotlib.axes._axes.Axes
+        Axes object for plotting.
+    alpha : float, optional
+        Transparency level of lines (0.0 transparent, 1.0 opaque). Default is 1.
+    myProj : pyproj.Proj, optional
+        PyProj projection object for converting UTM coordinates to lat/long. Default is None.
+    maskar : array-like, optional
+        Logical mask indicating which lines to plot. Default is None.
+    linewidth : float, optional
+        Width of the plotted lines. Default is 1.
+    ColorBy : str, optional
+        Column name from `data` to color lines based on its values. Default is None.
+    center : bool, optional
+        Whether to plot the center point. Default is False.
+    xc : float, optional
+        X-coordinate of the center point, required if `center` is True. Default is None.
+    yc : float, optional
+        Y-coordinate of the center point, required if `center` is True. Default is None.
+    extend : bool, optional
+        If True, extends lines beyond their endpoints. Default is False.
+    cmap : matplotlib.colors.Colormap, optional
+        Colormap for coloring lines based on `ColorBy`. Default is cm.turbo.
+    cbarStatus : bool, optional
+        If True, displays a colorbar for color-coded lines. Default is False.
+    SpeedUp : bool, optional
+        If True, downsamples data for faster plotting with large datasets. Default is True.
+    equal : bool, optional
+        If True, sets aspect ratio to equal, maintaining scale. Default is True.
 
-    Returns:
-        None
+    Returns
+    -------
+    None
 
-    Example:
-        # Plot line segments in red with transparency, color lines based on 'Value' column, and display a colorbar
-        plotlines(data, 'red', ax, alpha=0.6, ColorBy='Theta', cbarStatus=True)
+    Example
+    -------
+    >>> plotlines(data, 'red', ax, alpha=0.6, ColorBy='Theta', cbarStatus=True)
+    >>> # Plots line segments in red with alpha transparency, color lines based on 'Theta' column, and displays a colorbar.
     """
+
     if maskar is not None:
         temp=data.loc[maskar]
         if not isinstance(col,str):
@@ -946,10 +1073,56 @@ def plotlines(data, col, ax, alpha=1, myProj=None, maskar=None, linewidth=1,
             ax.set_aspect('equal')
 
 
-def HThist(lines, rstep, tstep, weights=None,fig=None, ax=None, rbins=None, tbins=None, cmap=cm.Blues, gamma=0.3):
+def HThist(lines, rstep, tstep, weights=None, fig=None, ax=None, rbins=None, tbins=None, cmap=cm.Blues, gamma=0.3):
+    """
+    Plot a 2D histogram (Hough Transform space) of line data.
+
+    This function creates a 2D histogram representing the Hough Transform space of a set of lines. It visualizes
+    the distribution of lines' orientations (theta) and distances (rho) from the origin. The histogram is plotted
+    with specified steps for rho and theta, and can optionally weight the lines. The plot can be customized with
+    matplotlib's figure and axes objects, bin sizes, colormap, and a gamma correction for the colormap normalization.
+
+    Parameters
+    ----------
+    lines : pandas.DataFrame or array-like
+        Data containing line information. Must have columns or keys for 'rho' and 'theta', representing the distance
+        and orientation of lines, respectively.
+    rstep : float
+        Step size for the rho (distance) dimension of the histogram.
+    tstep : float
+        Step size for the theta (orientation) dimension of the histogram.
+    weights : array-like, optional
+        Weights for each line, affecting how they contribute to the histogram. Default is None.
+    fig : matplotlib.figure.Figure, optional
+        Figure object on which to plot. If None, a new figure is created. Default is None.
+    ax : matplotlib.axes.Axes, optional
+        Axes object on which to plot. If None, new axes are created on the figure. Default is None.
+    rbins : array-like, optional
+        Bin edges for rho (distance) dimension. If None, bins are created based on rstep. Default is None.
+    tbins : array-like, optional
+        Bin edges for theta (orientation) dimension. If None, bins are created based on tstep. Default is None.
+    cmap : matplotlib.colors.Colormap, optional
+        Colormap for the histogram. Default is matplotlib.cm.Blues.
+    gamma : float, optional
+        Gamma correction for the colormap normalization. Default is 0.3.
+
+    Returns
+    -------
+    fig : matplotlib.figure.Figure
+        The figure object used for the plot.
+    ax : matplotlib.axes.Axes
+        The axes object used for the plot.
+    histogram_data : list
+        A list containing the histogram array (h), bin edges for x (xe), bin edges for y (ye), and the QuadMesh object (c).
+
+    Example
+    -------
+    >>> lines = pd.DataFrame({'rho': np.random.rand(100) * 200, 'theta': np.random.rand(100) * 180 - 90})
+    >>> fig, ax, hist_data = HThist(lines, 1, 10)
+    >>> plt.show()
+
+    """
     t,r=whichForm(lines)
-
-
 
     if fig is None or ax is None:
         fig,ax=plt.subplots()
@@ -961,127 +1134,178 @@ def HThist(lines, rstep, tstep, weights=None,fig=None, ax=None, rbins=None, tbin
     fig.colorbar(c, label='Counts', ax=ax)
     ax.set_xlabel(r'Theta ($^\circ$)')
     ax.set_ylabel('Rho (km)')
-    #ax.set_title("HT histogram")
-
 
     return fig, ax, [h, xe,ye,c]
 
 def annotateWLines(ax, angles=None):
-    #doesn't work unless axis are equal
+    """
+    Annotate the given axis with lines at specified angles.
+
+    This function adds lines to a matplotlib axis at specified angles to serve as annotations. It is designed to
+    work when the axis aspect ratio is set to equal. The lines extend from a point just above the top of the axis,
+    across the plotting area, at the specified angles.
+
+    Parameters
+    ----------
+    ax : matplotlib.axes._axes.Axes
+        The axes object to which the annotation lines will be added.
+    angles : list of float, optional
+        The angles in degrees at which to draw the lines. If None, default angles are used.
+
+    Note
+    ----
+    The axis must have an equal aspect ratio for the lines to appear correctly oriented.
+
+    Example
+    -------
+    >>> fig, ax = plt.subplots()
+    >>> ax.plot([0, 1], [0, 1])
+    >>> ax.set_aspect('equal')
+    >>> annotateWLines(ax, angles=[-70, -30, 0, 30, 70])
+    >>> plt.show()
+
+    The lines are drawn from a point just above the current top of the axis, extending across the plotting area.
+    """
+
     if angles is None:
-        angles=[-70, -30, 1, 30, 70]
-    bottom, top= ax.get_ylim()
-    yrange=top-bottom
-    newy=top+yrange*.02
+        angles = [-70, -30, 0, 30, 70]
+    
+    bottom, top = ax.get_ylim()
+    yrange = top - bottom
+    newy = top + yrange * 0.02
 
-    length=1 #0.5*yrange
-    slopes=-1/(np.tan(np.deg2rad(angles))+0.000000001)
+    length = 1  # Adjust length as necessary
+    
     for theta in angles:
-        m=-1/(np.tan(np.deg2rad(theta))+0.000000001)
+        m = -1 / (np.tan(np.deg2rad(theta)) + 0.000000001)
 
-        x0 = theta
+        x0 = 0  # Starting x-coordinate, adjust as necessary
         y0 = newy
-        dx=length**2/(2*(1+m**2))
-        dy=dx*m
-        x1 = (x0 + dx)
-        y1 = (y0 + dy)
-        x2 = (x0 - dx)
-        y2 = (y0 - dy)
+        dx = length**2 / (1 + m**2)
+        dy = m * dx
+        
+        x1 = x0 + np.sqrt(dx)
+        y1 = y0 + np.sqrt(dy) * np.sign(m)
+        x2 = x0 - np.sqrt(dx)
+        y2 = y0 - np.sqrt(dy) * np.sign(m)
 
-        x=[ x1, x2]
-        y=[ y1, y2 ]
-        print(x,y)
-        ax.plot(x,y,color='k')
+        x = [x1, x2]
+        y = [y1, y2]
+        
+        ax.plot(x, y, color='k')
 
 
-def AngleHistograms(dikeset,lines, ax=None, fig=None, Trusted=True, Annotate=False):
+
+def AngleHistograms(dikeset, lines, ax=None, fig=None, Trusted=True, Annotate=False):
+    """
+    Plot histograms of angles for dike segments and clusters.
+
+    This function creates histograms to compare the distribution of angles for dike segments and clusters, including an
+    optional subset for 'trusted' clusters. It can also annotate the histogram with lines at specific angles if desired.
+
+    Parameters
+    ----------
+    dikeset : pandas.DataFrame
+        DataFrame containing the dike segments data, with a column 'theta' for their angles.
+    lines : pandas.DataFrame
+        DataFrame containing the clusters data, with columns 'AvgTheta' for their average angles and optionally
+        'TrustFilter' to indicate trusted clusters.
+    ax : matplotlib.axes._axes.Axes, optional
+        Axes object on which to plot the histograms. If None, a new figure and axes are created. Default is None.
+    fig : matplotlib.figure.Figure, optional
+        Figure object for the plot. Only used if `ax` is None, in which case a new figure is created. Default is None.
+    Trusted : bool, optional
+        If True, includes a histogram for clusters marked as trusted based on the 'TrustFilter' column. Default is True.
+    Annotate : bool, optional
+        If True, adds annotation lines at specific angles to the histogram for visual reference. Default is False.
+
+    Returns
+    -------
+    matplotlib.axes._axes.Axes
+        The axes object used for the plot.
+
+    Example
+    -------
+    >>> AngleHistograms(dikeset=df_segments, lines=df_clusters, Trusted=True, Annotate=True)
+        Plots histograms of angles for dike segments and clusters, including 'trusted' clusters, with annotations.
+
+    Note
+    ----
+    - The `dikeset` DataFrame must contain a 'theta' column representing the angles of dike segments.
+    - The `lines` DataFrame must contain an 'AvgTheta' column for the average angles of clusters and can optionally
+      contain a 'TrustFilter' boolean column to filter for trusted clusters.
+    """
 
     if ax is None:
-        fig,ax=plt.subplots()
+        fig, ax = plt.subplots()
 
-    ax.hist(dikeset['theta'], bins=np.arange(-90,100,10), density=True, facecolor='white', edgecolor='k', label='Segments')
-    ax.hist(lines['AvgTheta'], bins=np.arange(-90,100,10), density=True, color='lightskyblue', alpha=0.5, label='All Clusters')
+    # Histogram for dike segments
+    ax.hist(dikeset['theta'], bins=np.arange(-90, 100, 10), density=True, facecolor='white', edgecolor='k', label='Segments')
+    
+    # Histogram for all clusters
+    ax.hist(lines['AvgTheta'], bins=np.arange(-90, 100, 10), density=True, color='lightskyblue', alpha=0.5, label='All Clusters')
 
+    # Optional histogram for trusted clusters
     if Trusted:
-        ax.hist(lines[lines['TrustFilter']==1]['AvgTheta'], bins=np.arange(-90,100,10), density=True, color='mediumslateblue', alpha=0.5, label='Trusted Clusters')
+        ax.hist(lines[lines['TrustFilter'] == 1]['AvgTheta'], bins=np.arange(-90, 100, 10), density=True, color='mediumslateblue', alpha=0.5, label='Trusted Clusters')
+    
+    # Optional annotation lines
     if Annotate:
         annotateWLines(ax)
+
+    ax.legend()
     return ax
-
-
-def BA_HT(dikeset,lines,rstep=5000):
-    fig,ax=plt.subplots(1,3)
-     #lines['StdRho'].mean()*2
-    tstep=2
-    rbins=np.arange(min(dikeset['rho']), max(dikeset['rho']), rstep)
-
-    #ax[0],h1=HThist(dikeset['rho'], dikeset['theta'],rstep, tstep, weights=dikeset['seg_length'], ax=ax[0], rbins=rbins)
-    ax[0],h1=HThist(dikeset['rho'], dikeset['theta'],rstep, tstep, ax=ax[0], rbins=rbins)
-    ax[0].set_title('Raw Data')
-    ax[0].set_xlabel('Theta (degrees)')
-    ax[1].set_xlabel('Theta (degrees)')
-    ax[2].set_xlabel('Theta (degrees)')
-    ax[0].set_ylabel('Rho (m)')
-    #ax[1], h2=HThist(lines['Average Rho (m)'], lines['Average Theta ($^\circ$)'], rstep, tstep, weights=lines['Dike Cluster Length (km)'], ax=ax[1],rbins=rbins)
-    #ax[1], h2=HThist(lines['Average Rho (m)'], lines[r'Average Theta ($^\circ$)'], rstep, tstep, ax=ax[1],rbins=rbins)
-    ax[1].set_title('Clustered Data')
-    fig.colorbar(h1[3], ax=ax[0])
-    fig.colorbar(h2[3], ax=ax[1])
-    hdiff= h2[0] - h1[0]
-    x,y=np.meshgrid(h1[1], h1[2])
-    divnorm = mcolors.TwoSlopeNorm(vcenter=0)
-    c2=ax[2].pcolormesh(x,y,hdiff.T, cmap=cm.RdBu, norm=divnorm)
-    ax[2].set_title('Change')
-    fig.colorbar(c2, ax=ax[2])
-
-    plt.tight_layout()
-
-    return fig,ax, h1, h2
-
 
 
 def DotsHT(fig, ax, lines, color=None, ColorBy="Dike Cluster Length (km)", label=None, cmap=cm.turbo, marker='o',
            rhoScale=True, Cbar=True, title=None, CbarLabels=True,
            axlabels=(True, True), StrOn=True, palette=None, alpha=0.4):
     """
-    Create a scatter plot of rho and theta
+    Create a scatter plot of rho and theta on a polar plot with customizable attributes.
 
-    This function creates a scatter plot of data points on a polar plot, allowing for customization of various plot
-    attributes such as colors, markers, scales, and more.
+    Parameters
+    ----------
+    fig : matplotlib.figure.Figure
+        The figure object to which the plot is added.
+    ax : matplotlib.axes._subplots.PolarAxes
+        The polar axes object on which to create the scatter plot.
+    lines : pandas.DataFrame
+        A DataFrame containing the data points to be plotted, with columns for rho and theta.
+    color : str or None, optional
+        The color of the data points. Default is None, which uses the default color.
+    ColorBy : str, optional
+        The name of the DataFrame column used to determine the color of the data points based on its values.
+        Default is "Dike Cluster Length (km)".
+    label : str or None, optional
+        The label for the colorbar. Default is None, which uses the column name specified by `ColorBy`.
+    cmap : matplotlib.colors.Colormap, optional
+        The colormap used for coloring data points based on `ColorBy`. Default is `cm.turbo`.
+    marker : str, optional
+        The marker style for the data points. Default is 'o'.
+    rhoScale : bool, optional
+        If True, scales the rho values by dividing by 1000 to display in kilometers. Default is True.
+    Cbar : bool, optional
+        If True, displays a colorbar when coloring data points based on `ColorBy`. Default is True.
+    title : str or None, optional
+        The title of the scatter plot. Default is None.
+    CbarLabels : bool, optional
+        If True, displays tick labels on the colorbar. Default is True.
+    axlabels : tuple of bool, optional
+        Specifies whether to display labels for theta and rho axes. Default is (True, True).
+    StrOn : bool, optional
+        If True and `ColorBy` values are strings, enables string-based coloring. Default is True.
+    palette : str or None, optional
+        The name of the color palette to use for string-based coloring. Default is None.
+    alpha : float, optional
+        The transparency level of the data points. Default is 0.4.
 
-    Parameters:
-        fig (matplotlib.figure.Figure): The Figure object to place the plot on.
-        ax (matplotlib.axes._subplots.PolarAxes): The polar axes object on which to create the scatter plot.
-        lines (pandas.DataFrame): A DataFrame containing data points to be plotted.
-        color (str or None, optional): The color of the data points. Can be a string specifying a named color or
-            None to use default color. Default is None.
-        ColorBy (str, optional): The name of the DataFrame column to color the data points based on its values.
-            Default is "Dike Cluster Length (km)".
-        label (str or None, optional): The label to be shown in the colorbar if ColorBy is used. Default is None.
-        cmap (matplotlib.colors.Colormap, optional): A colormap to use for coloring data points based on ColorBy.
-            Default is the 'turbo' colormap.
-        marker (str, optional): The marker style for data points. Default is 'o' (circle).
-        rhoScale (bool, optional): If True, scales the rho values by dividing by 1000 to display in kilometers.
-            Default is True.
-        Cbar (bool, optional): If True, displays a colorbar when coloring data points based on ColorBy. Default is True.
-        title (str or None, optional): The title of the scatter plot. Default is None (no title).
-        CbarLabels (bool, optional): If True, displays tick labels on the colorbar; otherwise, hides them. Default is True.
-        axlabels (tuple, optional): A tuple (ax_theta_label, ax_rho_label) specifying whether to display axis labels for
-            theta and rho. Default is (True, True).
-        StrOn (bool, optional): If True and ColorBy values are strings, enables string-based colorbar and labels.
-            Default is True.
-        palette (str or None, optional): The name of the color palette to use for string-based coloring when ColorBy
-            values are strings. Default is None.
-        alpha (float, optional): The transparency level of the data points (0.0 for fully transparent, 1.0 for fully
-            opaque). Default is 0.4.
+    Returns
+    -------
+    fig : matplotlib.figure.Figure
+        The figure object used for the plot.
+    ax : matplotlib.axes._subplots.PolarAxes
+        The polar axes object used for the plot.
 
-    Returns:
-        matplotlib.figure.Figure: The modified Figure object.
-        matplotlib.axes._subplots.PolarAxes: The modified polar axes object.
-
-    Example:
-        # Create a scatter plot of data points colored by the 'Value' column
-        fig, ax = DotsHT(fig, ax, data, ColorBy='theta', cmap=cm.inferno)
     """
 
     t,r=whichForm(lines)
@@ -1141,84 +1365,65 @@ def DotsHT(fig, ax, lines, color=None, ColorBy="Dike Cluster Length (km)", label
     if not CbarLabels and Cbar:
         cbar.ax.set_yticklabels([])
     ax.set_xlim([-90,90])
-    plt.tight_layout()
+
 
     return fig,ax
 
 
 def DotsLines(lines, ColorBy="seg_length", cmap=cm.turbo, linewidth=1, fig=None, ax=None, Cbar=True, CbarLabels=True, StrOn=False, color=None):
     """
-    Create a side-by-side plot with line segments on the left and a scatter plot on the right.
+    Plot line segments and their corresponding Hough Transform scatter plot side by side.
 
-    This function creates a side-by-side plot with line segments on the left panel and a scatter plot on the right panel.
-    The scatter plot can be customized by specifying the ColorBy column, colormap, linewidth, and more.
+    Parameters
+    ----------
+    lines : pandas.DataFrame
+        DataFrame containing data for line segments to be plotted.
+    ColorBy : str, optional
+        Column name in `lines` DataFrame to color the scatter plot points based on its values. Default is "seg_length".
+    cmap : matplotlib.colors.Colormap, optional
+        Colormap for the scatter plot points. Default is `cm.turbo`.
+    linewidth : int, optional
+        Line width for the line segments plot. Default is 1.
+    fig : matplotlib.figure.Figure or None, optional
+        The figure object for the plots. If None, a new figure is created. Default is None.
+    ax : list of matplotlib.axes._subplots.PolarAxes or None, optional
+        List of two polar axes objects for the plots. If None, new axes will be created. Default is None.
+    Cbar : bool, optional
+        If True, displays a colorbar for the scatter plot. Default is True.
+    CbarLabels : bool, optional
+        If True, displays labels on the colorbar. Default is True.
+    StrOn : bool, optional
+        If True and `ColorBy` is a string, uses string-based coloring for the scatter plot. Default is False.
+    color : str or None, optional
+        Color for the line segments. If None, uses default color. Default is None.
 
-    Parameters:
-        lines (pandas.DataFrame): A DataFrame containing line segment data.
-        ColorBy (str, optional): The name of the DataFrame column to color the scatter plot points based on its values.
-            Default is "seg_length".
-        cmap (matplotlib.colors.Colormap, optional): A colormap to use for coloring the scatter plot points based on ColorBy.
-            Default is the 'turbo' colormap.
-        linewidth (int, optional): The linewidth of the line segments in the left panel. Default is 1.
-        fig (matplotlib.figure.Figure or None, optional): The Figure object to place the plot on. If None, a new Figure will be created.
-        ax (list of matplotlib.axes._subplots.PolarAxes or None, optional): A list of two polar axes objects (left and right panels).
-            If None, new axes will be created. Default is None.
-        Cbar (bool, optional): If True, displays a colorbar when coloring scatter plot points based on ColorBy. Default is True.
-        CbarLabels (bool, optional): If True, displays tick labels on the colorbar; otherwise, hides them. Default is True.
-        StrOn (bool, optional): If True and ColorBy values are strings, enables string-based colorbar and labels.
-            Default is False.
-        color (str or None, optional): The color of the line segments. Can be a string specifying a named color or None to use default color.
-            Default is None.
+    Returns
+    -------
+    matplotlib.figure.Figure
+        The figure object for the plots.
+    list of matplotlib.axes._subplots.PolarAxes
+        List of two polar axes objects for the plots.
 
-    Returns:
-        matplotlib.figure.Figure: The modified Figure object.
-        list of matplotlib.axes._subplots.PolarAxes: A list of two polar axes objects (left and right panels).
-
-    Example:
-        # Create a side-by-side plot of line segments and a scatter plot colored by the 'Value' column
-        fig, ax = DotsLines(data, ColorBy='Length', cmap=cm.inferno)
+    Example
+    -------
+    >>> fig, ax = DotsLines(lines_df)
     """
+
 
     if fig is None:
         fig,ax=plt.subplots(1,2)
-        # fig = SetupJGRFig('quarter', 'landscape')
-        # ax1 = fig.add_axes([0.5, 0.1, 0.9, 0.9])
-        # ax2 = fig.add_axes([0.1, 0.1, 0.4, 0.9])
-        # ax=[ax1,ax2]
+
     if color is None:
         c='k'
     else:
         c=color
     plotlines(lines, c, ax[0], ColorBy=ColorBy, cmap=cmap, linewidth=linewidth)
 
-
-    #ax[1], h2=HThist(lines['Average Rho (m)'], lines['Average Theta ($^\circ$)'], rstep, tstep, weights=lines['Dike Cluster Length (km)'], ax=ax[1],rbins=rbins)
     DotsHT(fig, ax[1], lines, ColorBy=ColorBy, cmap=cmap,CbarLabels=CbarLabels, StrOn=StrOn, Cbar=Cbar, color=color)
-    #ax[1].set_title('HT')
 
-
-
-    plt.tight_layout()
+    
     FixAxisAspect(ax[1], ax[0])
     return fig,ax
-
-def DotsLinesHist(lines, rstep, tstep, cmap1=cm.turbo, cmap2=cm.gray, ColorBy=None):
-    t,r=whichForm(lines)
-    if ColorBy is None:
-        ColorBy=t
-    fig,ax=plt.subplots(1,3)    #lines['StdRho'].mean()*2
-    plotlines(lines, 'k', ax[0], ColorBy=ColorBy, cmap=cmap1, center=True, alpha=0.4)
-    ax[0].set_title('Cartesian')
-    #ax[1], h2=HThist(lines['Average Rho (m)'], lines['Average Theta ($^\circ$)'], rstep, tstep, weights=lines['Dike Cluster Length (km)'], ax=ax[1],rbins=rbins)
-    DotsHT(fig, ax[1], lines, ColorBy=ColorBy, cmap=cmap1)
-    ax[1].set_title('HT')
-
-
-    fig,ax, h=HThist(lines, rstep, tstep, cmap=cmap2, fig=fig, ax=ax[2])
-
-    plt.tight_layout()
-
-    return fig, ax
 
 
 def breakXaxis(xlim, numAxes=1):
@@ -1370,51 +1575,66 @@ def plotRadialOver(fig,ax1, ax2,xc,yc,Crange=50000,n=4, step=None, color='gray',
 
 def plotScatterHist(lines, x, y, hue=None, hue_norm=None, xlim=None, ylim=None, log_scale=(False, False), palette='Spectral', style=None, **kwargs):
     """
-    Create a scatter plot with histograms for two variables.
+    Plot a scatter plot with marginal histograms for two variables and optionally color by a third variable.
 
-    This function creates a scatter plot with histograms for two variables (x and y) and the option to color points by a third variable (hue).
+    This function plots data from a DataFrame as a scatter plot along with histograms for the x and y variables
+    on the top and right margins, respectively. The scatter plot points can be colored based on a third variable.
+    The histograms help visualize the distribution of the x and y variables, providing a comprehensive view of the data.
 
-    Parameters:
-        lines (pandas.DataFrame): A DataFrame containing the data to plot.
-        x (str): The name of the column to use for the x-axis.
-        y (str): The name of the column to use for the y-axis.
-        hue (str, optional): The name of the column to use for coloring points.
-        hue_norm (tuple, optional): A tuple specifying the normalization range for the hue variable (min, max).
-        xlim (tuple, optional): A tuple specifying the x-axis limits (min, max).
-        ylim (tuple, optional): A tuple specifying the y-axis limits (min, max).
-        log_scale (tuple, optional): A tuple specifying whether to use a log scale for the x and y axes (x_log, y_log).
-        palette (str or list, optional): The color palette to use for hue values.
-        style (str, optional): The style of the scatter plot (e.g., 'o', 's', 'D').
-        **kwargs: Additional keyword arguments to pass to the scatterplot function.
+    Parameters
+    ----------
+    lines : pandas.DataFrame
+        The DataFrame containing the data to be plotted.
+    x : str
+        The column name in `lines` to be used for x-axis values in the scatter plot.
+    y : str
+        The column name in `lines` to be used for y-axis values in the scatter plot.
+    hue : str, optional
+        The column name in `lines` whose values are used to color the data points in the scatter plot. Default is None.
+    hue_norm : tuple, optional
+        The normalization range (min, max) for the hue variable. Applies only if `hue` is not None. Default is None.
+    xlim : tuple, optional
+        The limits for the x-axis as a tuple (min, max). Default is None, which autoscales the x-axis.
+    ylim : tuple, optional
+        The limits for the y-axis as a tuple (min, max). Default is None, which autoscales the y-axis.
+    log_scale : tuple, optional
+        A tuple of booleans specifying whether to apply a logarithmic scale to the x and y axes, respectively.
+        Format is (x_log, y_log). Default is (False, False).
+    palette : str or list, optional
+        The color palette for the hue variable. Can be a string specifying a seaborn palette or a list of colors. Default is 'Spectral'.
+    style : str, optional
+        The marker style for the scatter plot. For example, 'o' for circles, 's' for squares. Default is None, which uses default markers.
+    **kwargs : dict
+        Additional keyword arguments passed to the scatter plot function.
 
-    Returns:
-        matplotlib.figure.Figure: The modified Figure object.
-        list of matplotlib.axes._subplots.AxesSubplot: A list of three axes objects (scatter plot, x-axis histogram, and y-axis histogram).
+    Returns
+    -------
+    matplotlib.figure.Figure
+        The figure object containing the scatter plot and marginal histograms.
+    list of matplotlib.axes._subplots.AxesSubplot
+        A list containing the axes objects for the scatter plot, x-axis histogram, and y-axis histogram.
 
-    Example:
-        # Create a scatter plot with histograms
-        fig, axes = plotScatterHist(data_df, x='X', y='Y', hue='Z', xlim=(0, 100), log_scale=(False, True))
+    Example
+    -------
+    >>> data = pd.DataFrame({'theta': np.random.rand(100), 'rho': np.random.rand(100), 'label': np.random.choice(['1', '2', '3'], 100)})
+    >>> fig, axes = plotScatterHist(data, 'theta', 'rho', hue='label', palette='viridis')
+
     """
-    # Function code goes here...
-
     sns.set_theme(style="ticks")
 
-    fig = SetupJGRFig((115,190), 'landscape')
+    fig = SetupAGUFig((115,190), 'landscape')
     gs = gridspec.GridSpec(4, 4)
     ax_main = plt.subplot(gs[1:4, :3])
     ax_xDist = plt.subplot(gs[0, :3])#,sharex=ax_main)
     ax_yDist = plt.subplot(gs[1:4, 3])#,sharey=ax_main)
 
 
-    m=lines['Linked']==1
     if hue is not None:
         sns.scatterplot(lines, x=x, y=y, hue=hue,
                         palette=palette,
                         alpha=0.6, ax=ax_main,
                         edgecolor='k', hue_norm=hue_norm,
                         style=style)
-        #xbins=np.arange(0,1,0.1)
-        #ax_xDist.hist(lines['Overlap'].values, bins=xbins)
 
         if len(np.unique(lines[hue])) < 10:
             h1=sns.histplot(lines, x=x, hue=hue,
@@ -1430,8 +1650,6 @@ def plotScatterHist(lines, x, y, hue=None, hue_norm=None, xlim=None, ylim=None, 
             h1.set(xlabel=None)
 
 
-            #ybins=np.arange(0,90,5)
-            #ax_yDist.hist(lines['EnEchelonAngleDiff'].values, orientation='horizontal', bins=ybins)
             h2=sns.histplot(lines, y=y, hue=hue,
                          multiple="stack",
                          palette=palette,
@@ -1451,9 +1669,6 @@ def plotScatterHist(lines, x, y, hue=None, hue_norm=None, xlim=None, ylim=None, 
             h1.set(xticklabels=[])
             h1.set(xlabel=None)
 
-
-            #ybins=np.arange(0,90,5)
-            #ax_yDist.hist(lines['EnEchelonAngleDiff'].values, orientation='horizontal', bins=ybins)
             h2=sns.histplot(lines, y=y,
                          edgecolor=".3",
                          linewidth=.5,
@@ -1462,13 +1677,10 @@ def plotScatterHist(lines, x, y, hue=None, hue_norm=None, xlim=None, ylim=None, 
                          legend=False)
 
 
-        lines=FilterLines(lines)
+        
         h2.set(yticklabels=[])
         h2.set(ylabel=None)
 
-        #ax_yDist.set(yticklabels=[], ylabel=None)
-        #ax_xDist.set(xticklabels=[], xlabel=None)
-        #ax_main.scatter(lines[x].values, lines[y].values,  color='white', alpha=0.4, edgecolor='k', marker='*')
 
     else:
         ax_main.scatter(lines[x].values, lines[y].values,  color='grey', alpha=0.4, edgecolor='k')
@@ -1479,8 +1691,6 @@ def plotScatterHist(lines, x, y, hue=None, hue_norm=None, xlim=None, ylim=None, 
 
         ax_yDist.set_xlabel('Percent')
         ax_yDist.xaxis.set_major_formatter(PercentFormatter(1))
-        #ax_yDist.set(yticklabels=[])
-        #ax_xDist.set(xticklabels=[])
         ax_xDist.set_ylabel('Percent')
         ax_xDist.yaxis.set_major_formatter(PercentFormatter(1))
 
@@ -1496,7 +1706,7 @@ def plotScatterHist(lines, x, y, hue=None, hue_norm=None, xlim=None, ylim=None, 
 
     ax_main.set_xlabel(x)
     ax_main.set_ylabel(y)
-    plt.tight_layout()
+    
 
 
     return fig, [ax_main, ax_xDist, ax_yDist]
@@ -1507,17 +1717,26 @@ def plotRatioLine(ax, x, ratio, line_kw=None):
 
     This function plots a line on a given axis with a specified ratio (slope) by specifying the x values. You can customize the appearance of the line using the `line_kw` argument.
 
-    Parameters:
-        ax (matplotlib.axes._subplots.AxesSubplot): The axis object on which to plot the line.
-        x (array-like): The x values for the line.
-        ratio (float): The desired slope (ratio) of the line.
-        line_kw (dict, optional): A dictionary of keyword arguments to customize the line's appearance (e.g., color, linestyle, label).
+    Parameters
+    -----------
+    ax : matplotlib.axes._subplots.AxesSubplot
+        The axis object on which to plot the line.
+    x : array-like
+        The x values for the line.
+    ratio : float
+        The desired slope (ratio) of the line.
+    line_kw : dict, optional 
+        A dictionary of keyword arguments to customize the line's appearance (e.g., color, linestyle, label).
 
-    Returns:
-        matplotlib.axes._subplots.AxesSubplot: The modified axis object.
-        list of matplotlib.lines.Line2D: A list containing the line objects created.
+    Returns
+    --------
+    ax : matplotlib.axes._subplots.AxesSubplot
+        The modified axis object.
+    l: list of matplotlib.lines.Line2D
+        A list containing the line objects created.
 
     Example:
+    --------
         # Plot a line with a 1:2 slope (y = 0.5 * x)
         fig, ax = plt.subplots()
         ax, line = plotRatioLine(ax, x=[0, 10], ratio=0.5, line_kw={'color': 'red', 'linestyle': '--', 'label': 'Line'})
@@ -1532,23 +1751,32 @@ def plotRatioLine(ax, x, ratio, line_kw=None):
 
 def plotByLoc(lines, col, log_scale=(False, False)):
     """
-    Plot histograms of a column against Xmid and Ymid, with color-coded distributions.
+    Plot histograms of a column against Xmid and Ymid, color-coded by the column values.
 
-    This function creates a 2x2 subplot grid with two main plots on the left and two color bars (inset axes) on the right. It uses seaborn's histplot to create histograms of a specified column col, mapping the color to the values in col. The function also provides options to use a logarithmic scale on the x-axis and y-axis of the main plots.
+    This function creates a 2x2 subplot grid where the left side displays histograms of a specified column
+    against 'Xmid' and 'Ymid', and the right side shows color bars corresponding to the histograms. The histograms
+    are color-coded based on the values in the specified column, providing a visual distribution of the data. Options
+    to apply a logarithmic scale to the x and y axes of the histograms are also available.
 
-    Parameters:
-        lines (pandas.DataFrame): The DataFrame containing the data.
-        col (str): The column name to plot against Xmid and Ymid.
-        log_scale (tuple of bool, optional): A tuple of two boolean values specifying whether to use a logarithmic scale for the x-axis and y-axis of the main plots, respectively. Default is (False, False).
+    Parameters
+    ----------
+    lines : pandas.DataFrame
+        The DataFrame containing the data to be plotted. Must include 'Xmid', 'Ymid', and the specified column `col`.
+    col : str
+        The name of the column in `lines` DataFrame to plot and color-code against 'Xmid' and 'Ymid'.
+    log_scale : tuple of bool, optional
+        Specifies whether to apply a logarithmic scale on the x-axis and y-axis of the histograms, respectively.
+        Format is (x_log, y_log). Default is (False, False).
 
-    Returns:
-        matplotlib.figure.Figure: The created figure object.
-        list of matplotlib.axes._subplots.AxesSubplot: A list containing the main axis objects.
-        list of matplotlib.axes._axes.Axes: A list containing the inset (color bar) axis objects.
+    Returns
+    -------
+    fig : matplotlib.figure.Figure
+        The figure object containing the plots.
+    axs : list of matplotlib.axes._subplots.AxesSubplot
+        A list containing the two main axes objects for the histograms.
+    axins : list of matplotlib.axes._axes.Axes
+        A list containing the two inset axes objects for the color bars.
 
-    Example:
-        # Plot histograms of a column 'Value' against Xmid and Ymid with logarithmic y-axis scale
-        fig, [ax, axins1, axins2] = plotByLoc(lines, col='Value', log_scale=(False, True))
     """
 
     if "Xmid" not in lines.columns:

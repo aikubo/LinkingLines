@@ -369,24 +369,25 @@ class TestWKTToArray:
         assert len(data)-1==len(result_df)
 
             
+
 class TestReadFile():
     # Test case 1: read csv with wkt
-    def testCSVRead(self):
-        df=readFile('../data/testCSV_dikemountain.csv')
+    def testCSVRead(self, shared_datadir):
+        df=readFile(str(shared_datadir / 'testCSV_dikemountain.csv'))
         assert isinstance(df, pd.DataFrame)
         columns= ['WKT', 'seg_length', 'Xstart', 'Ystart', 'Xend', 'Yend', 'theta', 'rho']
         assert all([a in df.columns for a in columns])
 
     # Test case 2: read geojson 
-    def testGeoJSONRead(self):
-        df=readFile('../data/testGJSON_dikemountain.geojson')
+    def testGeoJSONRead(self, shared_datadir):
+        df=readFile(str(shared_datadir / 'testGJSON_dikemountain.geojson'))
         assert isinstance(df, pd.DataFrame)
         columns= ['geometry','seg_length', 'Xstart', 'Ystart', 'Xend', 'Yend', 'theta', 'rho']
         assert all([a in df.columns for a in columns])
 
     # Test case 3: read shapefile
-    def testShapefileRead(self):
-        df=readFile('../data/testShapefile_dikemountain.shp')
+    def testShapefileRead(self, shared_datadir):
+        df=readFile(str(shared_datadir / 'testShapefile_dikemountain.shp'))
         assert isinstance(df, pd.DataFrame)
         columns= ['geometry', 'seg_length', 'Xstart', 'Ystart', 'Xend', 'Yend', 'theta', 'rho']
         assert all([a in df.columns for a in columns])
@@ -406,11 +407,11 @@ class TestWriteFile():
         return df
     
     # Test case 1: write to csv
-    def testFileTypesWrite(self, df):
+    def testFileTypesWrite(self, df, shared_datadir):
 
         for i in [".csv", ".shp", ".gpkg", ".geojson"]:
             
-            testpath = '../data/test'
+            testpath = str(shared_datadir / "testWriteFiles")
         
             dfwrite=writeFile(df, testpath+i)
 
@@ -426,12 +427,12 @@ class TestWriteFile():
 
             assert all([a in df2.columns for a in columns])
 
-    def testWriteWKT(self,df):
+    def testWriteWKT(self,df, shared_datadir):
 
         # write as geojson 
-        dfwrite = writeFile(df, '../data/testWKTwrite.geojson')
+        dfwrite = writeFile(df, str(shared_datadir / 'testWKTwrite.geojson'))
 
-        df2 = gpd.read_file('../data/testWKTwrite.geojson')
+        df2 = gpd.read_file(str(shared_datadir / 'testWKTwrite.geojson'))
 
         assert "WKT" in df2.columns or "geometry" in df2.columns
 

@@ -1,42 +1,26 @@
 # LinkingLines Package
  # Written by aikubo
- # Version: 2.1.0
+ 
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Thu Apr  1 12:54:02 2021
-
-@author: akh
-
 examineMod: Module for examining and analyzing line clusters.
 
 This module provides functions to analyze and examine line clusters, including computing bounding rectangles,
 evaluating cluster properties, and checking for changes between clusters.
 
 Functions:
-    - OutputRectangles(clusters): Compute the coordinates of bounding rectangles for each cluster.
-    - examineCluster(clusters): Generate a summary of properties for each cluster in a set of line clusters.
-    - examineClustersShort(clusters): Generate a summary of properties for clusters in a set of line clusters.
-    - checkClusterChange(lines1, lines2): Check if two sets of line clusters are the same.
-    - checkoutCluster(clusters,label): Display information and plots related to a cluster of lines.
-    - checkoutClusterCart(clusters, label): Display information and plots related to a cluster of lines.in Cartesian space
-    - checkoutby(dikeset, lines, col): plot information based on cluster metrics
-    - RotateOverlap(lines):Calculate the overlap ratio and maximum overlap count of lines after rotation.
-    - enEchelonTwistAngle:Calculate the angle twist and statistical significance of features.
-    -extendLines(lines):Extends lines in dataframe up to min(x)*.5 and max(x)*1.5
+    - `OutputRectangles(clusters)`: Compute the coordinates of bounding rectangles for each cluster.
+    - `examineCluster(clusters)`: Generate a summary of properties for each cluster in a set of line clusters.
+    - `examineClustersShort(clusters)`: Generate a summary of properties for clusters in a set of line clusters.
+    - `checkClusterChange(lines1, lines2)`: Check if two sets of line clusters are the same.
+    - `checkoutCluster(clusters,label)`: Display information and plots related to a cluster of lines.
+    - `checkoutClusterCart(clusters, label)`: Display information and plots related to a cluster of lines.in Cartesian space
+    - `checkoutby(dikeset, lines, col)`: plot information based on cluster metrics
+    - `RotateOverlap(lines)`:Calculate the overlap ratio and maximum overlap count of lines after rotation.
+    - `enEchelonTwistAngle(d, avgtheta)` :Calculate the angle twist and statistical significance of features.
+    - `extendLines(lines)`:Extends lines in dataframe up to min(x)*.5 and max(x)*1.5
 
-
-Dependences:
-
-    fitRectangle (this package)
-    htMOD (this package)
-    plotMod (this package)
-    statsmodels
-    scipy
-    matplotlib
-    numpy
-    pandas
-    sklearn
 """
 
 import numpy as np
@@ -66,13 +50,6 @@ def checkoutCluster(dikeset, label):
     """
     Display information and plots related to a cluster of lines.
 
-    Parameters:
-        dikeset (DataFrame): A DataFrame containing line data with columns 'xc', 'yc', 'Labels', 'theta', and 'rho'.
-        label (int): The label of the cluster to be analyzed.
-
-    Returns:
-        fig, ax (tuple): A tuple containing the Figure and Axes objects for the generated plots.
-
     This function takes a DataFrame containing line data and a label specifying a cluster of lines. It generates two subplots:
     1. Scatter plot of lines' theta and rho values, highlighting the selected cluster in red.
     2. Rectangle plot showing the lines in the cluster along with additional information.
@@ -86,14 +63,27 @@ def checkoutCluster(dikeset, label):
 
     Additionally, it handles cases where the cluster crosses the zero angle boundary and adjusts the plot accordingly.
 
-    Note:
-    - The input DataFrame 'dikeset' must contain columns 'xc', 'yc', 'Labels', 'theta', and 'rho'.
-    - 'label' specifies the cluster to be analyzed.
-    - The function returns the Figure and Axes objects for further customization or saving.
+    Parameters
+    ----------
+    dikeset : pandas.DataFrame
+        A DataFrame containing line data with columns 'xc', 'yc', 'Labels', 'theta', and 'rho'.
+    label : int
+        The label of the cluster to be analyzed.
 
-    Example usage:
-    fig, ax = checkoutCluster(lines, 2)
-    plt.show()
+    Returns
+    -------
+    fig : matplotlib.figure.Figure
+        The Figure object for the generated plots.
+    ax : matplotlib.axes.Axes
+        The Axes object for the generated plots.
+
+
+
+    Example:
+    ----------
+
+    >>> fig, ax = ll.checkoutCluster(lines, 2)
+    >>> plt.show()
     """
 
     xc=dikeset['xc'].iloc[0]
@@ -213,27 +203,36 @@ def checkoutClusterCart(dikeset, label, fig, ax):
     """
     Visualize and annotate cluster information in a Cartesian coordinate system.
 
-    Parameters:
-        dikeset (DataFrame): A DataFrame containing line data with columns 'xc', 'yc', 'Labels', 'theta', and 'rho'.
-        label (int): The label of the cluster to be analyzed.
-        fig (Figure): The Figure object for plotting.
-        ax (Axes): The Axes object for plotting.
+    This function takes as input a pandas DataFrame containing line segment data, a specific cluster label, and matplotlib Figure
+    and Axes objects for plotting. It outputs a visualization of the specified cluster's line segments within a Cartesian coordinate
+    system and annotates this visualization with the cluster's mean angle, length, width, and size. Additionally, the function
+    prints details of the cluster's mean angle, rho mean, length, and width for further reference.
 
-    Returns:
-        ax (Axes): The updated Axes object after plotting and annotation.
+    Parameters
+    ----------
+    dikeset : DataFrame
+        A DataFrame containing line data. Expected columns include 'xc' and 'yc' for Cartesian coordinates,
+        'Labels' for cluster labels, 'theta' for segment angles, and 'rho' for the distance from the origin to the line.
+    label : int
+        The label identifying the cluster to be visualized and analyzed.
+    fig : matplotlib.figure.Figure
+        The Figure object provided by matplotlib for plotting. It serves as the canvas on which the plot is drawn.
+    ax : matplotlib.axes.Axes
+        The Axes object provided by matplotlib, representing the space within the figure where the data is plotted.
 
-    This function visualizes cluster information in a Cartesian coordinate system. It takes a DataFrame containing line data,
-    a cluster label, and Figure and Axes objects for plotting. The function generates a plot of the cluster's line segments,
-    annotates the plot with information such as the mean angle, length, width, and size of the cluster, and adjusts the plot
-    based on the cluster's orientation.
+    Returns
+    -------
+    ax : matplotlib.axes.Axes
+        The modified Axes object with the cluster plot and annotations.
 
-    The function also prints the cluster's angle mean, rho mean, length, and width for reference.
+    Examples
+    --------
+    >>> fig, ax = plt.subplots()
+    >>> ax = ll.checkoutClusterCart(line_data, 2, fig, ax)
+    >>> plt.show()
 
-    Example usage:
-    fig, ax = plt.subplots()
-    ax = checkoutClusterCart(line_data, 2, fig, ax)
-    plt.show()
     """
+
 
     xc=dikeset['xc'].iloc[0]
     yc=dikeset['yc'].iloc[0]
@@ -307,19 +306,6 @@ def CheckoutBy(dikeset, lines, col, maximum=True, minimum=False):
     """
     Display cluster information and plots for lines with maximum or minimum values in a specified column.
 
-    Parameters:
-        dikeset (DataFrame): A DataFrame containing line data with columns 'xc', 'yc',
-        'Labels', 'theta', and 'rho'.
-        lines (DataFrame): A DataFrame containing line data with a 'Label' column and
-        the specified 'col' column.
-        col (str): The column name in 'lines' to identify the maximum or minimum values.
-        maximum (bool): If True, display information and plots for lines with the maximum 'col' value.
-        minimum (bool): If True, display information and plots for lines with the minimum 'col' value.
-
-    Returns:
-        fig, ax (tuple): A tuple containing the Figure and Axes objects for the generated plots.
-
-    Notes:
     This function allows you to analyze and visualize clusters of lines based
     on the maximum or minimum values in a specified column. It can display
     cluster information and plots for both maximum and minimum values independently.
@@ -333,9 +319,30 @@ def CheckoutBy(dikeset, lines, col, maximum=True, minimum=False):
     information and plots and prints the label and the corresponding maximum or
     minimum value of the specified column.
 
-    Example usage:
-    fig, ax = CheckoutBy(lines, dikeset, 'theta', maximum=True, minimum=True)
-    plt.show()
+    Parameters
+    ----------
+    dikeset : pandas.DataFrame
+        A DataFrame containing line data with columns 'xc', 'yc', 'Labels', 'theta', and 'rho'.
+    lines : panads.DataFrame 
+        A DataFrame containing line data with a 'Label' column and the specified 'col' column.
+    col : str
+      The column name in 'lines' to identify the maximum or minimum values.
+    maximum : bool, default True
+        If True, display information and plots for lines with the maximum 'col' value.
+    minimum : bool, default False
+        If True, display information and plots for lines with the minimum 'col' value.
+
+    Returns
+    -------
+    fig : matplotlib.figure.Figure
+        The Figure object for the generated plots.
+    ax : matplotlib.axes.Axes
+        The Axes object for the generated plots.
+
+    Example
+    -------
+    >>> fig, ax = ll.CheckoutBy(lines, dikeset, 'theta', maximum=True, minimum=True)
+    >>> plt.show()
     """
 
 
@@ -358,13 +365,7 @@ def RotateOverlap(lines):
     """
     Calculate the overlap ratio and maximum overlap count of lines after rotation.
 
-    Parameters:
-        lines (DataFrame): A DataFrame containing line data with 'theta', 'Xstart', and 'Xend' columns.
-
-    Returns:
-        overlap (float): The ratio of overlapping line segments after rotation.
-        max_overlap_count (int): The maximum count of overlapping line segments along the rotated x-axis.
-
+    
     This function takes a DataFrame of line data and performs the following steps:
     1. Calculates the mean angle ('theta') of the lines.
     2. Rotates the line data by the complementary angle (90 degrees minus the mean angle).
@@ -381,11 +382,24 @@ def RotateOverlap(lines):
     The maximum overlap count represents the maximum number of overlapping
     segments along the rotated x-axis.
 
-    Example usage:
-    overlap, max_overlap_count = RotateOverlap(line_data)
-    print("Overlap Ratio:", overlap)
-    print("Maximum Overlap Count:", max_overlap_count)
+
+    Parameters
+    ----------
+    lines : DataFrame
+        A DataFrame with columns 'theta' for the angle of each line segment, 'Xstart', and
+        'Xend' indicating the starting and ending points of the line segments along the x-axis.
+
+    Returns
+    -------
+    overlap_ratio : float
+        The ratio of the total length of overlapping segments to the total length of all segments
+        after rotation. Values closer to 1 indicate high overlap between two segments, while higher
+        values indicate overlap among three or more segments.
+    max_overlap_count : int
+        The maximum number of line segments overlapping along the rotated x-axis.
+
     """
+
 
 
     theta=np.mean(lines['theta'].values)
@@ -421,35 +435,49 @@ def enEchelonAngleTwist(d, avgtheta):
     """
     Calculate the angle twist and statistical significance for en échelon features.
 
-    Parameters:
-        d (DataFrame): A DataFrame containing en échelon line segment data with 'Xstart', 'Xend', 'Ystart', 'Yend',
-                       'Xmid', and 'Ymid' columns.
-        avgtheta (float): The average angle (in degrees) for alignment comparison.
+    This function is designed to analyze en échelon features, which are represented as line segments, to
+    determine the angle twist and its statistical significance. The process includes fitting a linear regression
+    model to the midpoints of the line features to estimate their orientation, computing the p-value for the
+    linear regression to assess the alignment's statistical significance, and calculating the angle twist
+    based on the p-value. The angle twist is defined as the angle difference between the linear model's orientation
+    and the average angle of the line segments if the p-value indicates significant alignment. Otherwise, the
+    angle twist is set to 0, suggesting no significant alignment.
 
-    Returns:
-        angle_twist (float): The angle twist between the average angle and the en échelon feature's orientation.
-        p_value (float): The p-value indicating the statistical significance of the alignment.
+    Parameters
+    ----------
+    d : pandas.DataFrame
+        A DataFrame containing en échelon line segment data, which must include columns for 'Xstart',
+        'Xend', 'Ystart', 'Yend', 'Xmid', and 'Ymid'. These represent the start and end points of the line
+        segments and their midpoints, respectively.
+    avgtheta : float
+        The average angle (in degrees) of the line segments, used for comparison with the estimated orientation
+        of the en échelon feature.
 
-        Xstart (float): The starting x-coordinate of the midpoints line.
-        Xend (float): The ending x-coordinate of the midpoints line.
-        Ystart (float): The corresponding y-coordinate at the starting x-coordinate.
-        Yend (float): The corresponding y-coordinate at the ending x-coordinate.
+    Returns
+    -------
+    angle_twist : float
+        The angle difference (in degrees) between the en échelon feature's orientation and the average angle of
+        the line segments. It reflects the degree of twist if the alignment is statistically significant, otherwise
+        set to 0.
+    p_value : float
+        The p-value from the linear regression model, indicating the statistical significance of the alignment
+        between the line segments. Values below 0.05 suggest significant alignment.
+    Xstart : float
+        The starting x-coordinate of the line representing the estimated orientation.
+    Xend : float
+        The ending x-coordinate of the line representing the estimated orientation.
+    Ystart : float
+        The y-coordinate at the starting x-coordinate of the estimated orientation line.
+    Yend : float
+        The y-coordinate at the ending x-coordinate of the estimated orientation line.
 
-    This function analyzes features represented as line segments and performs the following steps:
-    1. Fits a linear regression model to the midpoints of the  line feature to estimate its orientation.
-    3. Computes the p-value for the linear regression to assess the statistical significance of the alignment.
-    4. If the p-value is above 0.05, the angle twist is set to 0 (indicating no significant alignment).
-    5. If the p-value is below 0.05 (inidicating significant allignment of midpoints)
-    it caluclates the angle difference between the line created by the midpoints
-    and the average angle of the lines
+    Notes
+    -----
+    The function assumes significant alignment if the p-value is below 0.05, following standard statistical
+    significance levels.
 
-    Example usage:
-    angle_twist, p_value, Xstart, Xend, Ystart, Yend = enEchelonAngleTwist(en_echelon_data, 30.0)
-    print("Angle Twist (degrees):", angle_twist)
-    print("P-Value:", p_value)
-    print("Starting Coordinates:", Xstart, Ystart)
-    print("Ending Coordinates:", Xend, Yend)
     """
+
 
 
     warnings.filterwarnings("ignore")
@@ -487,13 +515,7 @@ def enEchelonAngleTwist(d, avgtheta):
 
 def examineClusterShort(clusters):
     """
-    Analyze and summarize information about clustered line segments.
-
-    Parameters:
-        clusters (DataFrame): A DataFrame containing line data with columns 'Labels', 'theta', 'rho', and 'HashID'.
-
-    Returns:
-        clusters_data (DataFrame): A DataFrame containing summarized information for each cluster.
+    Analyze and summarize information about clustered line segments. This is the shorter and faster version of `examineCluster`
 
     This function analyzes and summarizes information about clustered line segments.
     It calculates various statistics for each cluster,
@@ -507,14 +529,23 @@ def examineClusterShort(clusters):
     information for each cluster, including its label,
     coordinates, average rho, average theta, size, and a hash identifier.
 
-    Notes:
-        This is the shorter and faster version of examineCluster
 
-    Example usage:
-    cluster_summary = examineClusterShort(cluster_data)
-    print(cluster_summary.head())
+    Parameters
+    ----------
+    clusters : pandas.DataFrame
+        A DataFrame containing line data with columns 'Labels', 'theta', 'rho', and 'HashID'.
+
+    Returns
+    -------
+    clusters_data : pandas.DataFrame
+        A DataFrame containing summarized information for each cluster.
+
+    See Also
+    --------
+    examineCluster: A more detailed version of this function that provides additional information about the clusters.
+
+
     """
-    # Function code here
 
     clabel=np.unique(clusters['Labels'])
     nclusters=len(clabel)-1
@@ -569,64 +600,87 @@ def examineClusterShort(clusters):
 
 def examineClusters(clusters, enEchelonCutofff=7, ifEE=False, MaxNNSegDist=0.5, skipUnlinked=True, xc=None, yc=None):
     """
-    Analyze and summarize information about clusters of line segments.
+    Analyze and summarize information about clusters of line segments. 
+    
+    This function analyzes and summarizes information about clusters of line segments.
+    It calculates various statistics for each cluster, including coordinates, average rho (distance from the origin), average theta
+    (angle), size (number of lines) within each cluster, and other cluster-related information. 
+    
+    It also includes a TrustFilter based on the maximum normalized nearest neighbor segment distance. TrustFilter is calculated by 
+    first calculating all nearest neighbor distances between line segments in a cluster. The maximum, median, and minimum normalized
+    by the total length of the clustered segments. A MaxNNSegDist is then used to filter out clusters with a maximum normalized nearest
+    neighbor segment distance greater than the specified value. For if a cluster with 3 segments which are evenly distributed along the length, 
+    (one segment at the middle and two on either ends of a line), would have a MaxNNSegDist of 0.5. Whereas a cluster with 3 segments in which
+    two are close together and one is far away would have a MaxNNSegDist greater than 0.5 and up to 1.0.
 
-    Parameters:
-        clusters (DataFrame): A DataFrame containing line data with columns 'Xstart', 'Ystart', 'Xend', 'Yend', 'seg_length',
-                              'ID', 'rho', 'theta', 'Labels', and 'PerpOffsetDist'.
-        enEchelonCutofff (int): A cutoff value for en échelon angle differences.
-        ifEE (bool): A flag indicating whether en échelon analysis should be performed.
-        MaxNNSegDist (float): The maximum normalized nearest neighbor segment distance for the TrustFilter.
-        skipUnlinked (bool): A flag to skip unlinked segments.
-        xc (float): The x-coordinate of the center (optional).
-        yc (float): The y-coordinate of the center (optional).
+    Parameters
+    ----------
+    clusters : pandas.DataFrame
+        A DataFrame containing line data with columns 'Xstart', 'Ystart', 'Xend', 'Yend', 'seg_length',
+        'ID', 'rho', 'theta', 'Labels', and 'PerpOffsetDist'.
+    enEchelonCutofff : int, default = 7
+        A cutoff value for en échelon angle differences.
+    ifEE : bool default = False
+        A flag indicating whether en échelon analysis should be performed.
+    MaxNNSegDist : float 
+        The maximum normalized nearest neighbor segment distance for the TrustFilter.
+        This is a float (0,1).
+    skipUnlinked : bool default = True
+         A flag to skip unlinked segments.
+    xc : float, optional
+      The x-coordinate of the center 
+    yc : float, optional
+        The y-coordinate of the center 
 
-    Returns:
-        clusters_data (DataFrame): A DataFrame containing summarized information for each cluster.
+    Returns
+    -------
+    clusters_data : pandas.DataFrame
+        A DataFrame containing summarized information for each cluster.
 
-            1. `Label`: Cluster label or identifier.
-            2. `Xstart`: Starting x-coordinate of the clustered line.
-            3. `Ystart`: Starting y-coordinate of the clustered line.
-            4. `Xend`: Ending x-coordinate of the clustered line.
-            5. `Yend`: Ending y-coordinate of the clustered line.
-            6. `X0`: Midpoint of the x-coordinate range of the cluster.
-            7. `Y0`: Midpoint of the y-coordinate range of the cluster.
-            8. `AvgRho`: Average rho for the cluster.
-            9. `AvgTheta`: Average angle (theta) for the cluster.
-            10. `AvgSlope`: Average slope of the lines in the cluster.
-            11. `AvgIntercept`: Average intercept of the lines in the cluster.
-            12. `RhoRange`: Range of rho values within the cluster.
-            13. `Aspect`: Aspect ratio, calculated as the length (l) divided by the width (w).
-            14. `Xmid`: X-coordinate of the midpoint of the fitted rectangle
-            15. `Ymid`: Y-coordinate of the midpoint of the fitted rectangle
-            16. `PerpOffsetDist`: Average perpendicular offset distance for the lines in the cluster.
-            17. `PerpOffsetDistRange`: Range of perpendicular offset distances within the cluster.
-            18. `NormPerpOffsetDist`: Normalized perpendicular offset distance.
-            19. `ThetaRange`: Range of theta values within the cluster.
-            20. `StdRho`: Standard deviation of rho values within the cluster.
-            21. `StdTheta`: Standard deviation of theta values within the cluster.
-            22. `R_Width`: Width (w) of the cluster.
-            23. `R_Length`: Length (l) of the cluster.
-            24. `Size`: Number of lines in the cluster.
-            25. `R_error`: Square root of the error (r) in the cluster's line fit.
-            26. `Linked`: Indicates whether the lines in the cluster are considered linked or not.
-            27. `SegmentLSum`: Sum of the lengths of line segments within the cluster.
-            28. `ClusterHash`: A hash identifier for the cluster.
-            29. `ClusterCrossesZero`: Indicates whether the cluster's angles cross zero.
-            30. `EnEchelonAngleDiff`: Twist angle difference for features within the cluster.
-            31. `Overlap`: Overlap of line segments within the cluster.
-            32. `nOverlapingSegments`: Number of overlapping segments within the cluster.
-            33. `EEPvalue`: P-value related to en échelon analysis.
-            34. `MaxSegNNDist`: Maximum normalized nearest neighbor segment distance.
-            35. `MedianSegNNDist`: Median normalized nearest neighbor segment distance.
-            36. `MinSegNNDist`: Minimum normalized nearest neighbor segment distance.
-            37. `TrustFilter`: A filter indicating trustworthiness based on the
-            maximum normalized nearest neighbor segment distance.
-            38. 'xc': X-coordinate of HT origin
-            39. 'yc': Y-coordinate of HT origin
-            40: 'Date_Changed': date string of generation or change time
+        1. `Label`: Cluster label or identifier.
+        2. `Xstart`: Starting x-coordinate of the clustered line.
+        3. `Ystart`: Starting y-coordinate of the clustered line.
+        4. `Xend`: Ending x-coordinate of the clustered line.
+        5. `Yend`: Ending y-coordinate of the clustered line.
+        6. `X0`: Midpoint of the x-coordinate range of the cluster.
+        7. `Y0`: Midpoint of the y-coordinate range of the cluster.
+        8. `AvgRho`: Average rho for the cluster.
+        9. `AvgTheta`: Average angle (theta) for the cluster.
+        10. `AvgSlope`: Average slope of the lines in the cluster.
+        11. `AvgIntercept`: Average intercept of the lines in the cluster.
+        12. `RhoRange`: Range of rho values within the cluster.
+        13. `Aspect`: Aspect ratio, calculated as the length (l) divided by the width (w).
+        14. `Xmid`: X-coordinate of the midpoint of the fitted rectangle
+        15. `Ymid`: Y-coordinate of the midpoint of the fitted rectangle
+        16. `PerpOffsetDist`: Average perpendicular offset distance for the lines in the cluster.
+        17. `PerpOffsetDistRange`: Range of perpendicular offset distances within the cluster.
+        18. `NormPerpOffsetDist`: Normalized perpendicular offset distance.
+        19. `ThetaRange`: Range of theta values within the cluster.
+        20. `StdRho`: Standard deviation of rho values within the cluster.
+        21. `StdTheta`: Standard deviation of theta values within the cluster.
+        22. `R_Width`: Width (w) of the cluster.
+        23. `R_Length`: Length (l) of the cluster.
+        24. `Size`: Number of lines in the cluster.
+        25. `R_error`: Square root of the error (r) in the cluster's line fit.
+        26. `Linked`: Indicates whether the lines in the cluster are considered linked or not.
+        27. `SegmentLSum`: Sum of the lengths of line segments within the cluster.
+        28. `ClusterHash`: A hash identifier for the cluster.
+        29. `ClusterCrossesZero`: Indicates whether the cluster's angles cross zero.
+        30. `EnEchelonAngleDiff`: Twist angle difference for features within the cluster.
+        31. `Overlap`: Overlap of line segments within the cluster.
+        32. `nOverlapingSegments`: Number of overlapping segments within the cluster.
+        33. `EEPvalue`: P-value related to en échelon analysis.
+        34. `MaxSegNNDist`: Maximum normalized nearest neighbor segment distance.
+        35. `MedianSegNNDist`: Median normalized nearest neighbor segment distance.
+        36. `MinSegNNDist`: Minimum normalized nearest neighbor segment distance.
+        37. `TrustFilter`: A filter indicating trustworthiness based on the
+        maximum normalized nearest neighbor segment distance.
+        38. 'xc': X-coordinate of HT origin
+        39. 'yc': Y-coordinate of HT origin
+        40: 'Date_Changed': date string of generation or change time
 
-        evaluation (DataFrame): A DataFrame containing summary statistics of the clusters.
+    evaluation : pandas.DataFrame
+        A DataFrame containing summary statistics of the clusters.
 
         1. `nClusters`: The number of clusters in the `clusters_data` DataFrame.
         2. `nDikePackets`: The number of clusters with an overlap greater than 0.1 (presumably indicating some form of overlap between line segments).
@@ -651,24 +705,22 @@ def examineClusters(clusters, enEchelonCutofff=7, ifEE=False, MaxNNSegDist=0.5, 
         21. `Date`: The date when this summary information was generated.
 
 
-
-    This function analyzes and summarizes information about clusters of line segments.
-    It calculates various statistics for each cluster,
-    including coordinates, average rho (distance from the origin), average theta
-    (angle), size (number of lines) within each cluster, and
-    other cluster-related information. It also includes a TrustFilter based o
-    n the maximum normalized nearest neighbor segment distance.
-
-    The function returns two DataFrames: 'clusters_data' contains summarized
-    information for each cluster, and 'evaluation' contains summary
-    statistics of the clusters.
-
-    Example usage:
-    cluster_summary, cluster_evaluation = examineClusters(cluster_data,
+    Example:
+    ----------
+    >>> import linkinglines as ll
+    >>> data = ll.readFile('data.csv')
+    >>> cluster_data, _ = ll.AggCluster(data, 0.5, 0.5)
+    >>> cluster_summary, cluster_evaluation = ll.examineClusters(cluster_data,
                                                           enEchelonCutofff=10,
                                                           ifEE=True,
                                                           MaxNNSegDist=0.6,
                                                           skipUnlinked=True)
+
+    See Also
+    --------
+    fit_Rec: A function to fit a rectangle to a cluster of line segments.
+    EnEchelonAngleTwist: A function to calculate the angle twist and statistical significance for en échelon features.
+    RotateOverlap: A function to calculate the overlap ratio and maximum overlap count of lines after rotation.
 
     """
 
@@ -830,12 +882,6 @@ def evaluationOnClusters(clusters_data):
     """
     Calculate evaluation metrics based on cluster data.
 
-    Args:
-    clusters_data (DataFrame): A DataFrame containing cluster information.
-
-    Returns:
-    DataFrame: A summary DataFrame with evaluation metrics.
-
     This function computes various evaluation metrics based on the provided cluster data.
     The metrics include information about the number of clusters, cluster sizes,
     rho and theta range statistics, average lengths and widths of clusters,
@@ -845,9 +891,17 @@ def evaluationOnClusters(clusters_data):
     characteristics of the clusters, making it useful for further analysis and
     interpretation of the data.
 
-    Example:
-    >>> evaluation = evaluationOnClusters(clusters_data)
-    """
+    Parameters
+    ----------
+    clusters_data : pandas.DataFrame
+        A DataFrame containing cluster information.
+
+    Returns
+    -------
+    evaluation : pandas.DataFrame
+        A summary DataFrame with evaluation metrics.
+
+   """
 
 
     now = datetime.now()
@@ -881,22 +935,28 @@ def checkAllClusterChange(lines1, lines2):
     """
     Compare two sets of line clusters to check if they are the same.
 
-    Args:
-    lines1 (DataFrame): The first set of line clusters as a DataFrame.
-    lines2 (DataFrame): The second set of line clusters as a DataFrame.
-
-    Returns:
-    bool: True if the clusters are the same, False otherwise.
-
     This function compares two sets of line clusters to determine whether they are
     identical or different. It does this by sorting and hashing the ClusterHash
     values of both sets and then comparing the resulting hash values. If the hash
     values are the same, the clusters are considered the same; otherwise, they
-    are considered different.
+    are considered different. Both must have "ClusterHash" as a column.
 
-    Example:
-    >>> are_clusters_identical = checkAllClusterChange(cluster_data1, cluster_data2)
+    Parameters
+    ----------
+    lines1 : pandas.DataFrame
+        The first set of line clusters as a DataFrame.
+    lines2 : DataFrame
+        The second set of line clusters as a DataFrame.
+
+    Returns
+    -------
+        (bool): True if the clusters are the same, False otherwise.
+
+
     """
+    if "ClusterHash" not in lines1.columns or "ClusterHash" not in lines2.columns:
+        raise ValueError("Both DataFrames must have a 'ClusterHash' column")
+
     hash1 = np.sort(lines1['ClusterHash'])
     hash2 = np.sort(lines2['ClusterHash'])
     hash1.flags.writeable = False
@@ -913,25 +973,31 @@ def checkAllClusterChange(lines1, lines2):
 def checkIndividualClusterChange(df1, df2):
     """
     Compare individual line clusters between two sets of data frames.
-
-    Args:
-    df1 (DataFrame): The first set of line clusters as a DataFrame.
-    df2 (DataFrame): The second set of line clusters as a DataFrame.
-
-    Returns:
-    tuple: A tuple containing two NumPy arrays - eqLabels and diffLabels.
-           - eqLabels: An array of labels that are found in both df1 and df2.
-           - diffLabels: An array of labels that are unique to either df1 or df2.
-
     This function compares individual line clusters between two sets of data frames,
     df1 and df2. It identifies which cluster labels are common (eqLabels) and which
     are unique to each data frame (diffLabels). It also provides information about
     the number of overlapping clusters and the total number of clusters in each data
     frame.
 
-    Example:
-    >>> eqLabels, diffLabels = checkIndividualClusterChange(cluster_data1, cluster_data2)
+    Parameters
+    ----------
+    df1 : pandas.DataFrame
+        The first set of line clusters as a DataFrame.
+    df2 pandas.DataFrame
+        The second set of line clusters as a DataFrame.
+
+    Returns
+    -------
+    eqLabels : numpy.ndarray
+        An array of labels that are found in both df1 and df2.
+    diffLabels : numpy.ndarray
+        An array of labels that are unique to either df1 or df2.
+
+
     """
+    if "ClusterHash" not in df1.columns or "ClusterHash" not in df2.columns:
+        raise ValueError("Both DataFrames must have a 'ClusterHash' column")
+    
     l1 = df1['ClusterHash'].values
     l2 = df2['ClusterHash'].values
     HashList = np.array([l1, l2])
@@ -967,12 +1033,14 @@ def extendLines(lines, save=False, name='Longlines.csv'):
 
     Parameters
     ----------
-    df : pandas dataframe
-        DESCRIPTION.
+    df : pandas.DataFrame
+        Dataframe containing line data with columns 'Xstart', 'Ystart', 'Xend', 'Yend', 'theta', 'rho'
+        
 
     Returns
     -------
     lines: pandas.dataframe
+        extended lines dataframe
 
 
     """
@@ -996,16 +1064,6 @@ def extendLines(lines, save=False, name='Longlines.csv'):
     x2 = (x0 - l/2 * (-b))
     y2 = (y0 - l/2 * (a))
 
-    # m=(-1/np.tan(np.deg2rad(lines['AvgTheta'].values)))+0.000001
-    # b=(lines['AvgRho'].values)/np.sin(np.deg2rad(lines['AvgTheta'].values))
-
-
-    # print(xmax, xmin)
-    # xstart=[xmax]*len(lines)
-    # xend=[xmin]*len(lines)
-
-    # ystart=m*xstart+b
-    # yend=m*xend+b
     longlines=lines.copy()
     longlines['Xstart']=x1
     longlines['Ystart']=y1
@@ -1022,22 +1080,23 @@ def extendLines(lines, save=False, name='Longlines.csv'):
 def OutputRectangles(clusters):
     """
     Compute the coordinates of bounding rectangles for each cluster in a set of line clusters.
-
-    Args:
-    clusters (DataFrame): A DataFrame containing line clusters with attributes 'Labels', 'Xmid', 'Ymid'.
-
-    Returns:
-    tuple: A tuple containing two NumPy arrays - Xs and Ys.
-           - Xs: An array of X-coordinates for the corners of bounding rectangles for each cluster.
-           - Ys: An array of Y-coordinates for the corners of bounding rectangles for each cluster.
-
     This function computes the coordinates of bounding rectangles for each cluster in a set of
     line clusters. It uses the 'Xmid' and 'Ymid' attributes of the clusters to determine the
     center points and calculates the coordinates of the corners of rectangles that enclose
     the clusters.
 
-    Example:
-    >>> Xs, Ys = OutputRectangles(cluster_data)
+    Parameters
+    ----------
+    clusters : DataFrame
+        A DataFrame containing line clusters with attributes 'Labels', 'Xmid', 'Ymid'.
+
+    Returns
+    -------
+    Xs : numpy.ndarray
+        An array of X-coordinates for the corners of bounding rectangles for each cluster.
+    Ys : numpy.ndarray
+        An array of Y-coordinates for the corners of bounding rectangles for each cluster.
+
     """
     clabel = np.unique(clusters['Labels'])
     nclusters = len(clabel)

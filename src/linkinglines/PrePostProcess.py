@@ -1,6 +1,6 @@
 # LinkingLines Package
  # Written by aikubo
- # Version: 2.1.0
+ 
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
@@ -43,17 +43,23 @@ import os
 import geopandas
 
 def readFile(name, preprocess=True):
+    """
+    Reads in a file and returns a pandas dataframe.
+
+    Parameters
+    ----------
+    name : str
+        The path to the file to be read in.
+
+    preprocess : bool, optional
+        Indicates whether to preprocess the data, by default True.
+
+    Returns
+    -------
+    data : pandas.DataFrame
+        A pandas or geopandas dataframe containing the read data.
 
     """
-    Reads in a file and returns a pandas dataframe
-
-    Parameters:
-        name: (string) the path to the file to be read in
-    
-    Returns:
-        data: (pandas.DataFrame) a pandas or geopandas dataframe
-    """
-
     # if not a valid path, return error
     if not os.path.exists(name):
         raise ValueError("Invalid path")
@@ -87,15 +93,15 @@ def midPoint(df):
 
     Parameters
     ----------
-    df: pandas.Dataframe
-        dataframe of the line segments
-        must contain ["Xstart", "Ystart", "Xend", "Yend"]
+    df : pandas.DataFrame
+        Dataframe containing the line segments with columns ["Xstart", "Ystart", "Xend", "Yend"].
 
     Returns
     -------
-    df: pandas.Dataframe
-    with new columns of ['Xmid', 'Ymid']
+    df : pandas.DataFrame
+        Dataframe with new columns ['Xmid', 'Ymid'] indicating the midpoints of the line segments.
     """
+
     df['Xmid']=(df['Xstart']+df['Xend'])/2
     df['Ymid']=(df['Ystart']+df['Yend'])/2
 
@@ -104,20 +110,22 @@ def midPoint(df):
 
 def writeToWKT(df,name, myProj=None):
     """
+    Writes a dataframe to a CSV file using Well-Known Text (WKT) format for line vectors.
 
-    Writes a dataframe to a CSV file in the format of a QGIS layer.
-    Uses well known text (WKT) to write the data as readable line vectors in QGIS.
-    Uses the WKTtoArray function to process the dataframe.
+    Parameters
+    ----------
+    df : pandas.DataFrame
+        Dataframe with columns ['Xstart', 'Ystart', 'Xend', 'Yend', 'seg_length'].
+    name : str
+        Name of the output file.
+    myProj : pyproj.CRS, optional
+        Projection of the dataframe. If None, WGS84 is assumed, by default None.
 
-    Parameters:
-        df: a pandas dataframe with columns Xstart,Ystart,Xend,Yend,seg_length
-        name: the name of the file to be written
-        myProj: the projection of the dataframe. If none is given, the projection is set to WGS84
-        Returns:
-            A CSV file with the dataframe in the format of a QGIS layer
-            """
-
-    #if myProj not None:
+    Returns
+    -------
+    pandas.DataFrame
+        The input dataframe with an additional 'Linestring' column.
+    """
 
     front="LINESTRING("
     linestring=[]
@@ -134,19 +142,24 @@ def writeToWKT(df,name, myProj=None):
 
 def writetoGeoData(df, name, driver, myProj=None):
     """
-    Writes a dataframe to a shapefile.
+    Writes a dataframe to a geospatial file (shapefile, geopackage, or geojson).
 
-    Parameters:
-        df: a pandas dataframe with columns Xstart,Ystart,Xend,Yend,seg_length
-        name: the name of the file to be written
-        myProj: the projection of the dataframe. If none is given, the projection is set to WGS84
+    Parameters
+    ----------
+    df : pandas.DataFrame
+        Dataframe with geospatial data to be written.
+    name : str
+        Name of the output file.
+    driver : str
+        Format of the file (e.g., 'ESRI Shapefile', 'GeoJSON').
+    myProj : pyproj.CRS, optional
+        Projection of the dataframe. If None, WGS84 is assumed, by default None.
 
-    Returns:
-        A shapefile with the dataframe
+    Returns
+    -------
+    pandas.DataFrame
+        The input dataframe.
     """
-
-    if myProj is None:
-        myProj='WGS84'
 
     gdf = geopandas.GeoDataFrame(df, geometry=geopandas.points_from_xy(df.Xstart, df.Ystart))
     gdf.to_file(name, driver=driver, crs=myProj)
@@ -155,15 +168,22 @@ def writetoGeoData(df, name, driver, myProj=None):
 
 
 def WKTtoArray(df, plot=False):
+    """
+    Processes a dataframe with WKT strings to a pandas dataframe with explicit geometry columns.
 
-    '''
-    Processes a dataframe with columns Xstart,Ystart,Xend,Yend,seg_length to a pandas dataframe with columns Xstart,Ystart,Xend,Yend,seg_length
+    Parameters
+    ----------
+    df : pandas.DataFrame
+        Dataframe with a 'WKT' or 'geometry' column.
+    plot : bool, optional
+        Whether to plot the processed lines, by default False.
 
-    Parameters:
-        df: a pandas dataframe with a Linestring column containing WKT strings must contain ["WKT"]
-    Returns:
-        df: a pandas dataframe with columns Xstart,Ystart,Xend,Yend,seg_length
-    '''
+    Returns
+    -------
+    pandas.DataFrame
+        Dataframe with columns ['Xstart', 'Ystart', 'Xend', 'Yend', 'seg_length'].
+
+    """
     if not isinstance(df, pd.DataFrame):
         raise ValueError("Input 'data' must be a pandas DataFrame.")
 
@@ -269,8 +289,18 @@ def WKTtoArray(df, plot=False):
 
 def giveID(df):
     """
+    Assigns a numeric ID to the dataframe rows.
 
-    Gives a numeric ID to a dataframe."""
+    Parameters
+    ----------
+    df : pandas.DataFrame
+        The input dataframe.
+
+    Returns
+    -------
+    pandas.DataFrame
+        The dataframe with an added 'ID' column.
+    """
     col=[x.upper() for x in df.columns]
 
     if "ID" not in col:
@@ -287,12 +317,17 @@ def giveID(df):
 def giveHashID(df):
 
     """
-    Gives a hash ID to a dataframe based on line endpoints.
+    Assigns a hash ID to a dataframe based on line endpoints.
 
-    Parameters:
-        df: a pandas dataframe with columns Xstart,Ystart,Xend,Yend,seg_length
-    Returns:
-        df: a pandas dataframe with columns HashID
+    Parameters
+    ----------
+    df : pandas.DataFrame
+        Dataframe with line segment data.
+
+    Returns
+    -------
+    pandas.DataFrame
+        Dataframe with an added 'HashID' column based on the hash of line endpoints.
     """
 
     ids=[]
@@ -308,22 +343,18 @@ def giveHashID(df):
 
 def transformXstart(dikeset, HTredo=True):
     """
-    Transforms the Xstart column of a dataframe of line segments.
-    Sets the Start point as the smallest x value of the line segment.
+    Ensures that 'Xstart' is always less than 'Xend' in a dataframe of line segments.
 
     Parameters
     ----------
-    df: pandas.Dataframe
-        dataframe of the line segments
-        must contain ["Xstart", "Ystart", "Xend", "Yend"]
+    df : pandas.DataFrame
+        Dataframe with line segments.
 
     Returns
     -------
-    df: pandas.Dataframe
-        dataframe of the line segments with transformed Xstart column
+    df : pandas.DataFrame
+        Transformed dataframe where 'Xstart' < 'Xend'.
     """
-
-
     dist1= dikeset['Xstart'].values
     dist2= dikeset['Xend'].values
     switchXs=(dist1>dist2)
@@ -337,14 +368,21 @@ def dikesetReProcess(df, HTredo=True, xc=None, yc=None):
     """
     Reprocesses a dataframe containing dike line data to ensure it has essential attributes and is properly formatted.
 
-    Parameters:
-        df (DataFrame): The input dataframe containing dike line data.
-        HTredo (bool, optional): Whether to recalculate Hough Transform attributes (default is True).
-        xc (float, optional): The x-coordinate of the center point for the Hough Transform (default is None).
-        yc (float, optional): The y-coordinate of the center point for the Hough Transform (default is None).
+    Parameters
+    ----------
+    df : pandas.DataFrame
+        Input dataframe containing dike line data.
+    HTredo : bool, default True
+        Whether to recalculate Hough Transform attributes, by default True.
+    xc : float, optional
+        X-coordinate of the center point for the Hough Transform, by default None.
+    yc : float, optional
+        Y-coordinate of the center point for the Hough Transform, by default None.
 
-    Returns:
-        DataFrame: The processed dataframe with added or updated attributes.
+    Returns
+    -------
+    df : pandas.DataFrame
+        Processed dataframe with added or updated attributes.
     """
 
     # Check and transform dataframe columns if necessary
@@ -402,13 +440,19 @@ def LinesReProcess(df, HTredo=True):
     """
     Reprocesses a dataframe containing line data to ensure it has essential attributes and is properly formatted.
 
-    Parameters:
-        df (DataFrame): The input dataframe containing line data.
-        HTredo (bool, optional): Whether to recalculate Hough Transform attributes (default is True).
+    Parameters
+    ----------
+    df : pandas.DataFrame
+        The input dataframe containing line data.
+    HTredo : bool, default True
+        Indicates whether to recalculate Hough Transform attributes, by default True.
 
-    Returns:
-        DataFrame: The processed dataframe with added or updated attributes.
+    Returns
+    -------
+    pandas.DataFrame
+        The processed dataframe with added or updated attributes.
     """
+
     # Calculate Hough Transform center coordinates and transform 'Xstart' if necessary
     xc, yc = HT_center(df)
     df = transformXstart(df)
@@ -445,17 +489,30 @@ def LinesReProcess(df, HTredo=True):
     return df
 
 def preProcess(data):
-
-    df = data.copy()
     """
     Fully preprocesses a dataframe containing line data to ensure it has essential attributes and is properly formatted.
+        1. Convert WKT column to array format if present
+        2. Transform Xstart, so Xstart < Xend
+        3. calculate segment lengths
+        4. assign unique hash IDs
+        5. calculate midpoints
+        6. calculate Hough Transform attributes (theta, rho, xc, yc)
+        7. calculate perpendicular offset distances
+        8. assign the processing date
+        9. remove duplicate entries and report any found duplicates    
 
-    Parameters:
-        df (DataFrame): The input dataframe containing line data.
+    Parameters
+    ----------
+    data : pandas.DataFrame
+        The input dataframe containing line data.
 
-    Returns:
-        DataFrame: The fully processed dataframe with all required attributes.
+    Returns
+    -------
+    pandas.DataFrame
+        The fully processed dataframe with all required attributes.
     """
+    df = data.copy()
+
     # Convert WKT column to array format if present
     if "WKT" in df.columns:
         df = WKTtoArray(df)
@@ -489,21 +546,25 @@ def preProcess(data):
 
 
 def whichForm(lines):
-    '''
-    Returns the form of the dataframe column names
+    """
+    Identifies the form of the dataframe column names.
 
-    Parameters:
-        lines: a dataframe with columns containing theta, rho values
-    Returns:
-        form: a string with the form of the dataframe column names
+    Parameters
+    ----------
+    lines : pandas.DataFrame
+        A dataframe with columns containing theta and rho values.
 
-    '''
-
+    Returns
+    -------
+    tuple
+        A tuple (t, r) containing the string identifiers for theta and rho columns.
+    """
 
     col=lines.columns
 
     post=['Theta', 'AvgTheta', 'theta']
     posr=['Rho', 'AvgRho', 'rho']
+
 
     for p in post:
         if p in col:
@@ -517,19 +578,25 @@ def whichForm(lines):
         r='Average Rho (m)'
         t=r'Average Theta ($^\circ$)'
 
+
     return t,r
 
 def MaskArea(df, bounds):
 
     """
-    Returns dataframe masked by bounds
-    Parameters
-        df: pandas.dataframe with columns 'Xstart' and 'YStart'
-        bounds: X and Y bounds in form [x1, y1, x2, y2]
-        x1<x2 and y1<y2
+    Masks a dataframe by specified bounds.
 
-    Returns:
-        df_masked: returns all values for dataframe within those area bounds
+    Parameters
+    ----------
+    df : pandas.DataFrame
+        A dataframe with columns 'Xstart' and 'Ystart'.
+    bounds : list or tuple
+        The bounding box specified as [x1, y1, x2, y2], where x1<x2 and y1<y2.
+
+    Returns
+    -------
+    pandas.DataFrame
+        A masked dataframe containing only the rows within the specified bounds.
     """
 
     maskX=( df['Xstart']>bounds[0]) & (df['Xstart']<bounds[2])
@@ -545,11 +612,15 @@ def FilterLines(lines):
     """
     Filters lines based on a trust filter.
 
-    Parameters:
-        lines (DataFrame): The input dataframe containing line data.
+    Parameters
+    ----------
+    lines : pandas.DataFrame
+        The input dataframe containing line data.
 
-    Returns:
-        DataFrame: A filtered dataframe containing only the lines marked as trusted (TrustFilter == 1).
+    Returns
+    -------
+    pandas.DataFrame
+        A filtered dataframe containing only the lines marked as trusted (TrustFilter == 1).
     """
     mask = lines['TrustFilter'] == 1
     return lines[mask]
@@ -559,11 +630,17 @@ def getCartLimits(lines):
     """
     Computes the Cartesian limits (x and y) of a set of lines.
 
-    Parameters:
-        lines (DataFrame): The input dataframe containing line data.
+    Parameters
+    ----------
+    lines : pandas.DataFrame
+        The input dataframe containing line data.
 
-    Returns:
-        tuple: A tuple containing the x and y limits (xlim, ylim) as lists [min, max].
+    Returns
+    -------
+    xlim : float
+        The limits of the x-axis.
+    ylim : float
+        The limits of the y-axis.
     """
     xlim = [np.min([lines['Xstart'].min(), lines['Xend'].min()]), np.max([lines['Xstart'].max(), lines['Xend'].max()])]
     ylim = [np.min([lines['Ystart'].min(), lines['Yend'].min()]), np.max([lines['Ystart'].max(), lines['Yend'].max()])]
@@ -573,15 +650,20 @@ def writeFile(df, name, myProj=None):
     """
     Writes a dataframe to a file based on the file extension.
 
-    Parameters:
-        df: (pandas.DataFrame) a pandas dataframe
-        name: (string) the name of the file to be written with file extension
+    Parameters
+    ----------
+    df : pandas.DataFrame
+        A pandas dataframe to be written to file.
+    name : str
+        The name of the file to be written, including the file extension.
+    myProj : str, optional
+        The projection of the dataframe, if applicable. Default is None.
 
-    Returns:
-        df: (pandas.DataFrame) the input dataframe
-    """
-
-    
+    Returns
+    -------
+    pandas.DataFrame
+        The input dataframe.
+    """    
    # if ends with .csv or .txt, write as csv
     if name.endswith('.csv') or name.endswith('.txt'):
         df = writeToWKT(df, name, myProj=myProj)
