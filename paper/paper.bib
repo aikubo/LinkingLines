@@ -1,17 +1,13 @@
-@misc{iso2016information,
-  title={Information Technology--Database Languages--SQL Multimedia and Application Packages--Part 3: Spatial},
-  author={ISO/IEC 13249-3},
-  year={2016},
-  publisher={International Organization for Standardization, International~…}
-}
-@article{hough1962method,
-  title={A method and means for recognition of complex patterns},
-  author={Hough, Paul V. C.},
-  journal={US Patent},
-  year={1962},
-  volume={3},
-  pages={465-467},
-  publisher={Google Patents}
+@article{hough,
+  title={Use of the Hough transformation to detect lines and curves in pictures},
+  author={Duda, Richard O and Hart, Peter E},
+  journal={Communications of the ACM},
+  volume={15},
+  number={1},
+  pages={11--15},
+  year={1972},
+  publisher={ACM New York, NY, USA}
+  doi ={10.1145/361237.361242}
 }
 @article{ballard1981generalizing,
   title={Generalizing the Hough transform to detect arbitrary shapes},
@@ -22,25 +18,36 @@
   pages={111-122},
   year={1981},
   publisher={Elsevier}
+  doi ={10.1016/0031-3203(81)90009-1}
 }
-@article{pandas,
-  title={Data structures for statistical computing in python},
-  author={McKinney, Wes},
-  journal={Proceedings of the 9th Python in Science Conference},
-  volume={445},
-  pages={51--56},
-  year={2010},
-  organization={Austin, TX}
+@inproceedings{pandas,
+ author = {McKinney, Wes},
+ title = {Data Structures for Statistical Computing in Python},
+ pages = {56--61},
+ bookpagination = {page},
+ publisher = {SciPy},
+ series = {Proceedings of the Python in Science Conference},
+ editor = {{van der Walt}, St{\'e}fan and Millman, Jarrod},
+ booktitle = {Proceedings of the 9th Python in Science Conference},
+ year = {2010},
+ doi = {10.25080/Majora-92bf1922-00a},
+ booksubtitle = {SciPy 2010},
+ eventtitle = {Python in Science Conference},
+ venue = {Austin, Texas},
+ eventdate = {June 28 - July 3 2010}
 }
-@article{scipy,
-  title={Scipy: open source scientific tools for python},
-  author={Jones, Eric and Oliphant, Travis and Peterson, Pearu and others},
-  journal={Computational Science \& Discovery},
-  volume={2},
-  number={1},
-  pages={22},
-  year={2011},
-  publisher={IOP Publishing}
+
+
+@article{virtanen2020scipy,
+  title={SciPy 1.0: fundamental algorithms for scientific computing in Python},
+  author={Virtanen, Pauli and Gommers, Ralf and Oliphant, Travis E and Haberland, Matt and Reddy, Tyler and Cournapeau, David and Burovski, Evgeni and Peterson, Pearu and Weckesser, Warren and Bright, Jonathan and others},
+  journal={Nature methods},
+  volume={17},
+  number={3},
+  pages={261--272},
+  year={2020},
+  publisher={Nature Publishing Group}
+  doi ={10.1038/s41592-019-0686-2}
 }
 @article{kubo2023,
   title={Multiscale spatial patterns in giant dike swarms identified through objective feature extraction},
@@ -51,6 +58,7 @@
   pages={e2022GC010842},
   year={2023},
   publisher={Wiley Online Library}
+  doi ={10.1029/2022GC010842}
 }
 @article{morriss2020,
   title={The Chief Joseph dike swarm of the Columbia River flood basalts, and the legacy data set of William H. Taubeneck},
@@ -61,4 +69,141 @@
   pages={1082--1106},
   year={2020},
   publisher={Geological Society of America}
+  doi ={https://doi.org/10.1130/GES02173.1}
+}
+@article{grosfils2011geologic,
+  title={Geologic map of the Ganiki Planitia quadrangle (V-14)},
+  author={Grosfils, EB and Long, SM and Venechuk, EM and Hurwitz, DM and Richards, JW and Kastl, B and Drury, DE and Hardin, J},
+  journal={Venus. United States Geological Survey, Scientific Investigations Map},
+  volume={3121},
+  year={2011},
+  doi ={10.3133/sim3121}
+}
+@article{fractopo,
+  title={fractopo: A Python package for fracture network analysis},
+  author={Ovaskainen, Nikolas},
+  journal={Journal of Open Source Software},
+  volume={8},
+  number={85},
+  pages={5300},
+  year={2023}
+  doi ={10.21105/joss.05300}
+}
+@article{fractures,
+  title={Detailed investigation of multi-scale fracture networks in glacially abraded crystalline bedrock at {\AA}land Islands, Finland},
+  author={Ovaskainen, Nikolas and Skytt{\"a}, Pietari and Nordb{\"a}ck, Nicklas and Engstr{\"o}m, Jon},
+  journal={Solid Earth},
+  volume={14},
+  number={6},
+  pages={603--624},
+  year={2023},
+  publisher={Copernicus Publications G{\"o}ttingen, Germany}
+  doi ={10.5194/se-14-603-2023}
+}
+@article{ernst,
+  title={Giant radiating dyke swarms on Earth and Venus},
+  author={Ernst, Richard E and Head, James W and Parfitt, Elisabeth and Grosfils, E and Wilson, L},
+  journal={Earth-Science Reviews},
+  volume={39},
+  number={1-2},
+  pages={1--58},
+  year={1995},
+  publisher={Elsevier}
+  doi = {https://doi.org/10.1016/0012-8252(95)00017-5}
+}
+@manual{survey,
+  title        = {Bhukosh},
+  author       = {{GSI Bhukosh}},
+  year         = 2020,
+  note         = {[Computer software manual]},
+  url          = {http://bhukosh.gsi.gov.in}
+}
+@software{gpd,
+  author       = {Kelsey Jordahl and
+                  Joris Van den Bossche and
+                  Martin Fleischmann and
+                  Jacob Wasserman and
+                  James McBride and
+                  Jeffrey Gerard and
+                  Jeff Tratner and
+                  Matthew Perry and
+                  Adrian Garcia Badaracco and
+                  Carson Farmer and
+                  Geir Arne Hjelle and
+                  Alan D. Snow and
+                  Micah Cochran and
+                  Sean Gillies and
+                  Lucas Culbertson and
+                  Matt Bartos and
+                  Nick Eubank and
+                  maxalbert and
+                  Aleksey Bilogur and
+                  Sergio Rey and
+                  Christopher Ren and
+                  Dani Arribas-Bel and
+                  Leah Wasser and
+                  Levi John Wolf and
+                  Martin Journois and
+                  Joshua Wilson and
+                  Adam Greenhall and
+                  Chris Holdgraf and
+                  Filipe and
+                  François Leblanc},
+  title        = {geopandas/geopandas: v0.8.1},
+  month        = jul,
+  year         = 2020,
+  publisher    = {Zenodo},
+  version      = {v0.8.1},
+  doi          = {10.5281/zenodo.3946761},
+  url          = {https://doi.org/10.5281/zenodo.3946761}
+}
+@misc{li2023machine,
+  title={Machine Learning Developments and Applications in Solid-Earth Geosciences: Fad or Future?},
+  author={Li, Yunyue Elita and O’malley, Daniel and Beroza, Greg and Curtis, Andrew and Johnson, Paul},
+  journal={Journal of Geophysical Research: Solid Earth},
+  volume={128},
+  number={1},
+  pages={e2022JB026310},
+  year={2023},
+  publisher={Wiley Online Library}
+  doi ={10.1029/2022JB026310}
+}
+@article{scikit,
+    title = {scikit-image: image processing in Python},
+    author = {van der Walt, Stéfan and Schönberger, Johannes L. and
+              Nunez-Iglesias, Juan and Boulogne, François and
+              Warner, Joshua D. and Yager, Neil and Gouillart, Emmanuelle and
+              Yu, Tony and the scikit-image contributors},
+    year = {2014},
+    month = {jun},
+    keywords = {Image processing, Reproducible research, Education,
+                Visualization, Open source, Python, Scientific programming},
+    volume = {2},
+    pages = {e453},
+    journal = {PeerJ},
+    issn = {2167-8359},
+    url = {https://doi.org/10.7717/peerj.453},
+    doi = {10.7717/peerj.453}
+}
+@article{opencv,
+    author = {Bradski, G.},
+    citeulike-article-id = {2236121},
+    journal = {Dr. Dobb's Journal of Software Tools},
+    keywords = {bibtex-import},
+    posted-at = {2008-01-15 19:21:54},
+    priority = {4},
+    title = {{The OpenCV Library}},
+    year = {2000}
+}
+@article{pysal,
+    doi       = {10.21105/joss.02826},
+    url       = {https://doi.org/10.21105/joss.02826},
+    year      = {2021},
+    publisher = {The Open Journal},
+    volume    = {6},
+    number    = {62},
+    pages     = {2826},
+    author    = {James D. Gaboardi and Sergio Rey and Stefanie Lumnitz},
+    title     = {spaghetti: spatial network analysis in PySAL},
+    journal   = {Journal of Open Source Software}
 }

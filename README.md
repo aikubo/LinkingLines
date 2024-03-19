@@ -6,8 +6,7 @@
 
 ## 1. Introduction
 Welcome to the documentation for our Python module that performs the Hough
-Transform on line data from a CSV, clusters it using Agglomerative Clustering,
-and provides functionality to export the results into a CSV file.
+Transform on lines from geospatial data, clusters it using Agglomerative Clustering.
 This module also includes custom plotting scripts and feature extraction
 methods to help you analyze and visualize your data effectively.
 
