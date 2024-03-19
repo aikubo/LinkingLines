@@ -29,7 +29,21 @@ extensions = ['sphinx.ext.autodoc',
               'sphinx.ext.mathjax',
               'sphinx.ext.napoleon',
               'sphinx.ext.intersphinx',
-              'nbsphinx']
+              'nbsphinx',
+              'rtds_action']
+
+# The name of your GitHub repository
+rtds_action_github_repo = "aikubo/linkinglines"
+
+# The path where the artifact should be extracted
+# Note: this is relative to the conf.py file!
+rtds_action_path = "_build/html/"
+
+# The "prefix" used in the `upload-artifact` step of the action
+rtds_action_artifact_prefix = "autobuild-"
+
+# A GitHub personal access token is required, more info below
+rtds_action_github_token = os.environ.get("RTD1", "default")
 
 templates_path = ['_templates']
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
@@ -38,6 +52,7 @@ napoleon_numpy_docstring = True
 napoleon_use_param = True
 napoleon_use_rtype = True
 source_suffix = [".rst", ".md"]
+
 
 intersphinx_mapping = {
     'python': ('https://docs.python.org/3', None),
