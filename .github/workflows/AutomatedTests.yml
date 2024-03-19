@@ -2,9 +2,9 @@ name: Python Tests
 
 on:
   push:
-    branches: [ main, JOSS ]
+    branches: [ main, JOSS* ]
   pull_request:
-    branches: [ main, JOSS ]
+    branches: [ main, JOSS* ]
 
 jobs:
   test:
