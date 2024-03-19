@@ -15,15 +15,11 @@ jobs:
         pip install poetry
         poetry config virtualenvs.create false
         poetry install --with test,dev
-    - name: Go to Docs
-      run: |
-        cd docs
-    - name: Clean up
-      run: |
-        poetry run make clean 
     - name: Build
       run: |
+        poetry run make clean
         poetry run make html
+      working-directory: docs
     - name: Trigger RTDs build
       uses: dfm/rtds-action@v1
       with:
