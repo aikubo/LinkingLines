@@ -1,4 +1,8 @@
-on: [push, pull_request, workflow_dispatch]
+name: Docs Rebuilt
+
+on:
+  pull_request:
+    branches: [ main, JOSS* ]
 
 jobs:
   build:
