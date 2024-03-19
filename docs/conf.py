@@ -30,7 +30,7 @@ extensions = ['sphinx.ext.autodoc',
               'sphinx.ext.napoleon',
               'sphinx.ext.intersphinx',
               'nbsphinx'
-              'rtd_actions']
+              'rtds_action']
 
 # The name of your GitHub repository
 rtds_action_github_repo = "aikubo/linkinglines"
