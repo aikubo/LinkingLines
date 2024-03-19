@@ -3,6 +3,7 @@ on: [push, pull_request, workflow_dispatch]
 jobs:
   build:
     runs-on: ubuntu-latest
+    environment: documentation
     steps:
     - uses: actions/checkout@v2
     - name: Set up Python 3.10
@@ -19,6 +20,7 @@ jobs:
       run: |
         poetry run make clean
         poetry run make html
+      env: ${{secrets.RTD1}}
       working-directory: docs
     - name: Trigger RTDs build
       uses: dfm/rtds-action@v1
