@@ -42,6 +42,7 @@ optional = true
 sphinx = "^7.2.6"
 nbsphinx = "^0.9.3"
 jupyterlab = "^4.1.5"
+rtds-action = "^1.1.0"
 
 [tool.poetry.group.test.dependencies]
 pytest = "^8.1.1"
