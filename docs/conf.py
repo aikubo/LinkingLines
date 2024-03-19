@@ -43,7 +43,7 @@ rtds_action_path = "_build/html/"
 rtds_action_artifact_prefix = "autobuild-"
 
 # A GitHub personal access token is required, more info below
-rtds_action_github_token = os.environ["GITHUB_TOKEN"]
+rtds_action_github_token = os.environ["RTD1"]
 
 templates_path = ['_templates']
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
