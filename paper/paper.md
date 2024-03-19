@@ -11,7 +11,18 @@ authors:
   - name: Allison Kubo Hutchison
     orcid: 0000-0002-1378-361X
     affiliation: 1
-
+- name: Leif Karlstrom
+    orcid: 0000-0002-2197-2349
+    affiliation: 1
+  - name: Tushar Mittal
+    orcid: 0000-0002-8026-0018
+    affiliation: 2
+affiliations:
+ - name: University of Oregon
+ - name: Department of Earth Sciences, University of Oregon, Eugene, OR, USA
+   index: 1
+ - name: Department of Geosciences, Pennsylvania State University, University Park, PA, USA
+   index: 2
 date: 5 October 2023
 bibliography: paper.bib
 header-includes:
