@@ -29,7 +29,7 @@ extensions = ['sphinx.ext.autodoc',
               'sphinx.ext.mathjax',
               'sphinx.ext.napoleon',
               'sphinx.ext.intersphinx',
-              'nbsphinx'
+              'nbsphinx',
               'rtd_actions']
 
 # The name of your GitHub repository
