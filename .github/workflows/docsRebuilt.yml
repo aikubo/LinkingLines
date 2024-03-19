@@ -20,7 +20,8 @@ jobs:
       run: |
         poetry run make clean
         poetry run make html
-      env: ${{secrets.RTD1}}
+      env: 
+        RTD1 : ${{secrets.RTD1}}
       working-directory: docs
     - name: Trigger RTDs build
       uses: dfm/rtds-action@v1
