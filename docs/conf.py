@@ -30,7 +30,7 @@ extensions = ['sphinx.ext.autodoc',
               'sphinx.ext.napoleon',
               'sphinx.ext.intersphinx',
               'nbsphinx',
-              'rtd_actions']
+              'rtds_action']
 
 # The name of your GitHub repository
 rtds_action_github_repo = "aikubo/linkinglines"
@@ -43,7 +43,7 @@ rtds_action_path = "_build/html/"
 rtds_action_artifact_prefix = "autobuild-"
 
 # A GitHub personal access token is required, more info below
-rtds_action_github_token = os.environ["RTD1"]
+rtds_action_github_token = os.environ.get("RTD1", "default")
 
 templates_path = ['_templates']
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
