@@ -12,7 +12,7 @@ Created on Thu Apr  1 13:12:50 2021
 import numpy as np
 import pandas as pd
 from scipy.cluster.hierarchy import dendrogram
-from .HT import rotateData
+from .HT import rotateData, HoughTransform
 #from examineMod import *
 from .PrePostProcess import whichForm
 from scipy.spatial.distance import pdist, squareform
@@ -24,8 +24,9 @@ def AggCluster(dikeset, dtheta, drho, dimensions=2, linkage='complete', rotate=F
     """
     Agglomerative clustering with custom metric on Hough transform data.
 
-    Parameters:
-        dikeset : DataFrame
+    Parameters
+    ----------
+        dikeset : pandas DataFrame
             DataFrame with Hough transform data.
         dtheta : float
             Scaling factor for theta.
@@ -40,12 +41,18 @@ def AggCluster(dikeset, dtheta, drho, dimensions=2, linkage='complete', rotate=F
         metric : str, optional
             Metric to use for clustering (default is 'Euclidean').
 
-    Returns:
-        dikeset : DataFrame
+    Returns
+    -------
+        dikeset : pandas DataFrame
             DataFrame with cluster labels.
-        Z : ndarray
+        Z : numpy ndarray
             The hierarchical clustering linkage matrix.
     """
+    # if 'theta' is not dikeset.columns:
+    # do the Hough transform
+    if 'theta' not in dikeset.columns:
+        print("Hough transform not found, performing Hough transform")
+        dikeset, xc, yc=HoughTransform(dikeset) 
 
     t,r=whichForm(dikeset)
     angle=np.median(abs(dikeset[t]))-20
@@ -94,13 +101,15 @@ def fullTree(model, **kwargs):
     """
     Generate and plot a full dendrogram for hierarchical clustering results.
 
-    Parameters:
+    Parameters
+    ----------
         model : sklearn.cluster.AgglomerativeClustering
             Fitted AgglomerativeClustering model.
         **kwargs : dict
             Additional keyword arguments to be passed to the dendrogram function.
 
-    Returns:
+    Returns
+    -------
         None
 
     Note:
@@ -132,69 +141,3 @@ def fullTree(model, **kwargs):
     # Plot the corresponding dendrogram
     dendrogram(linkage_matrix, **kwargs)
 
-def plotDendro(dist1, labels, title):
-    """
-    Plot a dendrogram for hierarchical clustering results.
-
-    Parameters:
-        dist1 : ndarray
-            Distance matrix.
-        labels : list
-            Labels for the dendrogram.
-        title : str
-            Title for the dendrogram plot.
-
-    Returns:
-        Z1 : dict
-            The dendrogram data for the left-oriented dendrogram.
-
-    Note:
-        This function plots a dendrogram showing the hierarchical clustering of data based on the provided distance matrix.
-        It creates two dendrograms (left and top) and a distance matrix plot.
-        Based on this stack exchange
-        #https://stackoverflow.com/questions/2982929/plotting-results-of-hierarchical-clustering-ontop-of-a-matrix-of-data-in-python
-
-
-    Example:
-        plotDendro(distance_matrix, data_labels, "Hierarchical Clustering Dendrogram")
-
-
-
-    """
-    D=dist1
-    condensedD = squareform(D)
-
-    # Compute and plot first dendrogram.
-    fig = plt.figure(figsize=(8,8))
-
-    ax1 = fig.add_axes([0.09,0.1,0.15,0.6])
-    ax1.set_title(title)
-    Y = sch.linkage(condensedD, method='complete')
-    Z1 = sch.dendrogram(Y, labels=labels, orientation='left')
-    #ax1.set_xticks()
-    #ax1.set_yticks([])
-
-    # Compute and plot second dendrogram.
-    ax2 = fig.add_axes([0.3,0.76,0.6,0.2])
-    Y = sch.linkage(condensedD, method='complete')
-    Z2 = sch.dendrogram(Y,  labels=labels)
-    #ax2.set_xticks(labels[Z1['leaves']])
-    #ax2.set_yticks([])
-
-    # Plot distance matrix.
-    #add axis(left, bottom, width, height)
-    axmatrix = fig.add_axes([0.3,0.1,0.6,0.6])
-    idx1 = Z1['leaves']
-    idx2 = Z2['leaves']
-    D = D[idx1,:]
-    D = D[:,idx2]
-    im = axmatrix.matshow(D, aspect='auto', origin='lower', cmap=plt.cm.YlGnBu)
-    axmatrix.set_xticks([])
-    axmatrix.set_yticks([])
-
-   # Plot colorbar.
-    axcolor = fig.add_axes([0.91,0.1,0.02,0.6])
-
-    fig.show()
-    #fig.savefig('dendrogram.png')
-    return Z1

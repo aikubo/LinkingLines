@@ -68,15 +68,10 @@ To use this module, make sure you have Python installed (preferably Python 3.x).
 
     .. code-block:: python
 
-       import pandas as pd
-       import numpy as np
-       import matplotlib.pyplot as plt
        import linkinglines as ll
 
-       data=pd.read_csv('path/to/data')
-       theta,rho,xc,yc=ll.HoughTransform(data)
-       data['theta']=theta
-       data['rho']=rho
+       data=ll.readFile('path/to/data')
+       data,xc,yc=ll.HoughTransform(data)
 
        dtheta=2 #degrees
        drho=500 #meters
@@ -85,26 +80,25 @@ To use this module, make sure you have Python installed (preferably Python 3.x).
        lines,evaluation=examineCluster(data)
        fig,ax=DotsLines(lines, ColorBy='AvgTheta')
 
-    Follow this indepth `tutorial <>`_ to get started!
-
     You are now ready to utilize the power of Hough Line Transform, Agglomerative Clustering, and custom plotting in your data analysis projects. If you have any questions or need further assistance, please refer to the detailed documentation or contact our support team.
 
     Happy coding!
 
-Indepth Tutorials
------------------
-.. toctree::
-   :maxdepth:2 
+Examples and Tutorials
+----------------------
+.. toctree:: 
+   :caption: Try these examples with real data!
    
-
    DemoLinkingLines
+   DemoFractures 
+   DemoVenus
 
 Module Documentation
 --------------------
 
 .. toctree::
    :maxdepth: 4
-   :caption: Modules:
+   :caption: Detailed Documentation
 
    modules 
 

@@ -1,6 +1,6 @@
 # LinkingLines Package
  # Written by aikubo
- # Version: 2.1.0
+ 
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
@@ -26,27 +26,6 @@ Functions:
 - `W_L(Clusters)`: Calculate the widths and lengths of rectangles fitted to clusters of lines.
 - `squaresError(lines, xc, yc)`: Calculate the sum of squared errors for a cluster of lines fitted to a rectangle.
 
-Usage:
-Import the 'fitRectangle' module and use its functions to perform operations on line segments, including rotating, fitting rectangles, and calculating rectangle properties.
-
-Example:
-```python
-import fitRectangle
-
-# Rotate line segments
-x, y = fitRectangle.rotateXYShift(angle, x, y, center_x, center_y)
-
-# Fit rectangles to clusters of lines
-width, length, corr_coef, x_edges, y_edges, X_mid, Y_mid = fitRectangle.fit_Rec(lines, xc, yc)
-
-# Calculate the sum of squared errors for fitted rectangles
-error = fitRectangle.squaresError(lines, xc, yc)
-
-Notes:
-
-This module is designed for working with line segments represented as DataFrames with specific column names.
-It provides functions for fitting rectangles to clusters of lines based on their angles and distances from the origin.
-The module includes utility functions for various operations related to line segments and rectangles.
 
 """
 
@@ -62,28 +41,26 @@ def rotateXYShift(ang,x,y,h,k):
   ----------
   ang : float
       The angle in radians by which to rotate the coordinates.
-
   x : float or numpy array
       The x-coordinate of the point to be transformed.
-
   y : float or numpy array
       The y-coordinate of the point to be transformed.
-
   h : float
       The x-coordinate of the center point about which the rotation and shift will be performed.
-
   k : float
       The y-coordinate of the center point about which the rotation and shift will be performed.
 
   Returns
   -------
-  float, float or numpy array, numpy array
-      The transformed coordinates (xp, yp) after rotating and shifting (x, y) about (h, k).
+  xp : float or numpy array
+    The transformed x-coordinate after rotating and shifting (x, y) about (h, k).
+  yp : float or numpy array
+    The transformed y-coordinate after rotating and shifting (x, y) about (h, k).
 
   Notes
   -----
-  - The function rotates the point (x, y) counterclockwise by 'ang' radians around the center point (h, k).
-  - It returns the new coordinates (xp, yp) after the transformation.
+  The function rotates the point (x, y) counterclockwise by 'ang' radians around the center point (h, k).
+
   """
 
     xp= (x-h)*np.cos(ang)-(y-k)*np.sin(ang)
@@ -121,24 +98,15 @@ def unrotate(ang, x, y, h, k):
     -----
     - The function reverses the rotation and shift applied to the point (x, y) by 'ang' radians around the center point (h, k).
     - It returns the original coordinates (xr, yr) before the transformation.
+
+    See Also
+    --------
+    rotateXYShift : Rotate and shift coordinates (x, y) about a center point (h, k) by an angle 'ang'.
+
     """
     xr = x * np.cos(ang) + y * np.sin(ang) + h
     yr = -1 * (x) * np.sin(ang) + y * np.cos(ang) + k
     return xr, yr
-
-
-
-def inRectangle(a,b,xp,yp):
-    xtop=b; ytop=a
-    insideX=True
-    insideY=True
-
-    if any(abs(xp) > xtop):
-        insideX=False
-    if any(abs(yp) > ytop):
-        insideY=False
-
-    return insideX, insideY
 
 
 def endpoints(lines):
@@ -152,14 +120,11 @@ def endpoints(lines):
 
     Returns
     -------
-    numpy.ndarray, numpy.ndarray
-        Two NumPy arrays containing the x and y coordinates of endpoints, respectively.
+    xlist : numpy.ndarray
+        A NumPy array containing the x coordinates of endpoints.
+    ylist : numpy.ndarray
+        A NumPy array containing the y coordinates of endpoints.
 
-    Notes
-    -----
-    - This function extracts the endpoint coordinates from the DataFrame 'lines'.
-    - The DataFrame 'lines' should have columns 'Xstart', 'Ystart', 'Xend', and 'Yend' to represent line segments.
-    - The x and y coordinates of all endpoints are stored in separate NumPy arrays and returned.
     """
     xlist = np.array([])
     ylist = np.array([])
@@ -188,14 +153,10 @@ def midpoint(lines):
 
     Returns
     -------
-    numpy.ndarray, numpy.ndarray
-        Two NumPy arrays containing the x and y coordinates of midpoints, respectively.
-
-    Notes
-    -----
-    - This function calculates the midpoint coordinates of each line segment in the DataFrame 'lines'.
-    - The midpoint of a line is computed as the average of the x and y coordinates of its endpoints.
-    - The resulting x and y coordinates are stored in separate NumPy arrays and returned.
+    xlist : numpy.ndarray
+        A NumPy array containing the x coordinates of endpoints.
+    ylist : numpy.ndarray
+        A NumPy array containing the y coordinates of endpoints.
     """
 
     xstart=lines['Xstart'].to_numpy()
@@ -218,6 +179,9 @@ def allpoints(lines):
     """
     Calculate and return all the x and y coordinates along the line segments in a DataFrame.
 
+    This function calculates all the x and y coordinates that lie along the line segments in the DataFrame 'lines'.
+    It evenly samples points along each line segment using linear interpolation.
+
     Parameters
     ----------
     lines : pandas.DataFrame
@@ -225,14 +189,12 @@ def allpoints(lines):
 
     Returns
     -------
-    numpy.ndarray, numpy.ndarray
-        Two NumPy arrays containing all the x and y coordinates along the line segments, respectively.
+    xlist : numpy.ndarray
+        A NumPy array containing the x coordinates of endpoints.
+    ylist : numpy.ndarray
+        A NumPy array containing the y coordinates of endpoints.
 
-    Notes
-    -----
-    - This function calculates all the x and y coordinates that lie along the line segments in the DataFrame 'lines'.
-    - It evenly samples points along each line segment using linear interpolation.
-    - The resulting x and y coordinates are stored in separate NumPy arrays and returned.
+
     """
 
     xstart=lines['Xstart'].to_numpy()
@@ -261,25 +223,29 @@ def fit_Rec(lines, xc, yc):
     ----------
     lines : pandas.DataFrame
         A DataFrame containing line segments with columns ['Xstart', 'Ystart', 'Xend', 'Yend', 'theta', 'rho'].
-
     xc : float
         x-coordinate of the center of the rectangle.
-
     yc : float
         y-coordinate of the center of the rectangle.
 
     Returns
     -------
-    float, float, float, numpy.ndarray, numpy.ndarray, float, float
-        - The width and length of the fitted rectangle.
-        - The correlation coefficient.
-        - NumPy arrays containing x and y coordinates of rectangle edges.
-        - Coordinates of the rectangle's center (Xmid, Ymid).
+    width : float
+        The width of the fitted rectangle.
+    length : float
+        The length of the fitted rectangle.
+    r : float
+        The correlation coefficient of the fitted rectangle.
+    xs : numpy.ndarray
+        Array containing x coordinates of the edges of the fitted rectangle.
+    ys : numpy.ndarray
+        Array containing y coordinates of the edges of the fitted rectangle.
+    Xmid : float
+        The x-coordinate of the midpoint of the fitted rectangle.
+    Ymid : float
+        The y-coordinate of the midpoint of the fitted rectangle.
+  
 
-    Notes
-    -----
-    - This function fits a rectangle to a cluster of lines based on their angles and distances from the origin.
-    - It returns the width, length, correlation coefficient, and coordinates of the rectangle.
     """
 
     col=lines.columns
@@ -327,14 +293,10 @@ def fit_Rec(lines, xc, yc):
 
 
     xp, yp= rotateXYShift(np.deg2rad(-1*ang), xi,yi, x0,y0)
-    #plotlines(lines, 'k.-', a)
 
     width=np.ptp(xp.flatten())
     length=np.ptp(yp.flatten())
 
-    # if width>length :
-    #     length=width
-    #     width=length
     xc=(max(xp)-min(xp))/2 + min(xp)
     yc=(max(yp)-min(yp))/2 + min(yp)
 
@@ -350,7 +312,7 @@ def fit_Rec(lines, xc, yc):
 
     Xedges=np.array([xs[0], xs[0], xs[1], xs[1], xs[0]])
     Yedges=np.array([ys[1], ys[0], ys[0], ys[1], ys[1]])
-    # a.plot(Xedges, Yedges, 'r.-')
+
     Xmid=(np.max(xs)+np.min(xs))/2
     Ymid=(np.max(ys)+np.min(ys))/2
 
@@ -359,10 +321,7 @@ def fit_Rec(lines, xc, yc):
 
 
 
-    #xstart, xend, ystart, yend=clustered_lines(xi, yi, np.mean(lines['theta'].values), length)
-
-
-    r=np.sum((yc-yp)**2)/lines[segl].sum() #len(lines)
+    r=np.sum((yc-yp)**2)/lines[segl].sum()
 
 
     return width, length, r, xs, ys, Xmid, Ymid
@@ -390,12 +349,11 @@ def RecEdges(xi, yi, avgtheta, x0, y0):
 
     Returns
     -------
-    numpy.ndarray, numpy.ndarray
-        Arrays containing x and y coordinates of the rectangle's edges.
+    xs : numpy.ndarray
+        Array containing x coordinates of the edges of the rectangle.
+    ys : numpy.ndarray
+        Array containing y coordinates of the edges of the rectangle.
 
-    Notes
-    -----
-    - This function calculates the coordinates of the edges of a rectangle based on specified parameters.
     """
 
     ang=-1*np.deg2rad(avgtheta)
@@ -454,9 +412,7 @@ def pltLine(lines, xc, yc, ax):
     -------
     None
 
-    Notes
-    -----
-    - This function plots a line representing the fitted rectangle on a specified matplotlib axis 'ax'.
+
     """
 
     avgtheta=np.deg2rad(np.average(lines['theta']))
@@ -480,12 +436,10 @@ def W_L(Clusters):
 
     Returns
     -------
-    numpy.ndarray, numpy.ndarray
-        Arrays containing widths and lengths of fitted rectangles for each cluster.
-
-    Notes
-    -----
-    - This function calculates the widths and lengths of rectangles fitted to clusters of lines in the DataFrame 'Clusters'.
+    width : numpy.ndarray
+        Array containing widths of fitted rectangles for each cluster.
+    length : numpy.ndarray
+        Array containing lengths of fitted rectangles for each cluster.
     """
 
     width=np.array([])
@@ -518,12 +472,9 @@ def squaresError(lines, xc, yc):
 
     Returns
     -------
-    float
+    r : float
         The sum of squared errors.
 
-    Notes
-    -----
-    - This function calculates the sum of squared errors for a cluster of lines fitted to a rectangle.
     """
 
 
@@ -537,6 +488,5 @@ def squaresError(lines, xc, yc):
 
     r=np.sum((ys-(m*(xs-xc)+b+yc))**2)/lines['seg_length'].sum() #len(lines)
 
-    # just do b?
 
     return r

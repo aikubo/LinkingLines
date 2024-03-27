@@ -1,0 +1,60 @@
+<!DOCTYPE qgis PUBLIC 'http://mrcc.com/qgis.dtd' 'SYSTEM'>
+<qgis version="3.22.4-Białowieża">
+  <identifier>Structure_Merged_V14</identifier>
+  <parentidentifier></parentidentifier>
+  <language>EN</language>
+  <type>dataset</type>
+  <title>Structure_Merged_V14</title>
+  <abstract>The Ganiki Planitia (V14) quadrangle on Venus, which extends from 25°N to 50°N and from 180°E to 210°E, derives its name from the extensive suite of plains which dominate the geology of the northern part of the region. The geology of the V14 quadrangle is characterized by a complex array of volcanic, tectonic and impact-derived features. There are eleven impact craters with diameters from 4 to 64 km, as well as four diffuse "splotch" features interpreted to be the product of near-surface bolide explosions. Tectonic activity has produced heavily deformed tesserae, belts of complex deformation and rifts as well as a distributed system of fractures and wrinkle ridges. Volcanic activity has produced extensive regional plains deposits, and in the northwest corner of the quadrangle these plains host the initial (or terminal) 700 km of the Baltis Vallis canali, an enigmatic volcanic feature which, at a net length of ~7000 km, is the longest channel on Venus. Major volcanic centers in V14 include eight large volcanoes and eight coronae; all but one of these sixteen features was noted during a previous global survey. Finally, the quadrangle contains an abundance of minor volcanic features including individual shield volcanoes and localized fissure eruptions as well as many small annular structures and domes which often serve as the source for local lava flows.
+
+Geologic Map of the Ganiki Planitia Quadrangle (v-14), Venus</abstract>
+  <keywords vocabulary="gmd:topicCategory">
+    <keyword>Geology</keyword>
+  </keywords>
+  <contact>
+    <contactAddress>
+      <type>mailing address</type>
+      <address>Box 85286 Federal Center</address>
+      <city>Denver</city>
+      <administrativearea>CO</administrativearea>
+      <postalcode>80225</postalcode>
+      <country>USA</country>
+    </contactAddress>
+    <name>U. S. Geological Survey</name>
+    <organization>U. S. Geological Survey</organization>
+    <position></position>
+    <voice>928-556-7100</voice>
+    <fax>928-556-7104</fax>
+    <email>ktanaka@usgs.gov</email>
+    <role>Point of contact</role>
+  </contact>
+  <links>
+    <link url="file://\\tsclient\F\GIS\venus\v14\V14_Release\ESRI_Shapefiles\Structure_Merged_V14.shp" name="Shapefile" size="" mimeType="" format="" type="Local Area Network" description=""/>
+  </links>
+  <fees></fees>
+  <constraints type="Access">none</constraints>
+  <rights>none</rights>
+  <encoding></encoding>
+  <crs>
+    <spatialrefsys>
+      <wkt></wkt>
+      <proj4></proj4>
+      <srsid>0</srsid>
+      <srid>0</srid>
+      <authid></authid>
+      <description></description>
+      <projectionacronym></projectionacronym>
+      <ellipsoidacronym></ellipsoidacronym>
+      <geographicflag>false</geographicflag>
+    </spatialrefsys>
+  </crs>
+  <extent>
+    <spatial maxy="-4379809.74089999962598085" maxz="0" minx="-1472912.27319999993778765" dimensions="2" minz="0" miny="-7080243.72819999977946281" maxx="1501889.14180000009946525" crs="EPSG:4326"/>
+    <temporal>
+      <period>
+        <start></start>
+        <end></end>
+      </period>
+    </temporal>
+  </extent>
+</qgis>

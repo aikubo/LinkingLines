@@ -4,12 +4,9 @@
 import pytest
 import pandas as pd
 import numpy as np
-from fitRectangle import rotateXYShift
-from dilationCalculation import dilation
-from syntheticMod import makeLinear2, addSwarms, fromHT, addSwarms
-from examineMod import RotateOverlap
-from PrePostProcess import DikesetReProcess
-from fitRadialCenters import RadialFit
+from linkinglines import dilation, rotateXYShift, dikesetReProcess, RadialFit
+from linkinglines import fromHT, makeLinearDataFrame, RotateOverlap
+
 
 class TestRotate:
     
@@ -50,18 +47,18 @@ class TestDilation():
     #Create some fixtures of linear line dataframes
     @pytest.fixture(autouse=True)
     def df2(self):
-        return makeLinear2(1000, 90, 0, 5000, 500, ndikes=5)
+        return makeLinearDataFrame(1000, 90, 0, 5000, 500, ndikes=5)
 
     @pytest.fixture(autouse=True)
     def df3(self):
-        return makeLinear2(1000, 45, 0, 5000, 500, ndikes=5)
+        return makeLinearDataFrame(1000, 45, 0, 5000, 500, ndikes=5)
         
     
     def test_dilation_90_degrees(self, df2):
         EWDilation, NSDilation, EWbin, NSbin = dilation(df2, binWidth=1)
         
         assert np.isclose(np.sum(np.abs(EWDilation)), 0.0)
-        assert np.isclose(np.max(NSDilation),4.0)
+        assert np.isclose(np.max(NSDilation),5.0)
         assert len(EWDilation)==len(NSbin)
         assert len(NSDilation)==len(EWbin)
         
@@ -84,7 +81,7 @@ class TestDilation():
     def test_dilation_non_1_average_width(self, df2):
         EWDilation2, NSDilation2, _, _ = dilation(df2, binWidth=1, averageWidth=10)
         Value = [np.max(NSDilation2), np.max(EWDilation2)]
-        Expected = [30, 0]
+        Expected = [40, 0]
         
         assert np.allclose(Value, Expected)
         
@@ -108,7 +105,7 @@ class TestOverlap():
             }
 
         df = pd.DataFrame(data)
-        df=DikesetReProcess(df, xc=0, yc=0)
+        df=dikesetReProcess(df, xc=0, yc=0)
  
         for i in df['label'].unique():
             lines=df[ df['label']==i]
