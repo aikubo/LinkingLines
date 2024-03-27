@@ -17,7 +17,7 @@ to find their true lengths. This code can be applied to any linear features incl
 roads, fractures, and other types of linear data.
 
 - **Data Clustering**: Apply Agglomerative Clustering to group similar data points, this
-can be used for data reduction, analysis, and mapping .
+can be used for data reduction, analysis, and mapping.
 
 - **Data Visualization**: Custom plotting scripts help you visualize and analyze
 your data, making it easier to identify patterns and anomalies.
@@ -56,9 +56,9 @@ fig,ax=DotsLines(lines, ColorBy='AvgTheta')
 ```
 
 We have three examples:
-1. Indepth tutorial with hough transform, clustering, and feature extraction using Spanish Peaks Data CSV file.
+1. Indepth tutorial with Hough transform, clustering, and feature extraction using Spanish Peaks Data CSV file.
 2. Hough Transform and feature extraction on Venus lineament data shape file.
-3. Hough transform on fracture data geoJSON.
+3. Hough Rransform on fracture data geoJSON.
 
 Data from: 
 1. https://agupubs.onlinelibrary.wiley.com/doi/full/10.1029/2022GC010842
@@ -72,14 +72,14 @@ You are now ready to utilize the power of Hough Line Transform, Agglomerative Cl
 Thank you for your interest in contributing to `linkinglines`. Please feel free to open up issues with bugs or requested features. Any contributions you make will benefit everybody else and are greatly appreciated.
 
 
-If you would like to contribute code please do so in a seperate branch and open up an issue describing your contribution.
+If you would like to contribute code please do so in a separate branch and open up an issue describing your contribution.
 
 ```
 git clone git@github.com:USER/LinkingLines.git
 git checkout my-development-branch
 ```
 
-We recommend using a virutal environment to manage packages. We use `poetry` to manage dependencies and building.
+We recommend using a virtual environment to manage packages. We use `poetry` to manage dependencies and building.
 See more about [poetry](https://python-poetry.org/).
 
 
