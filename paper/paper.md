@@ -11,7 +11,7 @@ authors:
   - name: Allison Kubo Hutchison
     orcid: 0000-0002-1378-361X
     affiliation: 1
-- name: Leif Karlstrom
+  - name: Leif Karlstrom
     orcid: 0000-0002-2197-2349
     affiliation: 1
   - name: Tushar Mittal
