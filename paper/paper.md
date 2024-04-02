@@ -1,5 +1,5 @@
 ---
-title: 'LinkingLines: Using the Hough Transform to Cluster Line Segments and for
+title: 'LinkingLines: Using the Hough Transform to Cluster Line Segments and
 Mesoscale Feature Extraction'
 tags:
   - python
@@ -31,7 +31,7 @@ header-includes:
 
 # Summary
 
-Linear feature analysis plays a fundamental role in various scientific and geospatial applications, from detecting infrastructure networks to characterizing geological formations. In this paper, we introduce `linkinglines`, an open-source Python package tailored for the clustering, and feature extraction of linear structures in geospatial data. Our package leverages the Hough Transform, commonly used in image processing, performs clustering of line segments in the Hough Space then provides unique feature extraction methods and visualization. `linkinglines` empowers researchers, data scientists, and analysts across diverse domains to efficiently process, understand, and extract valuable insights from linear features, contributing to more informed decision-making and enhanced data-driven exploration. We have used `linkinglines` to map dike swarms with thousands of segments associated with Large Igneous Provinces in @kubo2023. T
+Linear feature analysis plays a fundamental role in various scientific and geospatial applications, from detecting infrastructure networks to characterizing geological formations. In this paper, we introduce `linkinglines`, an open-source Python package tailored for the clustering, and feature extraction of linear structures in geospatial data. Our package leverages the Hough Transform, commonly used in image processing, performs clustering of line segments in the Hough Space then provides unique feature extraction methods and visualization. `linkinglines` empowers researchers, data scientists, and analysts across diverse domains to efficiently process, understand, and extract valuable insights from linear features, contributing to more informed decision-making and enhanced data-driven exploration. We have used `linkinglines` to map dike swarms with thousands of segments associated with Large Igneous Provinces in @kubo2023. 
 
 # Statement of Need
 
@@ -39,17 +39,17 @@ The `linkinglines` Python package addresses the need for quantitative and automa
 
 The primary needs that the `linkinglines` package fulfills include:
 
-1. **Dissected Line Extraction or Data Reduction**: In areas where land cover or data availability effects the complete mapping of linear features, this package can link together similarly oriented segments into lines in a quantitative automated way. This is also an effective data reduction technique.
+1. **Dissected Line Extraction or Data Reduction**: In areas where land cover or data availability affects the complete mapping of linear features, this package can link together similarly oriented segments into lines in a quantitative automated way. This is also an data reduction technique.
 
 2. **Feature Extraction and Analysis**: The `linkinglines` package provides functions to extract and then compute essential metrics and statistics on extracted linear, radial or circumferential type features which are commonly seen in dike swarms or fracture networks.
 
 3. **Geospatial and Image Data Integration**: Geospatial data often involves complex relationships between various linear features. `linkinglines` integrates seamlessly with popular geospatial libraries like `pyproj` and `geopandas` to facilitate georeferenced data analysis and visualization.
 
-4. **Custom Plotting and Visualization**: Effective visualization is critical for data interpretation. The package offers custom plotting scripts, making it easier to visualize results and communicate findings effectively.
+4. **Custom Plotting and Visualization**: Effective visualization is critical for data interpretation. The package offers custom plotting scripts, making it easier to visualize results and communicate findings.
 
 ## Statement of the Field
 
-This package was originally developed to tackle the issue of mapped dike segments. Rugged terrain, vegetation cover, and a large area made it impossible to accurately map dikes. The length, density, and structure of the dike swarm affects how magma is transported and erupted. Scaling analysis indicated that for segments of widths of 10 m, dikes could be 10-10s of kilometers long however observed segments were two orders of magnitude lower [@morriss2020]. Additionally, the complex overlapping structure of the dike swarm was difficult to analyze. We designed `linkinglines` to extract not only lines from line segments but also help analyze the mesoscale structure of the dike swarm. Using the unique properties of the Hough Transform we can extract several unique mesoscale structures within a group of lines. 
+This package was originally developed to tackle the issue of mapping dike segments. Rugged terrain, vegetation cover, and a large area made it impossible to accurately map dikes. The length, density, and structure of the dike swarm affects how magma is transported and erupted. Scaling analysis indicated that for segments of widths of 10 m, dikes could be 10s to 100s of kilometers long; however observed segments were two orders of magnitude lower [@morriss2020]. Additionally, the complex overlapping structure of the dike swarm was difficult to analyze. We designed `linkinglines` to extract not only lines from line segments but also help analyze the mesoscale structure of the dike swarm. Using the unique properties of the Hough Transform we can extract several unique mesoscale structures within a group of lines. 
 
 Issues with data coverage, incompleteness, and complexity occur in a wide range of Earth and Planetary science data products. As an example we show how this work can also be applied to lineaments on Venus[@venus] and fracture networks[@fractures] in our documentation. Clustering and machine learning methods are commonly applied geosciences within the subdisciplines of seismology, geochemistry, and planetary science [@li2023machine]. There is currently available code to work with geospatial data clustering such as `geopandas`, `PySAL`, and others which perform the Hough Transform on images such as `scikit-image` or `OpenCV`, however this seems to be the first union of the two methods and specific to geoscience data applications [@gpd; @scikit; @opencv; @pysal]. There is a clear use case for `linkinglines` to be applied to planetary science and the variety of linear features on Venus and Mars. For example, `linkinglines` can be used to quantitatively identify the centers of radial lineaments on Venus and relate the data back to volcanism and plate tectonics, although work has been done to map and qualitatively characterize these features `linkinglines` offers unique insight and quantitative measure [@ernst]. Related packages which are specific to geosciences such as `fractopo` which focuses on network analysis of fractures could be utilized in parallel with `linkinglines` for additional analysis [@fractopo].
 
@@ -91,7 +91,7 @@ Overall, these capabilities can be separated from the clustering and linking ste
 
 # Future Work
 
-This package takes geospatial or other types of line segment data and clusters them based on their orientation. Currently, the Hough transform assumes that the data input into are only straight line segments however it could be generalized to arbitrary shapes for more flexibility [@ballard1981generalizing]. Additionally, future work could incorporate other shapes or patterns in the Hough Space and could extend the feature extraction methods laid out here. We invite collaboration to increase the capabilities of this code.
+This package takes geospatial or other types of line segment data and clusters them based on their orientation. Currently, the implementation only works with linear features however it could be generalized to arbitrary shapes for more flexibility [@ballard1981generalizing]. Additionally, future work could incorporate other shapes or patterns in the Hough Space and could extend the feature extraction methods laid out here. We invite collaboration to increase the capabilities of this code.
 
 # Acknowledgements
 
