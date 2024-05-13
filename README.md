@@ -56,9 +56,9 @@ fig,ax=DotsLines(lines, ColorBy='AvgTheta')
 ```
 
 We have three examples:
-1. Indepth tutorial with Hough transform, clustering, and feature extraction using Spanish Peaks Data CSV file.
+1. In-depth tutorial with Hough transform, clustering, and feature extraction using Spanish Peaks Data CSV file.
 2. Hough Transform and feature extraction on Venus lineament data shape file.
-3. Hough Rransform on fracture data geoJSON.
+3. Hough Transform on fracture data geoJSON.
 
 Data from: 
 1. https://agupubs.onlinelibrary.wiley.com/doi/full/10.1029/2022GC010842
