@@ -1,6 +1,6 @@
 # LinkingLines Package
  # Written by aikubo
- 
+
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
@@ -68,9 +68,9 @@ def readFile(name, preprocess=True):
 
     if not any(name.endswith(ext) for ext in valid_extensions):
         raise ValueError("Invalid file type")
-    
+
     # identify the type of file
-    # read in .csv 
+    # read in .csv
     if name.endswith('.csv'):
         data=pd.read_csv(name)
     elif name.endswith('.txt'):
@@ -78,10 +78,12 @@ def readFile(name, preprocess=True):
     else:
         data=geopandas.read_file(name)
         data=data.to_wkt()
-    
+
+    if 'Xstart' not in data.columns:
+        data = WKTtoArray(data)
+
     # if preprocess is True, preprocess the data
     if preprocess:
-        data = WKTtoArray(data)
         data = preProcess(data)
 
     return data
@@ -189,7 +191,7 @@ def WKTtoArray(df, plot=False):
 
     if len(df) < 1:
         raise ValueError("DataFrame is empty")
-    
+
     #     # if neither is in columns raise value error
     if not ("WKT" in df.columns ):
         if not ("geometry" in df.columns):
@@ -205,7 +207,7 @@ def WKTtoArray(df, plot=False):
     if plot:
         fig,ax=plt.subplots()
 
-    # check for either "WKT" or "geometry" columns 
+    # check for either "WKT" or "geometry" columns
     if "geometry" in df.columns:
         tag = "geometry"
     else:
@@ -221,7 +223,7 @@ def WKTtoArray(df, plot=False):
         if len(temp)<1:
             drop.append(i)
             continue
-       
+
         if "Z" in t1:
             tempx=np.array(temp[::3]).astype(float)
             tempy=np.array(temp[1::3]).astype(float)
@@ -233,7 +235,7 @@ def WKTtoArray(df, plot=False):
             drop.append(i)
             continue
 
-    
+
         slope, intercept, r_value, p_value, std_err = stats.linregress(tempx, tempy)
 
         #for x,y in zip(tempx, tempy):
@@ -499,7 +501,7 @@ def preProcess(data):
         6. calculate Hough Transform attributes (theta, rho, xc, yc)
         7. calculate perpendicular offset distances
         8. assign the processing date
-        9. remove duplicate entries and report any found duplicates    
+        9. remove duplicate entries and report any found duplicates
 
     Parameters
     ----------
@@ -516,6 +518,7 @@ def preProcess(data):
     # Convert WKT column to array format if present
     if "WKT" in df.columns:
         df = WKTtoArray(df)
+
 
     # Transform 'Xstart', calculate segment lengths, and assign unique hash IDs
     df = transformXstart(df)
@@ -663,12 +666,12 @@ def writeFile(df, name, myProj=None):
     -------
     pandas.DataFrame
         The input dataframe.
-    """    
+    """
    # if ends with .csv or .txt, write as csv
     if name.endswith('.csv') or name.endswith('.txt'):
         df = writeToWKT(df, name, myProj=myProj)
     # if ends with .shp, write as shapefile
-    else: 
+    else:
         if name.endswith('.shp'):
             driver = 'ESRI Shapefile'
         elif name.endswith('.geojson') or name.endswith('.json'):
@@ -677,7 +680,7 @@ def writeFile(df, name, myProj=None):
             driver = 'GPKG'
         else:
             driver = 'GeoJSON'
-        
+
         df = writetoGeoData(df, name, driver, myProj=myProj)
 
 
