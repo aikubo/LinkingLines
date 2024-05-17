@@ -60,17 +60,15 @@ We have three examples:
 2. Hough Transform and feature extraction on Venus lineament data shape file.
 3. Hough Transform on fracture data geoJSON.
 
-Data from: 
+Data from:
 1. https://agupubs.onlinelibrary.wiley.com/doi/full/10.1029/2022GC010842
 2. https://pubs.usgs.gov/sim/3121/
 3. https://doi.org/10.5281/zenodo.7919843
 
-You are now ready to utilize the power of Hough Line Transform, Agglomerative Clustering, and custom plotting in your data analysis projects. If you have any questions or need further assistance, please refer to the detailed documentation or contact our support team.
-
 
 ## 4. Contributing Guidelines
-Thank you for your interest in contributing to `linkinglines`. Please feel free to open up issues with bugs or requested features. Any contributions you make will benefit everybody else and are greatly appreciated.
 
+If you find bugs or issues please open up an [issues](). We also welcome requests for additional features.
 
 If you would like to contribute code please do so in a separate branch and open up an issue describing your contribution.
 
@@ -90,7 +88,7 @@ cd linkinglines # go to the repo
 
 poetry install --with test,dev # install in editable mode
 
-# add your code 
+# add your code
 
 poetry run pytest  # test code locally
 
@@ -100,10 +98,10 @@ poetry run pytest  # test code locally
 Before submitting your pull request please verify the following:
 
 1. Code is documented in [NumPy Docstring Style](https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_numpy.html)
-2. Code is tested and passes test 
+2. Code is tested and passes test
     - To run the tests please go to "/tests" and run `poetry run pytest` or `pytest`
     - Add your test code to any file with the name `test`
     - More here on [pytest and testing practices](https://docs.pytest.org/en/8.0.x/)
-3. Open an issue and pull request 
-4. After your pull request the code will be reviewed by maintainers. 
+3. Open an issue and pull request
+4. After your pull request the code will be reviewed by maintainer (namely @aikubo).
 5. After passing review and automated tests it will be added to the next release and published to pypi.
