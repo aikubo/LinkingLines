@@ -39,7 +39,7 @@ The `linkinglines` Python package addresses the need for quantitative and automa
 The primary needs that the `linkinglines` package fulfills include:
 
 1. **Dissected Line Extraction or Data Reduction**: In areas where land cover or data availability affects the complete mapping of linear features, this package can link together similarly oriented segments into lines in a quantitative automated way. This is also an data reduction technique.
-
+F
 2. **Feature Extraction and Analysis**: The `linkinglines` package provides functions to extract and then compute essential metrics and statistics on extracted linear, radial or circumferential type features which are commonly seen in dike swarms or fracture networks.
 
 3. **Custom Plotting and Visualization**: Effective visualization is critical for data interpretation. The package offers custom plotting scripts, making it easier to visualize results and communicate findings.
@@ -64,7 +64,7 @@ After labels are assigned in the clustering portion of the algorithm, new lines 
 
 Additionally, we leverage the unique properties of the Hough Transform to combine clustering with feature extraction. In the original usage case of overlapping complex dike swarms, two potential end members of swarm types are linear and radial or circumferential swarms (Figure 2). Using the equation of the Hough Transform, we can apply curve-fitting to quantitatively fit the data to a radial pattern.
 
-![Synthetic dike swarms in a Cartesian space (gray background, uppercase label) and Hough Transform space (white background, lowercase label). (A) Shows a simple linear swarm oriented at 30°. (B) Shows three linear swarms at −30°, 30°, 75°. (C) Shows three radial swarms aligned at a −45° angle. The angle at which radial swarms intersect in the Hough space (HS) is the angle of their relative orientation in Cartesian space. (D) Shows a circumferential swarm with the lines extending to show how it converges to Equation 8. The radius of the circumferential swarm is equal to the spacing of the parallel two curves in HS. (E) Shows three circumferential swarms with the same radius aligned at a -45° angle.](SyntheticsInkscape.png)
+![Synthetic dike swarms in a Cartesian space (gray background, uppercase label) and Hough Transform space (white background, lowercase label). (A) Shows a simple linear swarm oriented at 30°. (B) Shows three linear swarms at −30°, 30°, 75°. (C) Shows three radial swarms aligned at a −45° angle. The angle at which radial swarms intersect in the Hough space (HS) is the angle of their relative orientation in Cartesian space. (D) Shows a circumferential swarm with the lines extending to show how it converges to a radial swarm. The radius of the circumferential swarm is equal to the spacing of the parallel two curves in HS. (E) Shows three circumferential swarms with the same radius aligned at a -45° angle.](SyntheticsInkscape.png)
 
 For extraction of linear features we can apply the Hough accumulator array, a 2D histogram of $\theta$ and $\rho$. You set the size of bins in the histogram and if clusters fall within those boxes they can be thought of as mesoscale clusters. We allow for flexibility of cutoffs for these mesoscale feature extraction, so it can be tailored to each research or engineering application.
 
