@@ -39,7 +39,7 @@ The `linkinglines` Python package addresses the need for quantitative and automa
 The primary needs that the `linkinglines` package fulfills include:
 
 1. **Dissected Line Extraction or Data Reduction**: In areas where land cover or data availability affects the complete mapping of linear features, this package can link together similarly oriented segments into lines in a quantitative automated way. This is also an data reduction technique.
-F
+
 2. **Feature Extraction and Analysis**: The `linkinglines` package provides functions to extract and then compute essential metrics and statistics on extracted linear, radial or circumferential type features which are commonly seen in dike swarms or fracture networks.
 
 3. **Custom Plotting and Visualization**: Effective visualization is critical for data interpretation. The package offers custom plotting scripts, making it easier to visualize results and communicate findings.
